@@ -1,7 +1,7 @@
 import requests
 
 from intezer_sdk import SDK_VERSION
-from intezer_sdk import api_config
+from intezer_sdk.api_config import api_config
 
 
 class IntezerApi(object):
