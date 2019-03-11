@@ -1,8 +1,14 @@
+import sys
 import unittest
 
 import responses
-from mock import mock_open
-from mock import patch
+
+try:
+    from unittest.mock import mock_open
+    from unittest.mock import patch
+except ImportError:
+    from mock import mock_open
+    from mock import patch
 
 from intezer_sdk.analysis import Analysis
 from intezer_sdk.consts import AnalysisStatusCode
@@ -15,7 +21,10 @@ from intezer_sdk.exceptions import ReportDoesNotExistError
 
 class AnalysisSpec(unittest.TestCase):
     def setUp(self):
-        pass
+        if sys.version_info[0] < 3:
+            self.dir = '__builtin__.open'
+        else:
+            self.dir = 'builtins.open'
 
     def test_send_analysis_by_sha256_send_analysis_and_sets_status(self):
         # Arrange
@@ -49,9 +58,9 @@ class AnalysisSpec(unittest.TestCase):
                      json={'result': 'testtest'})
             analysis = Analysis(file_path='a')
 
-            with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
-                assert open("a").read() == "data"
-                mock_file.assert_called_with("a")
+            with patch(self.dir, mock_open(read_data='data')) as mock_file:
+                assert open('a').read() == 'data'
+                mock_file.assert_called_with('a')
 
                 # Act
                 analysis.send()
@@ -76,9 +85,9 @@ class AnalysisSpec(unittest.TestCase):
                      json={'result': 'report'})
             analysis = Analysis(file_path='a')
 
-            with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
-                assert open("a").read() == "data"
-                mock_file.assert_called_with("a")
+            with patch(self.dir, mock_open(read_data='data')) as mock_file:
+                assert open('a').read() == 'data'
+                mock_file.assert_called_with('a')
 
                 # Act
                 analysis.send(wait=True)
@@ -103,9 +112,9 @@ class AnalysisSpec(unittest.TestCase):
                      json={'result': 'report'})
             analysis = Analysis(file_path='a')
 
-            with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
-                assert open("a").read() == "data"
-                mock_file.assert_called_with("a")
+            with patch(self.dir, mock_open(read_data='data')) as mock_file:
+                assert open('a').read() == 'data'
+                mock_file.assert_called_with('a')
 
                 # Act
                 analysis.send()
@@ -138,9 +147,9 @@ class AnalysisSpec(unittest.TestCase):
 
             analysis = Analysis(file_path='a')
 
-            with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
-                assert open("a").read() == "data"
-                mock_file.assert_called_with("a")
+            with patch(self.dir, mock_open(read_data='data')) as mock_file:
+                assert open('a').read() == 'data'
+                mock_file.assert_called_with('a')
 
                 # Act
                 analysis.send()
@@ -168,9 +177,9 @@ class AnalysisSpec(unittest.TestCase):
                      json={'result': 'report'})
             analysis = Analysis(file_path='a')
 
-            with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
-                assert open("a").read() == "data"
-                mock_file.assert_called_with("a")
+            with patch(self.dir, mock_open(read_data='data')) as mock_file:
+                assert open('a').read() == 'data'
+                mock_file.assert_called_with('a')
 
                 # Act
                 analysis.send(wait=True)
@@ -276,9 +285,9 @@ class AnalysisSpec(unittest.TestCase):
                      json={'result': 'report'})
             analysis = Analysis(file_path='a')
 
-            with patch("__builtin__.open", mock_open(read_data="data")) as mock_file:
-                assert open("a").read() == "data"
-                mock_file.assert_called_with("a")
+            with patch(self.dir, mock_open(read_data='data')) as mock_file:
+                assert open('a').read() == 'data'
+                mock_file.assert_called_with('a')
 
                 # Act
                 analysis.send(wait=True)
