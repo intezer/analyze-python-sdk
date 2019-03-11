@@ -6,70 +6,74 @@ except ImportError:
 import time
 
 from intezer_sdk.api import IntezerApi
-from intezer_sdk.exceptions import AnalysisDoesNotExistError
-from intezer_sdk.exceptions import HashDoesNotExistError
-from intezer_sdk.globals import ANALYSIS_STATUS_CODE
+from intezer_sdk.consts import AnalysisStatusCode
+from intezer_sdk.exceptions import AnalysisAlreadyBeenSent
+from intezer_sdk.exceptions import IntezerError
+from intezer_sdk.exceptions import ReportDoesNotExistError
 
 
 class Analysis(object):
-    def __init__(self, file_path=None, file_hash=None, dynamic_unpacking=False, api=None):
+    def __init__(self,
+                 file_path=None,  # type: str
+                 file_hash=None,  # type: str
+                 dynamic_unpacking=None,  # type: bool
+                 api=None,  # type: IntezerApi
+                 static_unpacking=None  # type: bool
+                 ):
         if (file_hash is not None) == (file_path is not None):
             raise ValueError('Choose between file or sha256 analysis')
 
-        self.hash = file_hash  # type: str
-        self.dynamic_unpacking = dynamic_unpacking  # type: bool
-        self.file_path = file_path  # type: str
+        self.status = None  # type: AnalysisStatusCode
         self.analyses_id = None  # type: str
-        self.report = None  # type: dict
-        self.api = api or IntezerApi()
+        self._file_hash = file_hash  # type: str
+        self._dynamic_unpacking = dynamic_unpacking  # type: bool
+        self._static_unpacking = static_unpacking  # type: bool
+        self._file_path = file_path  # type: str
+        self._report = None  # type: dict
+        self._api = api or IntezerApi()  # type: IntezerApi
 
     def send(self, wait=False):
-        params = {}
+        if self.analyses_id:
+            raise AnalysisAlreadyBeenSent()
 
-        if self.hash is not None:
-            params['hash'] = self.hash
-            response = self.api.request(path='/analyze-by-hash', params=params, method='POST')
-            if response.status_code == HTTPStatus.NOT_FOUND:
-                raise HashDoesNotExistError()
+        if self._file_hash:
+            self.analyses_id = self._api.analyze_by_hash(self._file_hash, self._dynamic_unpacking,
+                                                         self._static_unpacking)
         else:
-            if self.dynamic_unpacking:
-                params['dynamic_unpacking'] = 'Auto'
-            with open(self.file_path, 'rb') as file_to_upload:
+            with open(self._file_path, 'rb') as file_to_upload:
                 files = {'file': ('file_name', file_to_upload)}
-                response = self.api.request(path='/analyze', files=files, params=params, method='POST')
+                self.analyses_id = self._api.analyze_by_files(files, self._dynamic_unpacking, self._static_unpacking)
 
-        assert response.status_code == HTTPStatus.CREATED
-
-        self.analyses_id = response.json()['result_url'].split('/')[2]
+        self.status = AnalysisStatusCode.send
 
         if wait:
             self.wait_for_completion()
-            return ANALYSIS_STATUS_CODE['succeeded']
-        else:
-            return ANALYSIS_STATUS_CODE['created']
 
     def wait_for_completion(self):
-        status_code = self.check_status()
-
-        while status_code != ANALYSIS_STATUS_CODE['succeeded']:
-            time.sleep(1)
+        if self.status in [AnalysisStatusCode.send, AnalysisStatusCode.in_progress]:
             status_code = self.check_status()
 
-    def check_status(self):
-        response = self._analyze_request()
-        if response.status_code == HTTPStatus.OK:
-            self.report = response.json()['result']
+            while status_code != AnalysisStatusCode.finish:
+                time.sleep(1)
+                status_code = self.check_status()
 
-        return response.status_code
+    def check_status(self):
+        if self.status not in [AnalysisStatusCode.send, AnalysisStatusCode.in_progress]:
+            raise IntezerError()
+
+        response = self._api.get_analysis_response(self.analyses_id)
+        if response.status_code == HTTPStatus.OK:
+            self._report = response.json()['result']
+            self.status = AnalysisStatusCode.finish
+        elif response.status_code == HTTPStatus.ACCEPTED:
+            self.status = AnalysisStatusCode.in_progress
+        else:
+            raise IntezerError()
+
+        return self.status
 
     def result(self):
-        return self.report
+        if not self._report:
+            raise ReportDoesNotExistError()
 
-    def _analyze_request(self):
-        if self.analyses_id is None:
-            raise AnalysisDoesNotExistError()
-
-        response = self.api.request(path='/analyses/%s' % self.analyses_id, method='GET')
-        response.raise_for_status()
-
-        return response
+        return self._report

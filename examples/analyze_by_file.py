@@ -1,25 +1,30 @@
+import sys
+from pprint import pprint
+
 from intezer_sdk.analysis import Analysis
 from intezer_sdk.api import IntezerApi
 
 
-def send_file_with_wait():
-    file_path = '<file_path>'
-    dynamic_unpacking = '<Boolean>'
-    api_key = '<api_key>'
-    api = IntezerApi(api_key=api_key)
-
-    analysis = Analysis(api=api, file_path=file_path, dynamic_unpacking=dynamic_unpacking)
+def send_file_with_wait(file_path, dynamic_unpacking=None, static_unpacking=None):
+    api = IntezerApi()
+    analysis = Analysis(api=api,
+                        file_path=file_path,
+                        dynamic_unpacking=dynamic_unpacking,
+                        static_unpacking=static_unpacking)
     analysis.send(wait=True)
-    result = analysis.result()
+    pprint(analysis.result())
 
 
-def send_file_without_wait():
-    file_path = '<file_path>'
-    dynamic_unpacking = '<Boolean>'
-    api_key = '<api_key>'
-    api = IntezerApi(api_key=api_key)
-
-    analysis = Analysis(api=api, file_path=file_path, dynamic_unpacking=dynamic_unpacking)
+def send_file_without_wait(file_path, dynamic_unpacking, static_unpacking):
+    api = IntezerApi()
+    analysis = Analysis(api=api,
+                        file_path=file_path,
+                        dynamic_unpacking=dynamic_unpacking,
+                        static_unpacking=static_unpacking)
     analysis.send()
     analysis.wait_for_completion()
-    result = analysis.result()
+    pprint(analysis.result())
+
+
+if __name__ == '__main__':
+    send_file_with_wait(*sys.argv[1:])
