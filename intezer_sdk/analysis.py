@@ -1,11 +1,9 @@
 import time
 
+from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.consts import analysis_status_code
-from intezer_sdk.errors import AnalysisHasAlreadyBeenSent
-from intezer_sdk.errors import IntezerError
-from intezer_sdk.errors import ReportDoesNotExistError
+from intezer_sdk.consts import AnalysisStatusCode
 
 try:
     from http import HTTPStatus
@@ -23,7 +21,7 @@ class Analysis(object):
         if (file_hash is not None) == (file_path is not None):
             raise ValueError('Choose between file hash or file path analysis')
 
-        self.status = None  # type: analysis_status_code
+        self.status = None  # type: AnalysisStatusCode
         self.analyses_id = None  # type: str
         self._file_hash = file_hash  # type: str
         self._dynamic_unpacking = dynamic_unpacking  # type: bool
@@ -34,48 +32,52 @@ class Analysis(object):
 
     def send(self, wait=False):  # type: (bool) -> None
         if self.analyses_id:
-            raise AnalysisHasAlreadyBeenSent()
+            raise errors.AnalysisHasAlreadyBeenSent()
 
         if self._file_hash:
             self.analyses_id = self._api.analyze_by_hash(self._file_hash,
                                                          self._dynamic_unpacking,
                                                          self._static_unpacking)
         else:
-
             self.analyses_id = self._api.analyze_by_file(self._file_path,
                                                          self._dynamic_unpacking,
                                                          self._static_unpacking)
 
-        self.status = analysis_status_code.SENT
+        self.status = AnalysisStatusCode.CREATED
 
         if wait:
             self.wait_for_completion()
 
     def wait_for_completion(self):
-        if self.status in (analysis_status_code.SENT, analysis_status_code.IN_PROGRESS):
+        if self._is_analysis_running():
             status_code = self.check_status()
 
-            while status_code != analysis_status_code.FINISH:
+            while status_code != AnalysisStatusCode.FINISH:
                 time.sleep(1)
                 status_code = self.check_status()
 
     def check_status(self):
-        if self.status not in (analysis_status_code.SENT, analysis_status_code.IN_PROGRESS):
-            raise IntezerError('Analysis is not in process')
+        if not self._is_analysis_running():
+            raise errors.IntezerError('Analysis dont running')
 
         response = self._api.get_analysis_response(self.analyses_id)
         if response.status_code == HTTPStatus.OK:
             self._report = response.json()['result']
-            self.status = analysis_status_code.FINISH
+            self.status = AnalysisStatusCode.FINISH
         elif response.status_code == HTTPStatus.ACCEPTED:
-            self.status = analysis_status_code.IN_PROGRESS
+            self.status = AnalysisStatusCode.IN_PROGRESS
         else:
-            raise IntezerError('Getting wrong server code from server:{0}'.format(response.status_code))
+            raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
 
         return self.status
 
     def result(self):
+        if self._is_analysis_running():
+            raise errors.AnalysisIsStillRunning()
         if not self._report:
-            raise ReportDoesNotExistError()
+            raise errors.ReportDoesNotExistError()
 
         return self._report
+
+    def _is_analysis_running(self):
+        return self.status in (AnalysisStatusCode.CREATED, AnalysisStatusCode.IN_PROGRESS)

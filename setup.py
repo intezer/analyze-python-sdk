@@ -2,22 +2,45 @@ import os
 
 from setuptools import setup
 
-from intezer_sdk import SDK_VERSION
 
-this_dir = os.path.dirname(__file__)
-requirements_filename = os.path.join(this_dir, 'requirements.txt')
+def rel(*xs):
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), *xs)
 
-with open(requirements_filename) as f:
-    PACKAGE_INSTALL_REQUIRES = [line[:-1] for line in f]
 
+with open(rel('intezer_sdk', '__init__.py'), 'r') as f:
+    version_marker = '__version__ = '
+    for line in f:
+        if line.startswith(version_marker):
+            _, version = line.split(version_marker)
+            version = version.strip().strip("'")
+            break
+    else:
+        raise RuntimeError('Version marker not found.')
+
+install_requires = [
+    'requests >= 2.21.0,<3',
+    'enum34==1.1.6;python_version < "3"'
+]
 setup(
-    name='intezersdk',
-    version=SDK_VERSION,
+    name='intezer_sdk',
+    version=version,
     packages=['intezer_sdk'],
     url='',
-    license='',
-    author='Intezer',
+    license='Apache License v2',
+    author='Intezer Labs ltd.',
     author_email='info@intezer.com',
-    description='Intezer SDK',
-    install_requires=PACKAGE_INSTALL_REQUIRES
+    description='Intezer Analyze SDK',
+    install_requires=install_requires,
+    keywords='intezer',
+    test_requires=[
+        'responses == 0.10.5',
+        'pytest == 3.6.4',
+        'mock == 2.0.0'
+    ],
+    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
+    classifiers=[
+        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7']
 )

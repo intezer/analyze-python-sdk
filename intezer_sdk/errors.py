@@ -35,3 +35,13 @@ class InsufficientQuota(IntezerError):
 class GlobalApiIsNotInitialized(IntezerError):
     def __init__(self):
         super(GlobalApiIsNotInitialized, self).__init__('Global API is not initialized')
+
+
+class AnalysisIsStillRunning(IntezerError):
+    def __init__(self):
+        super(AnalysisIsStillRunning, self).__init__('Analysis is still running')
+
+
+class InvalidApiKey(IntezerError):
+    def __init__(self):
+        super(InvalidApiKey, self).__init__('Invalid api key')

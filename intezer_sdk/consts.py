@@ -1,14 +1,14 @@
 from enum import Enum
 
-from intezer_sdk import SDK_VERSION
+from intezer_sdk import __version__
 
 
-class analysis_status_code(Enum):
-    SENT = 1
-    IN_PROGRESS = 2
-    FINISH = 3
+class AnalysisStatusCode(Enum):
+    CREATED = 'created'
+    IN_PROGRESS = 'in_progress'
+    FINISH = 'finished'
 
 
 BASE_URL = 'https://analyze.intezer.com/api/'
 API_VERSION = 'v2-0'
-USER_AGENT = 'intzersdk-python-{}'.format(SDK_VERSION)
+USER_AGENT = 'intezer-python-sdk-{}'.format(__version__)

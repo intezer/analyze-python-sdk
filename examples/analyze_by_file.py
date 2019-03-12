@@ -1,14 +1,13 @@
 import sys
 from pprint import pprint
 
+from intezer_sdk import api
 from intezer_sdk.analysis import Analysis
-from intezer_sdk.api import IntezerApi
 
 
 def send_file_with_wait(file_path, dynamic_unpacking=None, static_unpacking=None):
-    api = IntezerApi()
-    analysis = Analysis(api=api,
-                        file_path=file_path,
+    api.set_global_api('<api_key>')
+    analysis = Analysis(file_path=file_path,
                         dynamic_unpacking=dynamic_unpacking,
                         static_unpacking=static_unpacking)
     analysis.send(wait=True)
@@ -16,9 +15,8 @@ def send_file_with_wait(file_path, dynamic_unpacking=None, static_unpacking=None
 
 
 def send_file_without_wait(file_path, dynamic_unpacking, static_unpacking):
-    api = IntezerApi()
-    analysis = Analysis(api=api,
-                        file_path=file_path,
+    api.set_global_api('<api_key>')
+    analysis = Analysis(file_path=file_path,
                         dynamic_unpacking=dynamic_unpacking,
                         static_unpacking=static_unpacking)
     analysis.send()
