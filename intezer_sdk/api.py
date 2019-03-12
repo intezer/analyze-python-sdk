@@ -98,9 +98,9 @@ class IntezerApi(object):
     def _param_initialize(self, dynamic_unpacking=None, static_unpacking=None):
         params = {}
 
-        if dynamic_unpacking:
+        if dynamic_unpacking is not None:
             params['dynamic_unpacking'] = dynamic_unpacking
-        if static_unpacking:
+        if static_unpacking is not None:
             params['static_unpacking'] = static_unpacking
 
         return params
