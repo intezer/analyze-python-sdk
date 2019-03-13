@@ -22,7 +22,6 @@ class IntezerApi(object):
         self.api_key = api_key
         self._access_token = None
         self._session = None
-        self._set_session()
 
     def _request(self,
                  method,
