@@ -26,13 +26,7 @@ class AnalysisSpec(unittest.TestCase):
         else:
             self.patch_prop = 'builtins.open'
 
-        # make access-token mock
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
-            set_global_api()
+        set_global_api()
 
     def test_send_analysis_by_sha256_send_analysis_and_sets_status(self):
         # Arrange
@@ -41,6 +35,10 @@ class AnalysisSpec(unittest.TestCase):
                      url=self.full_url + '/analyze-by-hash',
                      status=201,
                      json={'result_url': 'a/sd/asd'})
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
             analysis = Analysis(file_hash='a' * 64)
 
             # Act
@@ -57,6 +55,10 @@ class AnalysisSpec(unittest.TestCase):
                      status=201,
                      json={'result_url': 'a/sd/asd'})
             analysis = Analysis(file_path='a')
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
 
             with patch(self.patch_prop, mock_open(read_data='data')):
                 # Act
@@ -68,6 +70,10 @@ class AnalysisSpec(unittest.TestCase):
     def test_send_analysis_by_file_sends_analysis_with_waits_to_compilation_when_requested(self):
         # Arrange
         with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
@@ -89,6 +95,10 @@ class AnalysisSpec(unittest.TestCase):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
+            mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
                      json={'result_url': 'a/sd/asd'})
@@ -109,6 +119,10 @@ class AnalysisSpec(unittest.TestCase):
     def test_send_analysis_by_file_send_analysis_with_pulling_and_get_status_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
@@ -139,6 +153,10 @@ class AnalysisSpec(unittest.TestCase):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
+            mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
                      json={'result_url': 'a/sd/asd'})
@@ -159,6 +177,10 @@ class AnalysisSpec(unittest.TestCase):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
+            mock.add('POST',
                      url=self.full_url + '/analyze-by-hash',
                      status=404)
             analysis = Analysis(file_hash='a' * 64)
@@ -169,6 +191,10 @@ class AnalysisSpec(unittest.TestCase):
     def test_send_analysis_while_running_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze-by-hash',
                      status=201,
@@ -182,6 +208,10 @@ class AnalysisSpec(unittest.TestCase):
     def test_send_analysis_that_running_on_server_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze-by-hash',
                      status=409,
@@ -214,6 +244,10 @@ class AnalysisSpec(unittest.TestCase):
     def test_analysis_check_status_after_analysis_finish_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
