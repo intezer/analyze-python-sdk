@@ -18,9 +18,10 @@ except ImportError:
 
 class AnalysisSpec(unittest.TestCase):
     def setUp(self):
-
         self.full_url = consts.BASE_URL + consts.API_VERSION
+        consts.CHECK_STATUS_INTERVAL = 0
 
+        # Python 2 support
         if sys.version_info[0] < 3:
             self.patch_prop = '__builtin__.open'
         else:

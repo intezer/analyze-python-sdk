@@ -4,6 +4,7 @@ from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import AnalysisStatusCode
+from intezer_sdk.consts import CHECK_STATUS_INTERVAL
 
 try:
     from http import HTTPStatus
@@ -53,7 +54,7 @@ class Analysis(object):
             status_code = self.check_status()
 
             while status_code != AnalysisStatusCode.FINISH:
-                time.sleep(1)
+                time.sleep(CHECK_STATUS_INTERVAL)
                 status_code = self.check_status()
 
     def check_status(self):
