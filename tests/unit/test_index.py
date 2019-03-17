@@ -1,5 +1,4 @@
 import sys
-import unittest
 
 import responses
 
@@ -7,6 +6,7 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import set_global_api
 from intezer_sdk.index import Index
+from tests.unit.base_test import BaseTest
 
 try:
     from unittest.mock import mock_open
@@ -16,7 +16,7 @@ except ImportError:
     from mock import patch
 
 
-class IndexSpec(unittest.TestCase):
+class IndexSpec(BaseTest):
     def setUp(self):
         self.full_url = consts.BASE_URL + consts.API_VERSION
         consts.CHECK_STATUS_INTERVAL = 0
