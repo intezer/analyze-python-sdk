@@ -110,7 +110,7 @@ class IndexSpec(unittest.TestCase):
             with self.assertRaises(errors.HashDoesNotExistError):
                 index.send(wait=True)
 
-    def test_index_by_file_status_change(self):
+    def test_send_index_by_file_status_changed_to_created(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -130,7 +130,7 @@ class IndexSpec(unittest.TestCase):
         # Assert
         self.assertEqual(index.status, consts.IndexStatusCode.CREATED)
 
-    def test_index_by_sha256_status_finish(self):
+    def test_index_by_sha256_succeeded_status_changed_to_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
