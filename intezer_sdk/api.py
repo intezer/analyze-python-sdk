@@ -175,7 +175,7 @@ def get_global_api():  # type: () -> IntezerApi
     return _global_api
 
 
-def set_global_api(api_key=None):
+def set_global_api(api_key=None, api_version=None, base_url=None):
     global _global_api
     api_key = os.environ.get('INTEZER_ANALYZE_API_KEY') or api_key
-    _global_api = IntezerApi(consts.API_VERSION, api_key, consts.BASE_URL)
+    _global_api = IntezerApi(api_version or consts.API_VERSION, api_key, base_url or consts.BASE_URL)
