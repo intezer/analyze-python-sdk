@@ -5,7 +5,7 @@ from intezer_sdk import api
 from intezer_sdk.analysis import Analysis
 
 
-def send_file_with_wait(file_path, dynamic_unpacking=None, static_unpacking=None):
+def send_file_with_wait(file_path, dynamic_unpacking=None, static_unpacking=None):  # type: (str, bool, bool) -> None
     api.set_global_api('<api_key>')
     analysis = Analysis(file_path=file_path,
                         dynamic_unpacking=dynamic_unpacking,
@@ -14,7 +14,7 @@ def send_file_with_wait(file_path, dynamic_unpacking=None, static_unpacking=None
     pprint(analysis.result())
 
 
-def send_file_without_wait(file_path, dynamic_unpacking, static_unpacking):
+def send_file_without_wait(file_path, dynamic_unpacking, static_unpacking):  # type: (str, bool, bool) -> None
     api.set_global_api('<api_key>')
     analysis = Analysis(file_path=file_path,
                         dynamic_unpacking=dynamic_unpacking,

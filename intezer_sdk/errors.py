@@ -50,3 +50,8 @@ class AnalysisIsStillRunning(IntezerError):
 class InvalidApiKey(IntezerError):
     def __init__(self):
         super(InvalidApiKey, self).__init__('Invalid api key')
+
+
+class IndexFailed(IntezerError):
+    def __init__(self):
+        super(IndexFailed, self).__init__('Index operation failed')

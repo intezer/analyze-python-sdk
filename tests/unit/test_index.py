@@ -16,7 +16,7 @@ except ImportError:
     from mock import patch
 
 
-class AnalysisSpec(unittest.TestCase):
+class IndexSpec(unittest.TestCase):
     def setUp(self):
         self.full_url = consts.BASE_URL + consts.API_VERSION
         consts.CHECK_STATUS_INTERVAL = 0
@@ -29,12 +29,12 @@ class AnalysisSpec(unittest.TestCase):
 
         set_global_api()
 
-    def test_index_malicious_without_family_name(self):
+    def test_index_malicious_without_family_name_raise_value_error(self):
         # Act + Assert
         with self.assertRaises(ValueError):
             Index(sha256='a', index_as=consts.IndexType.MALICIOUS)
 
-    def test_trusted_index_by_sha256_status_change(self):
+    def test_trusted_index_by_sha256_status_change_to_created(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -53,7 +53,7 @@ class AnalysisSpec(unittest.TestCase):
         # Assert
         self.assertEqual(index.status, consts.IndexStatusCode.CREATED)
 
-    def test_malicious_index_by_sha256_status_change(self):
+    def test_failed_index_raise_index_failed(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -64,30 +64,37 @@ class AnalysisSpec(unittest.TestCase):
                      url=self.full_url + '/files/{}/index'.format('a'),
                      status=201,
                      json={'result_url': '/files/index/testindex'})
-            index = Index(sha256='a', index_as=consts.IndexType.MALICIOUS, family_name='WannaCry')
-
-            # Act
-            index.send()
-
-        # Assert
-        self.assertEqual(index.status, consts.IndexStatusCode.CREATED)
-
-    def test_trusted_index_by_sha256_raise_sha256_do_not_exist(self):
-        # Arrange
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
+            mock.add('GET',
+                     url=self.full_url + '/files/index/testindex',
                      status=200,
-                     json={'result': 'accesstoken'})
-            mock.add('POST',
-                     url=self.full_url + '/files/{}/index'.format('a'),
-                     status=404)
+                     json={'result_url': '/files/index/testindex',
+                           'status': 'failed'})
             index = Index(sha256='a', index_as=consts.IndexType.TRUSTED)
 
-            with self.assertRaises(errors.HashDoesNotExistError):
+            # Act + Assert
+            with self.assertRaises(errors.IndexFailed):
                 index.send(wait=True)
 
-    def test_malicious_index_by_sha256_raise_sha256_do_not_exist(self):
+    def test_malicious_index_by_sha256_status_change_to_created(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'accesstoken'})
+            mock.add('POST',
+                     url=self.full_url + '/files/{}/index'.format('a'),
+                     status=201,
+                     json={'result_url': '/files/index/testindex'})
+            index = Index(sha256='a', index_as=consts.IndexType.MALICIOUS, family_name='WannaCry')
+
+            # Act
+            index.send()
+
+        # Assert
+        self.assertEqual(index.status, consts.IndexStatusCode.CREATED)
+
+    def test_index_by_sha256_raise_sha256_do_not_exist(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -97,8 +104,9 @@ class AnalysisSpec(unittest.TestCase):
             mock.add('POST',
                      url=self.full_url + '/files/{}/index'.format('a'),
                      status=404)
-            index = Index(sha256='a', index_as=consts.IndexType.MALICIOUS, family_name='WannaCry')
+            index = Index(sha256='a', index_as=consts.IndexType.TRUSTED)
 
+            # Act + Assert
             with self.assertRaises(errors.HashDoesNotExistError):
                 index.send(wait=True)
 
@@ -141,7 +149,9 @@ class AnalysisSpec(unittest.TestCase):
                      status=202)
             mock.add('GET',
                      url=self.full_url + '/files/index/testindex',
-                     status=200)
+                     status=200,
+                     json={'result_url': '/files/index/testindex',
+                           'status': 'succeeded'})
             index = Index(sha256='a', index_as=consts.IndexType.TRUSTED)
 
             # Act
@@ -150,7 +160,7 @@ class AnalysisSpec(unittest.TestCase):
         # Assert
         self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
 
-    def test_index_by_file_status_finish(self):
+    def test_index_by_file_succeeded_status_changed_to_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -169,7 +179,9 @@ class AnalysisSpec(unittest.TestCase):
                      status=202)
             mock.add('GET',
                      url=self.full_url + '/files/index/testindex',
-                     status=200)
+                     status=200,
+                     json={'result_url': '/files/index/testindex',
+                           'status': 'succeeded'})
             index = Index(file_path='a', index_as=consts.IndexType.TRUSTED)
 
             with patch(self.patch_prop, mock_open(read_data='data')):
@@ -179,7 +191,7 @@ class AnalysisSpec(unittest.TestCase):
         # Assert
         self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
 
-    def test_index_check_status_before_send(self):
+    def test_check_status_before_index_sent_raise_status(self):
         # Arrange
         index = Index(sha256='a', index_as=consts.IndexType.TRUSTED)
 
@@ -206,7 +218,9 @@ class AnalysisSpec(unittest.TestCase):
                      status=202)
             mock.add('GET',
                      url=self.full_url + '/files/index/testindex',
-                     status=200)
+                     status=200,
+                     json={'result_url': '/files/index/testindex',
+                           'status': 'succeeded'})
             index = Index(file_path='a', index_as=consts.IndexType.TRUSTED)
 
             with patch(self.patch_prop, mock_open(read_data='data')):
@@ -219,7 +233,7 @@ class AnalysisSpec(unittest.TestCase):
         # Assert
         self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
 
-    def test_parallel_index_by_sha256_status_finish(self):
+    def test_parallel_index_by_sha256_succeeded_status_changed_to_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
             first_index_name = 'a'
@@ -238,10 +252,14 @@ class AnalysisSpec(unittest.TestCase):
                      json={'result_url': '/files/index/second'})
             mock.add('GET',
                      url=self.full_url + '/files/index/first',
-                     status=200)
+                     status=200,
+                     json={'result_url': '/files/index/testindex',
+                           'status': 'succeeded'})
             mock.add('GET',
                      url=self.full_url + '/files/index/second',
-                     status=200)
+                     status=200,
+                     json={'result_url': '/files/index/testindex',
+                           'status': 'succeeded'})
             first_index = Index(sha256=first_index_name, index_as=consts.IndexType.TRUSTED)
             second_index = Index(sha256=second_index_name, index_as=consts.IndexType.TRUSTED)
 

@@ -26,7 +26,7 @@ class IntezerApi(object):
     def _request(self,
                  method,
                  path,
-                 params=None,
+                 data=None,
                  headers=None,
                  files=None):  # type: (str, str, dict, dict, dict) -> Response
         if not self._session:
@@ -36,7 +36,7 @@ class IntezerApi(object):
             response = self._session.request(
                 method,
                 self.full_url + path,
-                data=params or {},
+                data=data or {},
                 headers=headers or {},
                 files=files
             )
@@ -44,7 +44,7 @@ class IntezerApi(object):
             response = self._session.request(
                 method,
                 self.full_url + path,
-                json=params or {},
+                json=data or {},
                 headers=headers
             )
 
@@ -54,11 +54,11 @@ class IntezerApi(object):
                         file_hash,
                         dynamic_unpacking=None,
                         static_unpacking=None):  # type: (str,bool,bool) -> str
-        params = self._param_initialize(dynamic_unpacking, static_unpacking)
+        data = self._param_initialize(dynamic_unpacking, static_unpacking)
 
-        params['hash'] = file_hash
-        response = self._request(path='/analyze-by-hash', params=params, method='POST')
-        self._handle_analysis_reponse_status_code(response)
+        data['hash'] = file_hash
+        response = self._request(path='/analyze-by-hash', data=data, method='POST')
+        self._assert_analysis_reponse_status_code(response)
 
         return self._get_analysis_id_from_response(response)
 
@@ -66,14 +66,14 @@ class IntezerApi(object):
                         file_path,
                         dynamic_unpacking=None,
                         static_unpacking=None):  # type: (str,bool,bool) -> str
-        params = self._param_initialize(dynamic_unpacking, static_unpacking)
+        data = self._param_initialize(dynamic_unpacking, static_unpacking)
 
         with open(file_path, 'rb') as file_to_upload:
             file = {'file': (os.path.basename(file_path), file_to_upload)}
 
-            response = self._request(path='/analyze', files=file, params=params, method='POST')
+            response = self._request(path='/analyze', files=file, data=data, method='POST')
 
-        self._handle_analysis_reponse_status_code(response)
+        self._assert_analysis_reponse_status_code(response)
 
         return self._get_analysis_id_from_response(response)
 
@@ -84,26 +84,26 @@ class IntezerApi(object):
         return response
 
     def index_by_sha256(self, sha256, index_as, family_name=None):  # type: (str, IndexType, str) -> Response
-        params = {'index_as': index_as.value}
+        data = {'index_as': index_as.value}
         if family_name:
-            params['family_name'] = family_name
+            data['family_name'] = family_name
 
-        response = self._request(path='/files/{}/index'.format(sha256), params=params, method='POST')
-        self._handle_Index_reponse_status_code(response)
+        response = self._request(path='/files/{}/index'.format(sha256), data=data, method='POST')
+        self._assert_index_reponse_status_code(response)
 
         return self._get_index_id_from_response(response)
 
     def index_by_file(self, file_path, index_as, family_name=None):  # type: (str, IndexType, str) -> Response
-        params = {'index_as': index_as.value}
+        data = {'index_as': index_as.value}
         if family_name:
-            params['family_name'] = family_name
+            data['family_name'] = family_name
 
         with open(file_path, 'rb') as file_to_upload:
             file = {'file': (os.path.basename(file_path), file_to_upload)}
 
-            response = self._request(path='/files/index', params=params, files=file, method='POST')
+            response = self._request(path='/files/index', data=data, files=file, method='POST')
 
-        self._handle_Index_reponse_status_code(response)
+        self._assert_index_reponse_status_code(response)
 
         return self._get_index_id_from_response(response)
 
@@ -117,8 +117,10 @@ class IntezerApi(object):
         if self._access_token is None:
             response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
 
-            if response.status_code != HTTPStatus.OK:
+            if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
                 raise errors.InvalidApiKey()
+            elif response.status_code != HTTPStatus.OK:
+                response.raise_for_status()
 
             self._access_token = response.json()['result']
 
@@ -129,16 +131,16 @@ class IntezerApi(object):
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
     def _param_initialize(self, dynamic_unpacking=None, static_unpacking=None):
-        params = {}
+        data = {}
 
         if dynamic_unpacking is not None:
-            params['dynamic_unpacking'] = dynamic_unpacking
+            data['dynamic_unpacking'] = dynamic_unpacking
         if static_unpacking is not None:
-            params['static_unpacking'] = static_unpacking
+            data['static_unpacking'] = static_unpacking
 
-        return params
+        return data
 
-    def _handle_analysis_reponse_status_code(self, response):
+    def _assert_analysis_reponse_status_code(self, response):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError()
         elif response.status_code == HTTPStatus.CONFLICT:
@@ -148,7 +150,7 @@ class IntezerApi(object):
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
 
-    def _handle_Index_reponse_status_code(self, response):
+    def _assert_index_reponse_status_code(self, response):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError()
         elif response.status_code != HTTPStatus.CREATED:

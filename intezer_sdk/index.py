@@ -13,23 +13,23 @@ except ImportError:
 
 class Index(object):
     def __init__(self,
+                 index_as,
                  file_path=None,
                  sha256=None,
                  api=None,
-                 index_as=None,
-                 family_name=None):  # type: (str, str, IntezerApi, IndexType, str) -> None
+                 family_name=None):  # type: (str, str, IntezerApi, consts.IndexType, str) -> None
         if (sha256 is not None) == (file_path is not None):
             raise ValueError('Choose between sha256 or file indexing')
 
-        if (index_as == consts.IndexType.MALICIOUS) and (family_name is None):
+        if index_as == consts.IndexType.MALICIOUS and family_name is None:
             raise ValueError('family_name is mandatory if the index type is malicious')
 
-        self.status = None  # type: IndexStatusCode
+        self.status = None  # type: consts.IndexStatusCode
         self.index_id = None  # type: str
         self._sha256 = sha256  # type: str
         self._file_path = file_path  # type: str
         self._api = api or get_global_api()  # type: IntezerApi
-        self._index_as = index_as  # type: IndexType
+        self._index_as = index_as  # type: consts.IndexType
         self._family_name = family_name  # type: str
 
     def send(self, wait=False):  # type: (bool) -> None
@@ -60,7 +60,10 @@ class Index(object):
 
         response = self._api.get_index_response(self.index_id)
         if response.status_code == HTTPStatus.OK:
-            self.status = consts.IndexStatusCode.FINISH
+            if response.json()['status'] == 'failed':
+                raise errors.IndexFailed()
+            else:
+                self.status = consts.IndexStatusCode.FINISH
         elif response.status_code == HTTPStatus.ACCEPTED:
             self.status = consts.IndexStatusCode.IN_PROGRESS
         else:

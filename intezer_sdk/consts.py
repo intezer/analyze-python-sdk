@@ -19,6 +19,15 @@ class IndexType(Enum):
     TRUSTED = 'trusted'
     MALICIOUS = 'malicious'
 
+    @staticmethod
+    def from_str(label):
+        if label in ('TRUSTED', 'trusted'):
+            return IndexType.TRUSTED
+        elif label in ('MALICIOUS', 'malicious'):
+            return IndexType.MALICIOUS
+        else:
+            raise NotImplementedError
+
 
 BASE_URL = 'https://analyze.intezer.com/api/'
 API_VERSION = 'v2-0'

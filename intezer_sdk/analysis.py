@@ -1,10 +1,9 @@
 import time
 
+from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.consts import AnalysisStatusCode
-from intezer_sdk.consts import CHECK_STATUS_INTERVAL
 
 try:
     from http import HTTPStatus
@@ -22,7 +21,7 @@ class Analysis(object):
         if (file_hash is not None) == (file_path is not None):
             raise ValueError('Choose between file hash or file path analysis')
 
-        self.status = None  # type: AnalysisStatusCode
+        self.status = None  # type: consts.AnalysisStatusCode
         self.analyses_id = None  # type: str
         self._file_hash = file_hash  # type: str
         self._dynamic_unpacking = dynamic_unpacking  # type: bool
@@ -44,7 +43,7 @@ class Analysis(object):
                                                          self._dynamic_unpacking,
                                                          self._static_unpacking)
 
-        self.status = AnalysisStatusCode.CREATED
+        self.status = consts.AnalysisStatusCode.CREATED
 
         if wait:
             self.wait_for_completion()
@@ -53,8 +52,8 @@ class Analysis(object):
         if self._is_analysis_running():
             status_code = self.check_status()
 
-            while status_code != AnalysisStatusCode.FINISH:
-                time.sleep(CHECK_STATUS_INTERVAL)
+            while status_code != consts.AnalysisStatusCode.FINISH:
+                time.sleep(consts.CHECK_STATUS_INTERVAL)
                 status_code = self.check_status()
 
     def check_status(self):
@@ -64,9 +63,9 @@ class Analysis(object):
         response = self._api.get_analysis_response(self.analyses_id)
         if response.status_code == HTTPStatus.OK:
             self._report = response.json()['result']
-            self.status = AnalysisStatusCode.FINISH
+            self.status = consts.AnalysisStatusCode.FINISH
         elif response.status_code == HTTPStatus.ACCEPTED:
-            self.status = AnalysisStatusCode.IN_PROGRESS
+            self.status = consts.AnalysisStatusCode.IN_PROGRESS
         else:
             raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
 
@@ -81,4 +80,4 @@ class Analysis(object):
         return self._report
 
     def _is_analysis_running(self):
-        return self.status in (AnalysisStatusCode.CREATED, AnalysisStatusCode.IN_PROGRESS)
+        return self.status in (consts.AnalysisStatusCode.CREATED, consts.AnalysisStatusCode.IN_PROGRESS)
