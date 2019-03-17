@@ -17,7 +17,7 @@ class AnalysisSpec(BaseTest):
     def setUp(self):
         super(AnalysisSpec, self).setUp()
 
-    def test_send_analysis_by_sha256_send_analysis_and_sets_status(self):
+    def test_send_analysis_by_sha256_sent_analysis_and_sets_status(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -36,7 +36,7 @@ class AnalysisSpec(BaseTest):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
 
-    def test_send_analysis_by_file_send_analysis_and_sets_status(self):
+    def test_send_analysis_by_file_sent_analysis_and_sets_status(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -80,7 +80,7 @@ class AnalysisSpec(BaseTest):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
 
-    def test_send_analysis_by_file_send_analysis_without_wait_and_get_status_finish(self):
+    def test_send_analysis_by_file_sent_analysis_without_wait_and_get_status_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -105,7 +105,7 @@ class AnalysisSpec(BaseTest):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
 
-    def test_send_analysis_by_file_send_analysis_with_pulling_and_get_status_finish(self):
+    def test_send_analysis_by_file_sent_analysis_with_pulling_and_get_status_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -210,7 +210,7 @@ class AnalysisSpec(BaseTest):
             with self.assertRaises(errors.AnalysisIsAlreadyRunning):
                 analysis.send()
 
-    def test_analysis_by_sha256_and_file_send_analysis_and_raise_value_error(self):
+    def test_analysis_by_sha256_and_file_sent_analysis_and_raise_value_error(self):
         # Assert
         with self.assertRaises(ValueError):
             Analysis(file_hash='a', file_path='/test/test')
