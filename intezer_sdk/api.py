@@ -30,7 +30,7 @@ class IntezerApi(object):
                  headers=None,
                  files=None):  # type: (str, str, dict, dict, dict) -> Response
         if not self._session:
-            self._set_session()
+            self.set_session()
 
         if files:
             response = self._session.request(
@@ -113,21 +113,18 @@ class IntezerApi(object):
 
         return response
 
-    def get_access_token(self, api_key):  # type: (str) -> str
-        response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
-
-        if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
-            raise errors.InvalidApiKey()
-        elif response.status_code != HTTPStatus.OK:
-            response.raise_for_status()
-
-        return response.json()['result']
-
-    def _set_access_token(self, api_key):  # type: (str) -> None
+    def _set_access_token(self, api_key):  # type: (str) -> str
         if self._access_token is None:
-            self._access_token = self.get_access_token(api_key)
+            response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
 
-    def _set_session(self):
+            if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
+                raise errors.InvalidApiKey()
+            elif response.status_code != HTTPStatus.OK:
+                response.raise_for_status()
+
+            self._access_token = response.json()['result']
+
+    def set_session(self):
         self._session = requests.session()
         self._set_access_token(self.api_key)
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)

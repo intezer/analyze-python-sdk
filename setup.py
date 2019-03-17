@@ -19,7 +19,7 @@ with open(rel('intezer_sdk', '__init__.py'), 'r') as f:
 
 install_requires = [
     'requests >= 2.21.0,<3',
-    'enum34==1.1.6;python_version < "3"'
+    'enum34==1.1.6 ; python_version < "3.0"'
 ]
 setup(
     name='intezer_sdk',
