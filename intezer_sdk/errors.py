@@ -7,6 +7,11 @@ class AnalysisHasAlreadyBeenSent(IntezerError):
         super(AnalysisHasAlreadyBeenSent, self).__init__('Analysis already been sent')
 
 
+class IndexHasAlreadyBeenSent(IntezerError):
+    def __init__(self):
+        super(IndexHasAlreadyBeenSent, self).__init__('Index already been sent')
+
+
 class AnalysisDoesNotExistError(IntezerError):
     def __init__(self):
         super(AnalysisDoesNotExistError, self).__init__('Analysis was not found')
@@ -45,3 +50,8 @@ class AnalysisIsStillRunning(IntezerError):
 class InvalidApiKey(IntezerError):
     def __init__(self):
         super(InvalidApiKey, self).__init__('Invalid api key')
+
+
+class IndexFailed(IntezerError):
+    def __init__(self):
+        super(IndexFailed, self).__init__('Index operation failed')

@@ -1,12 +1,9 @@
-import sys
-import unittest
-
 import responses
 
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.analysis import Analysis
-from intezer_sdk.api import set_global_api
+from tests.unit.base_test import BaseTest
 
 try:
     from unittest.mock import mock_open
@@ -16,19 +13,11 @@ except ImportError:
     from mock import patch
 
 
-class AnalysisSpec(unittest.TestCase):
+class AnalysisSpec(BaseTest):
     def setUp(self):
+        super(AnalysisSpec, self).setUp()
 
-        self.full_url = consts.BASE_URL + consts.API_VERSION
-
-        if sys.version_info[0] < 3:
-            self.patch_prop = '__builtin__.open'
-        else:
-            self.patch_prop = 'builtins.open'
-
-        set_global_api()
-
-    def test_send_analysis_by_sha256_send_analysis_and_sets_status(self):
+    def test_send_analysis_by_sha256_sent_analysis_and_sets_status(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -47,7 +36,7 @@ class AnalysisSpec(unittest.TestCase):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
 
-    def test_send_analysis_by_file_send_analysis_and_sets_status(self):
+    def test_send_analysis_by_file_sent_analysis_and_sets_status(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -91,7 +80,7 @@ class AnalysisSpec(unittest.TestCase):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
 
-    def test_send_analysis_by_file_send_analysis_without_wait_and_get_status_finish(self):
+    def test_send_analysis_by_file_sent_analysis_without_wait_and_get_status_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -116,7 +105,7 @@ class AnalysisSpec(unittest.TestCase):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
 
-    def test_send_analysis_by_file_send_analysis_with_pulling_and_get_status_finish(self):
+    def test_send_analysis_by_file_sent_analysis_with_pulling_and_get_status_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -221,7 +210,7 @@ class AnalysisSpec(unittest.TestCase):
             with self.assertRaises(errors.AnalysisIsAlreadyRunning):
                 analysis.send()
 
-    def test_analysis_by_sha256_and_file_send_analysis_and_raise_value_error(self):
+    def test_analysis_by_sha256_and_file_sent_analysis_and_raise_value_error(self):
         # Assert
         with self.assertRaises(ValueError):
             Analysis(file_hash='a', file_path='/test/test')

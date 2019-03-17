@@ -26,55 +26,39 @@ class IntezerApi(object):
     def _request(self,
                  method,
                  path,
-                 params=None,
+                 data=None,
                  headers=None,
                  files=None):  # type: (str, str, dict, dict, dict) -> Response
         if not self._session:
             self._set_session()
 
-        if method in ('GET', 'DELETE'):
+        if files:
             response = self._session.request(
                 method,
                 self.full_url + path,
-                params=params or {},
-                headers=headers
+                data=data or {},
+                headers=headers or {},
+                files=files
             )
-
         else:
             response = self._session.request(
                 method,
                 self.full_url + path,
-                json=params or {},
-                headers=headers or {},
-                files=files
+                json=data or {},
+                headers=headers
             )
 
         return response
-
-    def _set_access_token(self, api_key):  # type: (str) -> str
-        if self._access_token is None:
-            response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
-
-            if response.status_code != HTTPStatus.OK:
-                raise errors.raiseInvalidApiKey()
-
-            self._access_token = response.json()['result']
-
-    def _set_session(self):
-        self._session = requests.session()
-        self._set_access_token(self.api_key)
-        self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
-        self._session.headers['User-Agent'] = consts.USER_AGENT
 
     def analyze_by_hash(self,
                         file_hash,
                         dynamic_unpacking=None,
                         static_unpacking=None):  # type: (str,bool,bool) -> str
-        params = self._param_initialize(dynamic_unpacking, static_unpacking)
+        data = self._param_initialize(dynamic_unpacking, static_unpacking)
 
-        params['hash'] = file_hash
-        response = self._request(path='/analyze-by-hash', params=params, method='POST')
-        self._handle_reponse_status_code(response)
+        data['hash'] = file_hash
+        response = self._request(path='/analyze-by-hash', data=data, method='POST')
+        self._assert_analysis_reponse_status_code(response)
 
         return self._get_analysis_id_from_response(response)
 
@@ -82,14 +66,14 @@ class IntezerApi(object):
                         file_path,
                         dynamic_unpacking=None,
                         static_unpacking=None):  # type: (str,bool,bool) -> str
-        params = self._param_initialize(dynamic_unpacking, static_unpacking)
+        data = self._param_initialize(dynamic_unpacking, static_unpacking)
 
         with open(file_path, 'rb') as file_to_upload:
-            file = {'file': ('file_name', file_to_upload)}
+            file = {'file': (os.path.basename(file_path), file_to_upload)}
 
-        response = self._request(path='/analyze', files=file, params=params, method='POST')
+            response = self._request(path='/analyze', files=file, data=data, method='POST')
 
-        self._handle_reponse_status_code(response)
+        self._assert_analysis_reponse_status_code(response)
 
         return self._get_analysis_id_from_response(response)
 
@@ -99,17 +83,64 @@ class IntezerApi(object):
 
         return response
 
+    def index_by_sha256(self, sha256, index_as, family_name=None):  # type: (str, IndexType, str) -> Response
+        data = {'index_as': index_as.value}
+        if family_name:
+            data['family_name'] = family_name
+
+        response = self._request(path='/files/{}/index'.format(sha256), data=data, method='POST')
+        self._assert_index_reponse_status_code(response)
+
+        return self._get_index_id_from_response(response)
+
+    def index_by_file(self, file_path, index_as, family_name=None):  # type: (str, IndexType, str) -> Response
+        data = {'index_as': index_as.value}
+        if family_name:
+            data['family_name'] = family_name
+
+        with open(file_path, 'rb') as file_to_upload:
+            file = {'file': (os.path.basename(file_path), file_to_upload)}
+
+            response = self._request(path='/files/index', data=data, files=file, method='POST')
+
+        self._assert_index_reponse_status_code(response)
+
+        return self._get_index_id_from_response(response)
+
+    def get_index_response(self, index_id):  # type: (str) -> Response
+        response = self._request(path='/files/index/{}'.format(index_id), method='GET')
+        response.raise_for_status()
+
+        return response
+
+    def _set_access_token(self, api_key):  # type: (str) -> str
+        if self._access_token is None:
+            response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
+
+            if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
+                raise errors.InvalidApiKey()
+            elif response.status_code != HTTPStatus.OK:
+                response.raise_for_status()
+
+            self._access_token = response.json()['result']
+
+    def _set_session(self):
+        self._session = requests.session()
+        self._set_access_token(self.api_key)
+        self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
+        self._session.headers['User-Agent'] = consts.USER_AGENT
+
     def _param_initialize(self, dynamic_unpacking=None, static_unpacking=None):
-        params = {}
+        data = {}
 
         if dynamic_unpacking is not None:
-            params['dynamic_unpacking'] = dynamic_unpacking
+            data['dynamic_unpacking'] = dynamic_unpacking
         if static_unpacking is not None:
-            params['static_unpacking'] = static_unpacking
+            data['static_unpacking'] = static_unpacking
 
-        return params
+        return data
 
-    def _handle_reponse_status_code(self, response):
+    def _assert_analysis_reponse_status_code(self, response):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError()
         elif response.status_code == HTTPStatus.CONFLICT:
@@ -119,8 +150,17 @@ class IntezerApi(object):
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
 
+    def _assert_index_reponse_status_code(self, response):
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError()
+        elif response.status_code != HTTPStatus.CREATED:
+            raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
+
     def _get_analysis_id_from_response(self, response):
         return response.json()['result_url'].split('/')[2]
+
+    def _get_index_id_from_response(self, response):
+        return response.json()['result_url'].split('/')[3]
 
 
 def get_global_api():  # type: () -> IntezerApi
