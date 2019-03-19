@@ -36,9 +36,9 @@ class IntezerApi(object):
             response = self._session.request(
                 method,
                 self.full_url + path,
+                files=files,
                 data=data or {},
-                headers=headers or {},
-                files=files
+                headers=headers or {}
             )
         else:
             response = self._session.request(
@@ -113,7 +113,7 @@ class IntezerApi(object):
 
         return response
 
-    def _set_access_token(self, api_key):  # type: (str) -> str
+    def _set_access_token(self, api_key):  # type: (str) -> None
         if self._access_token is None:
             response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
 
@@ -134,9 +134,9 @@ class IntezerApi(object):
         data = {}
 
         if dynamic_unpacking is not None:
-            data['dynamic_unpacking'] = dynamic_unpacking
+            data['disable_dynamic_execution'] = not dynamic_unpacking
         if static_unpacking is not None:
-            data['static_unpacking'] = static_unpacking
+            data['disable_static_extraction'] = not static_unpacking
 
         return data
 
