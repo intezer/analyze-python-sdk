@@ -3,6 +3,8 @@ import responses
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.analysis import Analysis
+from intezer_sdk.api import get_global_api
+from intezer_sdk.api import set_global_api
 from tests.unit.base_test import BaseTest
 
 try:
@@ -17,6 +19,14 @@ class AnalysisSpec(BaseTest):
     def setUp(self):
         super(AnalysisSpec, self).setUp()
 
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'access-token'})
+            set_global_api()
+            get_global_api().set_session()
+
     def test_send_analysis_by_sha256_sent_analysis_and_sets_status(self):
         # Arrange
         with responses.RequestsMock() as mock:
@@ -24,10 +34,6 @@ class AnalysisSpec(BaseTest):
                      url=self.full_url + '/analyze-by-hash',
                      status=201,
                      json={'result_url': 'a/sd/asd'})
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
             analysis = Analysis(file_hash='a' * 64)
 
             # Act
@@ -44,10 +50,6 @@ class AnalysisSpec(BaseTest):
                      status=201,
                      json={'result_url': 'a/sd/asd'})
             analysis = Analysis(file_path='a')
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
 
             with patch(self.patch_prop, mock_open(read_data='data')):
                 # Act
@@ -59,10 +61,6 @@ class AnalysisSpec(BaseTest):
     def test_send_analysis_by_file_sends_analysis_with_waits_to_compilation_when_requested(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
@@ -84,10 +82,6 @@ class AnalysisSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
-            mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
                      json={'result_url': 'a/sd/asd'})
@@ -108,10 +102,6 @@ class AnalysisSpec(BaseTest):
     def test_send_analysis_by_file_sent_analysis_with_pulling_and_get_status_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
@@ -142,10 +132,6 @@ class AnalysisSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
-            mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,
                      json={'result_url': 'a/sd/asd'})
@@ -166,10 +152,6 @@ class AnalysisSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
-            mock.add('POST',
                      url=self.full_url + '/analyze-by-hash',
                      status=404)
             analysis = Analysis(file_hash='a' * 64)
@@ -180,10 +162,6 @@ class AnalysisSpec(BaseTest):
     def test_send_analysis_while_running_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze-by-hash',
                      status=201,
@@ -197,10 +175,6 @@ class AnalysisSpec(BaseTest):
     def test_send_analysis_that_running_on_server_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze-by-hash',
                      status=409,
@@ -233,10 +207,6 @@ class AnalysisSpec(BaseTest):
     def test_analysis_check_status_after_analysis_finish_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'testtest'})
             mock.add('POST',
                      url=self.full_url + '/analyze',
                      status=201,

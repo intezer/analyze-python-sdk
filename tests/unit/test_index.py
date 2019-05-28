@@ -2,6 +2,8 @@ import responses
 
 from intezer_sdk import consts
 from intezer_sdk import errors
+from intezer_sdk.api import get_global_api
+from intezer_sdk.api import set_global_api
 from intezer_sdk.index import Index
 from tests.unit.base_test import BaseTest
 
@@ -17,6 +19,14 @@ class IndexSpec(BaseTest):
     def setUp(self):
         super(IndexSpec, self).setUp()
 
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=200,
+                     json={'result': 'access-token'})
+            set_global_api()
+            get_global_api().set_session()
+
     def test_index_malicious_without_family_name_raise_value_error(self):
         # Act + Assert
         with self.assertRaises(ValueError):
@@ -25,10 +35,6 @@ class IndexSpec(BaseTest):
     def test_trusted_index_by_sha256_status_change_to_created(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
             mock.add('POST',
                      url=self.full_url + '/files/{}/index'.format('a'),
                      status=201,
@@ -44,10 +50,6 @@ class IndexSpec(BaseTest):
     def test_failed_index_raise_index_failed(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
             mock.add('POST',
                      url=self.full_url + '/files/{}/index'.format('a'),
                      status=201,
@@ -67,10 +69,6 @@ class IndexSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
-            mock.add('POST',
                      url=self.full_url + '/files/{}/index'.format('a'),
                      status=201,
                      json={'result_url': '/files/index/testindex'})
@@ -86,10 +84,6 @@ class IndexSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
-            mock.add('POST',
                      url=self.full_url + '/files/{}/index'.format('a'),
                      status=404)
             index = Index(sha256='a', index_as=consts.IndexType.TRUSTED)
@@ -101,10 +95,6 @@ class IndexSpec(BaseTest):
     def test_send_index_by_file_status_changed_to_created(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
             mock.add('POST',
                      url=self.full_url + '/files/index',
                      status=201,
@@ -121,10 +111,6 @@ class IndexSpec(BaseTest):
     def test_index_by_sha256_succeeded_status_changed_to_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
             mock.add('POST',
                      url=self.full_url + '/files/{}/index'.format('a'),
                      status=201,
@@ -151,10 +137,6 @@ class IndexSpec(BaseTest):
     def test_index_by_file_succeeded_status_changed_to_finish(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
             mock.add('POST',
                      url=self.full_url + '/files/index',
                      status=201,
@@ -191,10 +173,6 @@ class IndexSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
-            mock.add('POST',
                      url=self.full_url + '/files/index',
                      status=201,
                      json={'result_url': '/files/index/testindex'})
@@ -226,10 +204,6 @@ class IndexSpec(BaseTest):
         with responses.RequestsMock() as mock:
             first_index_name = 'a'
             second_index_name = 'b'
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'accesstoken'})
             mock.add('POST',
                      url=self.full_url + '/files/{}/index'.format(first_index_name),
                      status=201,

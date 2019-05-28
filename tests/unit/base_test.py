@@ -2,7 +2,6 @@ import sys
 import unittest
 
 from intezer_sdk import consts
-from intezer_sdk.api import set_global_api
 
 
 class BaseTest(unittest.TestCase):
@@ -15,5 +14,3 @@ class BaseTest(unittest.TestCase):
             self.patch_prop = '__builtin__.open'
         else:
             self.patch_prop = 'builtins.open'
-
-        set_global_api()
