@@ -1,4 +1,5 @@
 import time
+import typing
 
 from intezer_sdk import consts
 from intezer_sdk import errors
@@ -13,35 +14,38 @@ except ImportError:
 
 class Analysis(object):
     def __init__(self,
-                 file_path=None,
-                 file_hash=None,
-                 dynamic_unpacking=None,
-                 api=None,
-                 static_unpacking=None):  # type: (str, str, bool, IntezerApi, bool) -> None
-        if (file_hash is not None) == (file_path is not None):
-            raise ValueError('Choose between file hash or file path analysis')
+                 file_path: str = None,
+                 file_hash: str = None,
+                 file_stream: typing.BinaryIO = None,
+                 dynamic_unpacking: bool = None,
+                 api: IntezerApi = None,
+                 static_unpacking: bool = None) -> None:
+        if [file_path, file_hash, file_stream].count(None) != 2:
+            raise ValueError('Choose between file hash, file stream or file path analysis')
 
-        self.status = None  # type: consts.AnalysisStatusCode
-        self.analyses_id = None  # type: str
-        self._file_hash = file_hash  # type: str
-        self._dynamic_unpacking = dynamic_unpacking  # type: bool
-        self._static_unpacking = static_unpacking  # type: bool
-        self._file_path = file_path  # type: str
-        self._report = None  # type: dict
-        self._api = api or get_global_api()  # type: IntezerApi
+        self.status = None
+        self.analysis_id = None
+        self._file_hash = file_hash
+        self._dynamic_unpacking = dynamic_unpacking
+        self._static_unpacking = static_unpacking
+        self._file_path = file_path
+        self._file_stream = file_stream
+        self._report = None
+        self._api = api or get_global_api()
 
-    def send(self, wait=False):  # type: (bool) -> None
-        if self.analyses_id:
+    def send(self, wait: bool = False) -> None:
+        if self.analysis_id:
             raise errors.AnalysisHasAlreadyBeenSent()
 
         if self._file_hash:
-            self.analyses_id = self._api.analyze_by_hash(self._file_hash,
+            self.analysis_id = self._api.analyze_by_hash(self._file_hash,
                                                          self._dynamic_unpacking,
                                                          self._static_unpacking)
         else:
-            self.analyses_id = self._api.analyze_by_file(self._file_path,
-                                                         self._dynamic_unpacking,
-                                                         self._static_unpacking)
+            self.analysis_id = self._api.analyze_by_file(self._file_path,
+                                                         self._file_stream,
+                                                         dynamic_unpacking=self._dynamic_unpacking,
+                                                         static_unpacking=self._static_unpacking)
 
         self.status = consts.AnalysisStatusCode.CREATED
 
@@ -60,7 +64,7 @@ class Analysis(object):
         if not self._is_analysis_running():
             raise errors.IntezerError('Analysis dont running')
 
-        response = self._api.get_analysis_response(self.analyses_id)
+        response = self._api.get_analysis_response(self.analysis_id)
         if response.status_code == HTTPStatus.OK:
             self._report = response.json()['result']
             self.status = consts.AnalysisStatusCode.FINISH
@@ -79,5 +83,26 @@ class Analysis(object):
 
         return self._report
 
+    def set_report(self, report: dict):
+        if not report:
+            raise ValueError('Report can not be None')
+
+        self.analysis_id = report['analysis_id']
+        self._report = report
+        self.status = consts.AnalysisStatusCode.FINISH
+
     def _is_analysis_running(self):
         return self.status in (consts.AnalysisStatusCode.CREATED, consts.AnalysisStatusCode.IN_PROGRESS)
+
+
+def get_latest_analysis(file_hash: str, api: IntezerApi = None) -> typing.Optional[Analysis]:
+    api = api or get_global_api()
+    analysis_report = api.get_latest_analysis(file_hash)
+
+    if not analysis_report:
+        return None
+
+    analysis = Analysis(file_hash=file_hash, api=api)
+    analysis.set_report(analysis_report)
+
+    return analysis

@@ -1,9 +1,13 @@
 import os
+import typing
+from typing import Optional
 
 import requests
+from requests import Response
 
 from intezer_sdk import consts
 from intezer_sdk import errors
+from intezer_sdk.utilities import dummy_context_manager
 
 try:
     from http import HTTPStatus
@@ -63,19 +67,39 @@ class IntezerApi(object):
         return self._get_analysis_id_from_response(response)
 
     def analyze_by_file(self,
-                        file_path,
-                        dynamic_unpacking=None,
-                        static_unpacking=None):  # type: (str,bool,bool) -> str
+                        file_path: str = None,
+                        file_stream: typing.BinaryIO = None,
+                        dynamic_unpacking: bool = None,
+                        static_unpacking: bool = None) -> str:
+        if file_path:
+            file_context_manager = open(file_path, 'rb')
+            file_name = os.path.basename(file_path)
+        elif file_stream:
+            file_context_manager = dummy_context_manager(file_stream)
+            file_name = 'file'
+        else:
+            raise ValueError('File path and file stream are mandatory')
+
         data = self._param_initialize(dynamic_unpacking, static_unpacking)
 
-        with open(file_path, 'rb') as file_to_upload:
-            file = {'file': (os.path.basename(file_path), file_to_upload)}
+        with file_context_manager as file_to_upload:
+            file = {'file': (file_name, file_to_upload)}
 
             response = self._request(path='/analyze', files=file, data=data, method='POST')
 
         self._assert_analysis_reponse_status_code(response)
 
         return self._get_analysis_id_from_response(response)
+
+    def get_latest_analysis(self, file_hash: str) -> Optional[dict]:
+        response = self._request(path=f'/files/{file_hash}', method='GET')
+
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+
+        response.raise_for_status()
+
+        return response.json()['result']
 
     def get_analysis_response(self, analyses_id):  # type: (str) -> Response
         response = self._request(path='/analyses/{}'.format(analyses_id), method='GET')
