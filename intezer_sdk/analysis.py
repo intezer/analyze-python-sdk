@@ -18,8 +18,8 @@ class Analysis(object):
                  file_hash: str = None,
                  file_stream: typing.BinaryIO = None,
                  dynamic_unpacking: bool = None,
-                 api: IntezerApi = None,
-                 static_unpacking: bool = None) -> None:
+                 static_unpacking: bool = None,
+                 api: IntezerApi = None) -> None:
         if [file_path, file_hash, file_stream].count(None) != 2:
             raise ValueError('Choose between file hash, file stream or file path analysis')
 

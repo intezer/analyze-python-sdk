@@ -7,7 +7,6 @@ from requests import Response
 
 from intezer_sdk import consts
 from intezer_sdk import errors
-from intezer_sdk.utilities import dummy_context_manager
 
 try:
     from http import HTTPStatus
@@ -66,30 +65,27 @@ class IntezerApi(object):
 
         return self._get_analysis_id_from_response(response)
 
+    def _analyze_file_stream(self, file_stream: typing.BinaryIO, file_name: str, options: dict) -> str:
+        file = {'file': (file_name, file_stream)}
+
+        response = self._request(path='/analyze', files=file, data=options, method='POST')
+
+        self._assert_analysis_reponse_status_code(response)
+
+        return self._get_analysis_id_from_response(response)
+
     def analyze_by_file(self,
                         file_path: str = None,
                         file_stream: typing.BinaryIO = None,
                         dynamic_unpacking: bool = None,
                         static_unpacking: bool = None) -> str:
-        if file_path:
-            file_context_manager = open(file_path, 'rb')
-            file_name = os.path.basename(file_path)
-        elif file_stream:
-            file_context_manager = dummy_context_manager(file_stream)
-            file_name = 'file'
-        else:
-            raise ValueError('File path and file stream are mandatory')
+        options = self._param_initialize(dynamic_unpacking, static_unpacking)
 
-        data = self._param_initialize(dynamic_unpacking, static_unpacking)
+        if file_stream:
+            return self._analyze_file_stream(file_stream, 'file', options)
 
-        with file_context_manager as file_to_upload:
-            file = {'file': (file_name, file_to_upload)}
-
-            response = self._request(path='/analyze', files=file, data=data, method='POST')
-
-        self._assert_analysis_reponse_status_code(response)
-
-        return self._get_analysis_id_from_response(response)
+        with open(file_path, 'rb') as file_to_upload:
+            return self._analyze_file_stream(file_to_upload, os.path.basename(file_path), options)
 
     def get_latest_analysis(self, file_hash: str) -> Optional[dict]:
         response = self._request(path=f'/files/{file_hash}', method='GET')
