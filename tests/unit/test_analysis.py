@@ -3,6 +3,7 @@ import responses
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.analysis import Analysis
+from intezer_sdk.analysis import get_latest_analysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.api import set_global_api
 from tests.unit.base_test import BaseTest
@@ -54,6 +55,21 @@ class AnalysisSpec(BaseTest):
             with patch(self.patch_prop, mock_open(read_data='data')):
                 # Act
                 analysis.send()
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
+
+    def test_send_analysis_by_file_with_file_stream_sent_analysis(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            analysis = Analysis(file_stream=__file__)
+
+            # Act
+            analysis.send()
 
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
@@ -184,10 +200,25 @@ class AnalysisSpec(BaseTest):
             with self.assertRaises(errors.AnalysisIsAlreadyRunning):
                 analysis.send()
 
+    def test_analysis_raise_value_error_when_no_file_option_given(self):
+        # Assert
+        with self.assertRaises(ValueError):
+            Analysis()
+
     def test_analysis_by_sha256_and_file_sent_analysis_and_raise_value_error(self):
         # Assert
         with self.assertRaises(ValueError):
             Analysis(file_hash='a', file_path='/test/test')
+
+    def test_analysis_by_sha256_raise_value_error_when_file_path_and_file_stream_given(self):
+        # Assert
+        with self.assertRaises(ValueError):
+            Analysis(file_stream=__file__, file_path='/test/test')
+
+    def test_analysis_by_sha256_raise_value_error_when_sha256_file_path_and_file_stream_given(self):
+        # Assert
+        with self.assertRaises(ValueError):
+            Analysis(file_hash='a', file_stream=__file__, file_path='/test/test')
 
     def test_analysis_get_report_for_not_finish_analyze_raise_error(self):
         # Arrange
@@ -224,3 +255,35 @@ class AnalysisSpec(BaseTest):
             # Assert
             with self.assertRaises(errors.IntezerError):
                 analysis.check_status()
+
+    def test_get_latest_analysis_none_when_no_analysis_found(self):
+        # Arrange
+        file_hash = 'hash'
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=404)
+
+            # Act
+            analysis = get_latest_analysis(file_hash)
+
+        self.assertIsNone(analysis)
+
+    def test_get_latest_analysis_analysis_object_when_latest_analysis_found(self):
+        # Arrange
+        file_hash = 'hash'
+        analysis_id = 'analysis_id'
+        analysis_report = {'analysis_id': analysis_id}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/files/{file_hash}',
+                     status=200,
+                     json={'result': analysis_report})
+
+            # Act
+            analysis = get_latest_analysis(file_hash)
+
+        self.assertIsNotNone(analysis)
+        self.assertEqual(analysis_id, analysis.analysis_id)
+        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
+        self.assertDictEqual(analysis_report, analysis.result())
