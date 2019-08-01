@@ -78,14 +78,15 @@ class IntezerApi(object):
                         file_path: str = None,
                         file_stream: typing.BinaryIO = None,
                         dynamic_unpacking: bool = None,
-                        static_unpacking: bool = None) -> str:
+                        static_unpacking: bool = None,
+                        file_name: str = None) -> str:
         options = self._param_initialize(dynamic_unpacking, static_unpacking)
 
         if file_stream:
-            return self._analyze_file_stream(file_stream, 'file', options)
+            return self._analyze_file_stream(file_stream, file_name, options)
 
         with open(file_path, 'rb') as file_to_upload:
-            return self._analyze_file_stream(file_to_upload, os.path.basename(file_path), options)
+            return self._analyze_file_stream(file_to_upload, file_name or os.path.basename(file_path), options)
 
     def get_latest_analysis(self, file_hash: str) -> Optional[dict]:
         response = self._request(path=f'/files/{file_hash}', method='GET')
