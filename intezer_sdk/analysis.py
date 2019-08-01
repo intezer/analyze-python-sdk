@@ -19,7 +19,8 @@ class Analysis(object):
                  file_stream: typing.BinaryIO = None,
                  dynamic_unpacking: bool = None,
                  static_unpacking: bool = None,
-                 api: IntezerApi = None) -> None:
+                 api: IntezerApi = None,
+                 file_name: str = None) -> None:
         if [file_path, file_hash, file_stream].count(None) != 2:
             raise ValueError('Choose between file hash, file stream or file path analysis')
 
@@ -30,6 +31,7 @@ class Analysis(object):
         self._static_unpacking = static_unpacking
         self._file_path = file_path
         self._file_stream = file_stream
+        self._file_name = file_name
         self._report = None
         self._api = api or get_global_api()
 
@@ -45,7 +47,8 @@ class Analysis(object):
             self.analysis_id = self._api.analyze_by_file(self._file_path,
                                                          self._file_stream,
                                                          dynamic_unpacking=self._dynamic_unpacking,
-                                                         static_unpacking=self._static_unpacking)
+                                                         static_unpacking=self._static_unpacking,
+                                                         file_name=self._file_name)
 
         self.status = consts.AnalysisStatusCode.CREATED
 
