@@ -1,5 +1,3 @@
-requests==2.21.0
-enum34==1.1.6; python_version < '3.0'
-responses==0.10.5
+requests==2.22.0
+responses==0.10.6
 pytest==3.6.4
-mock==2.0.0

@@ -1,15 +1,11 @@
 import time
 import typing
+from http import HTTPStatus
 
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-
-try:
-    from http import HTTPStatus
-except ImportError:
-    import httplib as HTTPStatus
 
 
 class Analysis(object):
