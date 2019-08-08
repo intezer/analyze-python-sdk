@@ -18,8 +18,7 @@ with open(rel('intezer_sdk', '__init__.py'), 'r') as f:
         raise RuntimeError('Version marker not found.')
 
 install_requires = [
-    'requests >= 2.21.0,<3',
-    'enum34==1.1.6 ; python_version < "3.0"'
+    'requests >= 2.22.0,<3'
 ]
 setup(
     name='intezer_sdk',
@@ -33,9 +32,8 @@ setup(
     install_requires=install_requires,
     keywords='intezer',
     test_requires=[
-        'responses == 0.10.5',
-        'pytest == 3.6.4',
-        'mock == 2.0.0'
+        'responses == 0.10.6',
+        'pytest == 3.6.4'
     ],
     python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
     classifiers=[

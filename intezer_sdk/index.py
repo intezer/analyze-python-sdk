@@ -1,38 +1,34 @@
 import time
+from http import HTTPStatus
 
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 
-try:
-    from http import HTTPStatus
-except ImportError:
-    import httplib as HTTPStatus
-
 
 class Index(object):
     def __init__(self,
-                 index_as,
-                 file_path=None,
-                 sha256=None,
-                 api=None,
-                 family_name=None):  # type: (str, str, IntezerApi, consts.IndexType, str) -> None
+                 index_as: consts.IndexType,
+                 file_path: str = None,
+                 sha256: str = None,
+                 api: IntezerApi = None,
+                 family_name: str = None):
         if (sha256 is not None) == (file_path is not None):
             raise ValueError('Choose between sha256 or file indexing')
 
         if index_as == consts.IndexType.MALICIOUS and family_name is None:
             raise ValueError('family_name is mandatory if the index type is malicious')
 
-        self.status = None  # type: consts.IndexStatusCode
-        self.index_id = None  # type: str
-        self._sha256 = sha256  # type: str
-        self._file_path = file_path  # type: str
-        self._api = api or get_global_api()  # type: IntezerApi
-        self._index_as = index_as  # type: consts.IndexType
-        self._family_name = family_name  # type: str
+        self.status = None
+        self.index_id = None
+        self._sha256 = sha256
+        self._file_path = file_path
+        self._api = api or get_global_api()
+        self._index_as = index_as
+        self._family_name = family_name
 
-    def send(self, wait=False):  # type: (bool) -> None
+    def send(self, wait: bool = False):
         if self.index_id:
             raise errors.IndexHasAlreadyBeenSent()
 

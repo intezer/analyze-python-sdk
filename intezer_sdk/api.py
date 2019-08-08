@@ -1,5 +1,6 @@
 import os
 import typing
+from http import HTTPStatus
 from typing import Optional
 
 import requests
@@ -7,31 +8,19 @@ from requests import Response
 
 from intezer_sdk import consts
 from intezer_sdk import errors
-
-try:
-    from http import HTTPStatus
-except ImportError:
-    import httplib as HTTPStatus
+from intezer_sdk.consts import IndexType
 
 _global_api = None
 
 
 class IntezerApi(object):
-    def __init__(self,
-                 api_version=None,
-                 api_key=None,
-                 base_url=None):  # type: (str, str,str) -> None
+    def __init__(self, api_version: str = None, api_key: str = None, base_url: str = None):
         self.full_url = base_url + api_version
         self.api_key = api_key
         self._access_token = None
         self._session = None
 
-    def _request(self,
-                 method,
-                 path,
-                 data=None,
-                 headers=None,
-                 files=None):  # type: (str, str, dict, dict, dict) -> Response
+    def _request(self, method: str, path: str, data: dict = None, headers: dict = None, files: dict = None) -> Response:
         if not self._session:
             self.set_session()
 
@@ -53,10 +42,7 @@ class IntezerApi(object):
 
         return response
 
-    def analyze_by_hash(self,
-                        file_hash,
-                        dynamic_unpacking=None,
-                        static_unpacking=None):  # type: (str,bool,bool) -> str
+    def analyze_by_hash(self, file_hash: str, dynamic_unpacking: dict = None, static_unpacking: dict = None) -> str:
         data = self._param_initialize(dynamic_unpacking, static_unpacking)
 
         data['hash'] = file_hash
@@ -89,7 +75,7 @@ class IntezerApi(object):
             return self._analyze_file_stream(file_to_upload, file_name or os.path.basename(file_path), options)
 
     def get_latest_analysis(self, file_hash: str) -> Optional[dict]:
-        response = self._request(path=f'/files/{file_hash}', method='GET')
+        response = self._request(path='/files/{}'.format(file_hash), method='GET')
 
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -98,13 +84,13 @@ class IntezerApi(object):
 
         return response.json()['result']
 
-    def get_analysis_response(self, analyses_id):  # type: (str) -> Response
+    def get_analysis_response(self, analyses_id) -> Response:
         response = self._request(path='/analyses/{}'.format(analyses_id), method='GET')
         response.raise_for_status()
 
         return response
 
-    def index_by_sha256(self, sha256, index_as, family_name=None):  # type: (str, IndexType, str) -> Response
+    def index_by_sha256(self, sha256: str, index_as: IndexType, family_name: str = None) -> Response:
         data = {'index_as': index_as.value}
         if family_name:
             data['family_name'] = family_name
@@ -114,7 +100,7 @@ class IntezerApi(object):
 
         return self._get_index_id_from_response(response)
 
-    def index_by_file(self, file_path, index_as, family_name=None):  # type: (str, IndexType, str) -> Response
+    def index_by_file(self, file_path: str, index_as: IndexType, family_name: str = None) -> Response:
         data = {'index_as': index_as.value}
         if family_name:
             data['family_name'] = family_name
@@ -128,13 +114,13 @@ class IntezerApi(object):
 
         return self._get_index_id_from_response(response)
 
-    def get_index_response(self, index_id):  # type: (str) -> Response
+    def get_index_response(self, index_id: str) -> Response:
         response = self._request(path='/files/index/{}'.format(index_id), method='GET')
         response.raise_for_status()
 
         return response
 
-    def _set_access_token(self, api_key):  # type: (str) -> None
+    def _set_access_token(self, api_key: str):
         if self._access_token is None:
             response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
 
@@ -151,7 +137,7 @@ class IntezerApi(object):
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
-    def _param_initialize(self, dynamic_unpacking=None, static_unpacking=None):
+    def _param_initialize(self, dynamic_unpacking: bool = None, static_unpacking: bool = None):
         data = {}
 
         if dynamic_unpacking is not None:
@@ -161,7 +147,7 @@ class IntezerApi(object):
 
         return data
 
-    def _assert_analysis_reponse_status_code(self, response):
+    def _assert_analysis_reponse_status_code(self, response: Response):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError()
         elif response.status_code == HTTPStatus.CONFLICT:
@@ -171,20 +157,20 @@ class IntezerApi(object):
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
 
-    def _assert_index_reponse_status_code(self, response):
+    def _assert_index_reponse_status_code(self, response: Response):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError()
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
 
-    def _get_analysis_id_from_response(self, response):
+    def _get_analysis_id_from_response(self, response: Response):
         return response.json()['result_url'].split('/')[2]
 
-    def _get_index_id_from_response(self, response):
+    def _get_index_id_from_response(self, response: Response):
         return response.json()['result_url'].split('/')[3]
 
 
-def get_global_api():  # type: () -> IntezerApi
+def get_global_api() -> IntezerApi:
     global _global_api
 
     if not _global_api:
@@ -193,7 +179,7 @@ def get_global_api():  # type: () -> IntezerApi
     return _global_api
 
 
-def set_global_api(api_key=None, api_version=None, base_url=None):
+def set_global_api(api_key: str = None, api_version: str = None, base_url: str = None):
     global _global_api
-    api_key = os.environ.get('INTEZER_ANALYZE_API_KEY') or api_key
+    api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
     _global_api = IntezerApi(api_version or consts.API_VERSION, api_key, base_url or consts.BASE_URL)

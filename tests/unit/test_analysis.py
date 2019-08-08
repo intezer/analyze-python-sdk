@@ -1,3 +1,6 @@
+from unittest.mock import mock_open
+from unittest.mock import patch
+
 import responses
 
 from intezer_sdk import consts
@@ -7,13 +10,6 @@ from intezer_sdk.analysis import get_latest_analysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.api import set_global_api
 from tests.unit.base_test import BaseTest
-
-try:
-    from unittest.mock import mock_open
-    from unittest.mock import patch
-except ImportError:
-    from mock import mock_open
-    from mock import patch
 
 
 class AnalysisSpec(BaseTest):
@@ -261,7 +257,7 @@ class AnalysisSpec(BaseTest):
         file_hash = 'hash'
 
         with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=404)
+            mock.add('GET', url='{}/files/{}'.format(self.full_url, file_hash), status=404)
 
             # Act
             analysis = get_latest_analysis(file_hash)
@@ -276,7 +272,7 @@ class AnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url=f'{self.full_url}/files/{file_hash}',
+                     url='{}/files/{}'.format(self.full_url, file_hash),
                      status=200,
                      json={'result': analysis_report})
 
