@@ -29,6 +29,11 @@ class IndexType(Enum):
             raise NotImplementedError
 
 
+class CodeItemType(Enum):
+    FILE = 'file'
+    MEMORY_MODULE = 'memory_module'
+
+
 BASE_URL = 'https://analyze.intezer.com/api/'
 API_VERSION = 'v2-0'
 USER_AGENT = 'intezer-python-sdk-{}'.format(__version__)

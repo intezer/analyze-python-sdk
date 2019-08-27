@@ -7,6 +7,7 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
+from intezer_sdk.consts import CodeItemType
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class Analysis(object):
         if file_hash and code_item_type:
             logger.warning('Analyze by hash ignores code item type')
 
-        if code_item_type and code_item_type not in ['file', 'memory_module']:
+        if code_item_type and code_item_type not in [c.value for c in CodeItemType]:
             raise ValueError('Invalid code item type, possible code item types are: file, memory module')
 
         self.status = None
