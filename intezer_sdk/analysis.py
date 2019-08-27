@@ -1,3 +1,4 @@
+import logging
 import time
 import typing
 from http import HTTPStatus
@@ -6,6 +7,9 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
+from intezer_sdk.consts import CodeItemType
+
+logger = logging.getLogger(__name__)
 
 
 class Analysis(object):
@@ -16,9 +20,16 @@ class Analysis(object):
                  dynamic_unpacking: bool = None,
                  static_unpacking: bool = None,
                  api: IntezerApi = None,
-                 file_name: str = None) -> None:
+                 file_name: str = None,
+                 code_item_type: str = None) -> None:
         if [file_path, file_hash, file_stream].count(None) != 2:
             raise ValueError('Choose between file hash, file stream or file path analysis')
+
+        if file_hash and code_item_type:
+            logger.warning('Analyze by hash ignores code item type')
+
+        if code_item_type and code_item_type not in [c.value for c in CodeItemType]:
+            raise ValueError('Invalid code item type, possible code item types are: file, memory module')
 
         self.status = None
         self.analysis_id = None
@@ -28,6 +39,7 @@ class Analysis(object):
         self._file_path = file_path
         self._file_stream = file_stream
         self._file_name = file_name
+        self._code_item_type = code_item_type
         self._report = None
         self._api = api or get_global_api()
 
@@ -44,7 +56,8 @@ class Analysis(object):
                                                          self._file_stream,
                                                          dynamic_unpacking=self._dynamic_unpacking,
                                                          static_unpacking=self._static_unpacking,
-                                                         file_name=self._file_name)
+                                                         file_name=self._file_name,
+                                                         code_item_type=self._code_item_type)
 
         self.status = consts.AnalysisStatusCode.CREATED
 

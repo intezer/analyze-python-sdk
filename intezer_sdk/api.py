@@ -65,8 +65,9 @@ class IntezerApi(object):
                         file_stream: typing.BinaryIO = None,
                         dynamic_unpacking: bool = None,
                         static_unpacking: bool = None,
-                        file_name: str = None) -> str:
-        options = self._param_initialize(dynamic_unpacking, static_unpacking)
+                        file_name: str = None,
+                        code_item_type: str = None) -> str:
+        options = self._param_initialize(dynamic_unpacking, static_unpacking, code_item_type)
 
         if file_stream:
             return self._analyze_file_stream(file_stream, file_name, options)
@@ -137,13 +138,18 @@ class IntezerApi(object):
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
-    def _param_initialize(self, dynamic_unpacking: bool = None, static_unpacking: bool = None):
+    @staticmethod
+    def _param_initialize(dynamic_unpacking: bool = None,
+                          static_unpacking: bool = None,
+                          code_item_type: str = None):
         data = {}
 
         if dynamic_unpacking is not None:
             data['disable_dynamic_execution'] = not dynamic_unpacking
         if static_unpacking is not None:
             data['disable_static_extraction'] = not static_unpacking
+        if code_item_type:
+            data['code_item_type'] = code_item_type
 
         return data
 
