@@ -55,6 +55,28 @@ class AnalysisSpec(BaseTest):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
 
+    def test_analysis_by_file_wrong_code_item_type(self):
+        # Act + Assert
+        with self.assertRaises(ValueError):
+            Analysis(file_path='a', code_item_type='anderson_paak')
+
+    def test_analysis_by_file_correct_code_item_type(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            analysis = Analysis(file_path='a',
+                                code_item_type='memory_module')
+
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send()
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
+
     def test_send_analysis_by_file_with_file_stream_sent_analysis(self):
         # Arrange
         with responses.RequestsMock() as mock:
