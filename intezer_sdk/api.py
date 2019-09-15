@@ -42,12 +42,12 @@ class IntezerApi(object):
 
         return response
 
-    def analyze_by_hash(self, file_hash: str, dynamic_unpacking: dict = None, static_unpacking: dict = None) -> str:
+    def analyze_by_hash(self, file_hash: str, dynamic_unpacking: bool = None, static_unpacking: bool = None) -> str:
         data = self._param_initialize(dynamic_unpacking, static_unpacking)
 
         data['hash'] = file_hash
         response = self._request(path='/analyze-by-hash', data=data, method='POST')
-        self._assert_analysis_reponse_status_code(response)
+        self._assert_analysis_response_status_code(response)
 
         return self._get_analysis_id_from_response(response)
 
@@ -56,7 +56,7 @@ class IntezerApi(object):
 
         response = self._request(path='/analyze', files=file, data=options, method='POST')
 
-        self._assert_analysis_reponse_status_code(response)
+        self._assert_analysis_response_status_code(response)
 
         return self._get_analysis_id_from_response(response)
 
@@ -97,7 +97,7 @@ class IntezerApi(object):
             data['family_name'] = family_name
 
         response = self._request(path='/files/{}/index'.format(sha256), data=data, method='POST')
-        self._assert_index_reponse_status_code(response)
+        self._assert_index_response_status_code(response)
 
         return self._get_index_id_from_response(response)
 
@@ -111,7 +111,7 @@ class IntezerApi(object):
 
             response = self._request(path='/files/index', data=data, files=file, method='POST')
 
-        self._assert_index_reponse_status_code(response)
+        self._assert_index_response_status_code(response)
 
         return self._get_index_id_from_response(response)
 
@@ -139,9 +139,7 @@ class IntezerApi(object):
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
     @staticmethod
-    def _param_initialize(dynamic_unpacking: bool = None,
-                          static_unpacking: bool = None,
-                          code_item_type: str = None):
+    def _param_initialize(dynamic_unpacking: bool = None, static_unpacking: bool = None, code_item_type: str = None):
         data = {}
 
         if dynamic_unpacking is not None:
@@ -153,7 +151,8 @@ class IntezerApi(object):
 
         return data
 
-    def _assert_analysis_reponse_status_code(self, response: Response):
+    @staticmethod
+    def _assert_analysis_response_status_code(response: Response):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError()
         elif response.status_code == HTTPStatus.CONFLICT:
@@ -163,16 +162,19 @@ class IntezerApi(object):
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
 
-    def _assert_index_reponse_status_code(self, response: Response):
+    @staticmethod
+    def _assert_index_response_status_code(response: Response):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError()
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
 
-    def _get_analysis_id_from_response(self, response: Response):
+    @staticmethod
+    def _get_analysis_id_from_response(response: Response):
         return response.json()['result_url'].split('/')[2]
 
-    def _get_index_id_from_response(self, response: Response):
+    @staticmethod
+    def _get_index_id_from_response(response: Response):
         return response.json()['result_url'].split('/')[3]
 
 
