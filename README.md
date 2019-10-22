@@ -1,9 +1,11 @@
 
 # Intezer SDK
 
-Basic SDK for Intezer Analyze API 2.0
+Basic SDK for Intezer Analyze API 2.0 
 
-Currently the following options are available:
+[View full API documentation](https://analyze.intezer.com/api/docs/documentation) (Notice - You must be logged in to Intezer Analyze to access the documentation)
+
+Currently the following options are available in the SDK:
 
 - Analyze by file
 - Analyze by SHA256
