@@ -182,6 +182,33 @@ class AnalysisSpec(BaseTest):
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
         self.assertEqual(analysis.result(), 'report')
 
+    def test_send_analysis_by_file_with_disable_unpacking(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            analysis = Analysis(file_path='a',
+                                disable_dynamic_unpacking=True,
+                                disable_static_unpacking=True)
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+
+            # Assert
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+            self.assertEqual(analysis.result(), 'report')
+            request_body = mock.calls[0].request.body.decode()
+            self.assertTrue('Content-Disposition: form-data; name="disable_static_extraction"\r\n\r\nTrue'
+                            in request_body)
+            self.assertTrue('Content-Disposition: form-data; name="disable_dynamic_execution"\r\n\r\nTrue'
+                            in request_body)
+
     def test_send_analysis_by_sha256_that_dont_exist_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:

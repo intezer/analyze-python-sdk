@@ -42,8 +42,11 @@ class IntezerApi(object):
 
         return response
 
-    def analyze_by_hash(self, file_hash: str, dynamic_unpacking: bool = None, static_unpacking: bool = None) -> str:
-        data = self._param_initialize(dynamic_unpacking, static_unpacking)
+    def analyze_by_hash(self,
+                        file_hash: str,
+                        disable_dynamic_unpacking: bool = None,
+                        disable_static_unpacking: bool = None) -> str:
+        data = self._param_initialize(disable_dynamic_unpacking, disable_static_unpacking)
 
         data['hash'] = file_hash
         response = self._request(path='/analyze-by-hash', data=data, method='POST')
@@ -63,11 +66,11 @@ class IntezerApi(object):
     def analyze_by_file(self,
                         file_path: str = None,
                         file_stream: typing.BinaryIO = None,
-                        dynamic_unpacking: bool = None,
-                        static_unpacking: bool = None,
+                        disable_dynamic_unpacking: bool = None,
+                        disable_static_unpacking: bool = None,
                         file_name: str = None,
                         code_item_type: str = None) -> str:
-        options = self._param_initialize(dynamic_unpacking, static_unpacking, code_item_type)
+        options = self._param_initialize(disable_dynamic_unpacking, disable_static_unpacking, code_item_type)
 
         if file_stream:
             return self._analyze_file_stream(file_stream, file_name, options)
@@ -139,13 +142,15 @@ class IntezerApi(object):
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
     @staticmethod
-    def _param_initialize(dynamic_unpacking: bool = None, static_unpacking: bool = None, code_item_type: str = None):
+    def _param_initialize(disable_dynamic_unpacking: bool = None,
+                          disable_static_unpacking: bool = None,
+                          code_item_type: str = None):
         data = {}
 
-        if dynamic_unpacking is not None:
-            data['disable_dynamic_execution'] = not dynamic_unpacking
-        if static_unpacking is not None:
-            data['disable_static_extraction'] = not static_unpacking
+        if disable_dynamic_unpacking:
+            data['disable_dynamic_execution'] = disable_dynamic_unpacking
+        if disable_static_unpacking:
+            data['disable_static_extraction'] = disable_static_unpacking
         if code_item_type:
             data['code_item_type'] = code_item_type
 

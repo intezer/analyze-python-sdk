@@ -17,8 +17,8 @@ class Analysis(object):
                  file_path: str = None,
                  file_hash: str = None,
                  file_stream: typing.BinaryIO = None,
-                 dynamic_unpacking: bool = None,
-                 static_unpacking: bool = None,
+                 disable_dynamic_unpacking: bool = False,
+                 disable_static_unpacking: bool = False,
                  api: IntezerApi = None,
                  file_name: str = None,
                  code_item_type: str = None) -> None:
@@ -34,8 +34,8 @@ class Analysis(object):
         self.status = None
         self.analysis_id = None
         self._file_hash = file_hash
-        self._dynamic_unpacking = dynamic_unpacking
-        self._static_unpacking = static_unpacking
+        self._disable_dynamic_unpacking = disable_dynamic_unpacking
+        self._disable_static_unpacking = disable_static_unpacking
         self._file_path = file_path
         self._file_stream = file_stream
         self._file_name = file_name
@@ -49,13 +49,13 @@ class Analysis(object):
 
         if self._file_hash:
             self.analysis_id = self._api.analyze_by_hash(self._file_hash,
-                                                         self._dynamic_unpacking,
-                                                         self._static_unpacking)
+                                                         self._disable_dynamic_unpacking,
+                                                         self._disable_static_unpacking)
         else:
             self.analysis_id = self._api.analyze_by_file(self._file_path,
                                                          self._file_stream,
-                                                         dynamic_unpacking=self._dynamic_unpacking,
-                                                         static_unpacking=self._static_unpacking,
+                                                         disable_dynamic_unpacking=self._disable_dynamic_unpacking,
+                                                         disable_static_unpacking=self._disable_static_unpacking,
                                                          file_name=self._file_name,
                                                          code_item_type=self._code_item_type)
 
