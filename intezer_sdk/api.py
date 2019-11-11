@@ -147,9 +147,9 @@ class IntezerApi(object):
                           code_item_type: str = None):
         data = {}
 
-        if disable_dynamic_unpacking:
+        if disable_dynamic_unpacking is not None:
             data['disable_dynamic_execution'] = disable_dynamic_unpacking
-        if disable_static_unpacking:
+        if disable_static_unpacking is not None:
             data['disable_static_extraction'] = disable_static_unpacking
         if code_item_type:
             data['code_item_type'] = code_item_type

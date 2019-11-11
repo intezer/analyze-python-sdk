@@ -17,8 +17,8 @@ class Analysis(object):
                  file_path: str = None,
                  file_hash: str = None,
                  file_stream: typing.BinaryIO = None,
-                 disable_dynamic_unpacking: bool = False,
-                 disable_static_unpacking: bool = False,
+                 disable_dynamic_unpacking: bool = None,
+                 disable_static_unpacking: bool = None,
                  api: IntezerApi = None,
                  file_name: str = None,
                  code_item_type: str = None) -> None:
