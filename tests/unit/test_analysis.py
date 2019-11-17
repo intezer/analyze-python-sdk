@@ -1,6 +1,7 @@
 from unittest.mock import mock_open
 from unittest.mock import patch
 
+import json
 import responses
 
 from intezer_sdk import consts
@@ -10,6 +11,11 @@ from intezer_sdk.analysis import get_latest_analysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.api import set_global_api
 from tests.unit.base_test import BaseTest
+
+try:
+    from http import HTTPStatus
+except ImportError:
+    import httplib as HTTPStatus
 
 
 class AnalysisSpec(BaseTest):
@@ -219,6 +225,48 @@ class AnalysisSpec(BaseTest):
             # Act + Assert
             with self.assertRaises(errors.HashDoesNotExistError):
                 analysis.send()
+
+    def test_send_analysis_by_sha256_with_expired_jwt_token_gets_new_token(self):
+        # Arrange
+        analysis = Analysis(file_hash='a' * 64)
+
+        # Analysis attempt will initiate an access-token refresh by getting UNAUTHORIZED 401
+        with responses.RequestsMock() as mock:
+            def request_callback(request):
+                if request.headers['Authorization'] == 'Bearer newer-access-token':
+                    return (HTTPStatus.CREATED, {}, json.dumps({'result_url': 'https://analyze.intezer.com/test-url'}))
+                if request.headers['Authorization'] == 'Bearer access-token':
+                    return (HTTPStatus.UNAUTHORIZED, {}, json.dumps({}))
+                # Fail test completley is unexpected access token received
+                return (HTTPStatus.SERVICE_UNAVAILABLE, {}, json.dumps({}))
+
+            mock.add_callback('POST', url=self.full_url + '/analyze-by-hash', callback=request_callback)
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=HTTPStatus.OK,
+                     json={'result': 'newer-access-token'})
+
+            # Act & Assert
+            analysis.send()
+            self.assertEqual(3, len(mock.calls)) # analyze -> refresh access_token -> analyze retry
+
+    def test_send_analysis_by_sha256_with_expired_jwt_token_doesnt_loop_indefinitley(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST', url=self.full_url + '/analyze-by-hash', status=HTTPStatus.UNAUTHORIZED)
+            mock.add('POST',
+                     url=self.full_url + '/get-access-token',
+                     status=HTTPStatus.OK,
+                     json={'result': 'newer-access-token'})
+
+            analysis = Analysis(file_hash='a' * 64)
+
+            # Act & Assert
+            with self.assertRaises(errors.IntezerError):
+                analysis.send()
+
+            # analyze -> get_access token -> analyze -> 401Exception
+            self.assertEqual(3, len(mock.calls))
 
     def test_send_analysis_while_running_raise_error(self):
         # Arrange
