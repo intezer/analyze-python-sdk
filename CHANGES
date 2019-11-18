@@ -1,3 +1,7 @@
+1.1
+------
+ - In Analysis: Refresh JWT access token in case of expiration
+
 1.0
 ------
  - In Analysis: Change dynamic_unpacking and static_unpacking to disable_dynamic_unpacking and disable_static_unpacking
