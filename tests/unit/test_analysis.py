@@ -1,7 +1,9 @@
+import json
+from http import HTTPStatus
+
 from unittest.mock import mock_open
 from unittest.mock import patch
 
-import json
 import responses
 
 from intezer_sdk import consts
@@ -11,11 +13,6 @@ from intezer_sdk.analysis import get_latest_analysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.api import set_global_api
 from tests.unit.base_test import BaseTest
-
-try:
-    from http import HTTPStatus
-except ImportError:
-    import httplib as HTTPStatus
 
 
 class AnalysisSpec(BaseTest):
