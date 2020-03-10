@@ -1,3 +1,8 @@
+1.1.1
+------
+ - Add support for python 3.8
+ - Retry https connection errors
+
 1.1
 ------
  - In Analysis: Refresh JWT access token in case of expiration
