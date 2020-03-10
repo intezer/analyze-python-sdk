@@ -4,6 +4,7 @@ from http import HTTPStatus
 from typing import Optional
 
 import requests
+import requests.adapters
 from requests import Response
 
 from intezer_sdk import consts
@@ -77,7 +78,10 @@ class IntezerApi:
     def _analyze_file_stream(self, file_stream: typing.BinaryIO, file_name: str, options: dict) -> str:
         file = {'file': (file_name, file_stream)}
 
-        response = self._request_with_refresh_expired_access_token(path='/analyze', files=file, data=options, method='POST')
+        response = self._request_with_refresh_expired_access_token(path='/analyze',
+                                                                   files=file,
+                                                                   data=options,
+                                                                   method='POST')
 
         self._assert_analysis_response_status_code(response)
 
@@ -109,7 +113,8 @@ class IntezerApi:
         return response.json()['result']
 
     def get_analysis_response(self, analyses_id) -> Response:
-        response = self._request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id), method='GET')
+        response = self._request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id),
+                                                                   method='GET')
         response.raise_for_status()
 
         return response
@@ -119,7 +124,8 @@ class IntezerApi:
         if family_name:
             data['family_name'] = family_name
 
-        response = self._request_with_refresh_expired_access_token(path='/files/{}/index'.format(sha256), data=data, method='POST')
+        response = self._request_with_refresh_expired_access_token(path='/files/{}/index'.format(sha256), data=data,
+                                                                   method='POST')
         self._assert_index_response_status_code(response)
 
         return self._get_index_id_from_response(response)
@@ -142,14 +148,14 @@ class IntezerApi:
         return self._get_index_id_from_response(response)
 
     def get_index_response(self, index_id: str) -> Response:
-        response = self._request_with_refresh_expired_access_token(path='/files/index/{}'.format(index_id), method='GET')
+        response = self._request_with_refresh_expired_access_token(path='/files/index/{}'.format(index_id),
+                                                                   method='GET')
         response.raise_for_status()
 
         return response
 
     def _set_access_token(self, api_key: str):
-        if self._access_token is None:
-            response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
+        response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
 
         if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
             raise errors.InvalidApiKey()
@@ -160,6 +166,7 @@ class IntezerApi:
 
     def set_session(self):
         self._session = requests.session()
+        self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
         self._set_access_token(self.api_key)
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = consts.USER_AGENT
