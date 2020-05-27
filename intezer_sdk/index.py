@@ -70,13 +70,13 @@ class Index(object):
         response = self._api.get_index_response(self.index_id)
         if response.status_code == HTTPStatus.OK:
             if response.json()['status'] == 'failed':
-                raise errors.IndexFailed()
+                raise errors.IndexFailed(response)
             else:
                 self.status = consts.IndexStatusCode.FINISH
         elif response.status_code == HTTPStatus.ACCEPTED:
             self.status = consts.IndexStatusCode.IN_PROGRESS
         else:
-            raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
 
         return self.status
 

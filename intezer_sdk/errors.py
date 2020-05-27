@@ -1,5 +1,26 @@
+import requests
+
+
+def _parse_erroneous_response(response: requests.Response):
+    try:
+        data = response.json()
+        if 'error' in data:
+            return data['error']
+    except ValueError:
+        return ''
+
+
 class IntezerError(Exception):
     pass
+
+
+class ServerError(IntezerError):
+    def __init__(self, message: str, response: requests.Response):
+        self.response = response
+        detailed_error = _parse_erroneous_response(response)
+        if detailed_error:
+            message = '{}. Error:{}'.format(message, detailed_error)
+        super().__init__(message)
 
 
 class AnalysisHasAlreadyBeenSent(IntezerError):
@@ -9,49 +30,49 @@ class AnalysisHasAlreadyBeenSent(IntezerError):
 
 class IndexHasAlreadyBeenSent(IntezerError):
     def __init__(self):
-        super(IndexHasAlreadyBeenSent, self).__init__('Index already been sent')
+        super().__init__('Index already been sent')
 
 
 class AnalysisDoesNotExistError(IntezerError):
     def __init__(self):
-        super(AnalysisDoesNotExistError, self).__init__('Analysis was not found')
+        super().__init__('Analysis was not found')
 
 
-class HashDoesNotExistError(IntezerError):
-    def __init__(self):
-        super(HashDoesNotExistError, self).__init__('Hash was not found')
+class HashDoesNotExistError(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Hash was not found', response)
 
 
 class ReportDoesNotExistError(IntezerError):
     def __init__(self):
-        super(ReportDoesNotExistError, self).__init__('Report was not found')
+        super().__init__('Report was not found')
 
 
-class AnalysisIsAlreadyRunning(IntezerError):
-    def __init__(self):
-        super(AnalysisIsAlreadyRunning, self).__init__('Analysis already running')
+class AnalysisIsAlreadyRunning(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Analysis already running', response)
 
 
-class InsufficientQuota(IntezerError):
-    def __init__(self):
-        super(InsufficientQuota, self).__init__('Insufficient quota')
+class InsufficientQuota(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Insufficient quota', response)
 
 
 class GlobalApiIsNotInitialized(IntezerError):
     def __init__(self):
-        super(GlobalApiIsNotInitialized, self).__init__('Global API is not initialized')
+        super().__init__('Global API is not initialized')
 
 
 class AnalysisIsStillRunning(IntezerError):
     def __init__(self):
-        super(AnalysisIsStillRunning, self).__init__('Analysis is still running')
+        super().__init__('Analysis is still running')
 
 
-class InvalidApiKey(IntezerError):
-    def __init__(self):
-        super(InvalidApiKey, self).__init__('Invalid api key')
+class InvalidApiKey(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Invalid api key', response)
 
 
-class IndexFailed(IntezerError):
-    def __init__(self):
-        super(IndexFailed, self).__init__('Index operation failed')
+class IndexFailed(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Index operation failed', response)
