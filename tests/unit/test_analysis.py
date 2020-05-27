@@ -1,3 +1,4 @@
+import datetime
 import json
 from http import HTTPStatus
 
@@ -114,6 +115,30 @@ class AnalysisSpec(BaseTest):
 
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+
+    def test_send_analysis_by_file_sends_analysis_and_waits_specific_time_until_compilation(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            analysis = Analysis(file_path='a')
+            wait = 1
+
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                start = datetime.datetime.utcnow()
+                analysis.send(wait=wait)
+                duration = (datetime.datetime.utcnow() - start).total_seconds()
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertGreater(duration, wait)
 
     def test_send_analysis_by_file_sent_analysis_without_wait_and_get_status_finish(self):
         # Arrange

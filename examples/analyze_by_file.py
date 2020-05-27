@@ -5,20 +5,16 @@ from intezer_sdk import api
 from intezer_sdk.analysis import Analysis
 
 
-def send_file_with_wait(file_path, dynamic_unpacking=None, static_unpacking=None):  # type: (str, bool, bool) -> None
+def send_file_with_wait(file_path):
     api.set_global_api('<api_key>')
-    analysis = Analysis(file_path=file_path,
-                        dynamic_unpacking=dynamic_unpacking,
-                        static_unpacking=static_unpacking)
+    analysis = Analysis(file_path=file_path)
     analysis.send(wait=True)
     pprint(analysis.result())
 
 
-def send_file_without_wait(file_path, dynamic_unpacking, static_unpacking):  # type: (str, bool, bool) -> None
+def send_file_without_wait(file_path):
     api.set_global_api('<api_key>')
-    analysis = Analysis(file_path=file_path,
-                        dynamic_unpacking=dynamic_unpacking,
-                        static_unpacking=static_unpacking)
+    analysis = Analysis(file_path=file_path)
     analysis.send()
     analysis.wait_for_completion()
     pprint(analysis.result())
