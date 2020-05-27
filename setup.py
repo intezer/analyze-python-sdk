@@ -32,8 +32,8 @@ setup(
     install_requires=install_requires,
     keywords='intezer',
     test_requires=[
-        'responses == 0.10.12',
-        'pytest == 5.3.5'
+        'responses == 0.10.14',
+        'pytest == 5.4.2'
     ],
     python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
     classifiers=[
