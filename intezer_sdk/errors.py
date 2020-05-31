@@ -4,8 +4,7 @@ import requests
 def _parse_erroneous_response(response: requests.Response):
     try:
         data = response.json()
-        if 'error' in data:
-            return data['error']
+        return data.get('error', '')
     except ValueError:
         return ''
 
