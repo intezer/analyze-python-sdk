@@ -1,5 +1,6 @@
 import time
 from http import HTTPStatus
+from typing import Union
 
 from intezer_sdk import consts
 from intezer_sdk import errors
@@ -28,7 +29,7 @@ class Index(object):
         self._index_as = index_as
         self._family_name = family_name
 
-    def send(self, wait: bool = False):
+    def send(self, wait: Union[bool, int] = False):
         if self.index_id:
             raise errors.IndexHasAlreadyBeenSent()
 
@@ -40,14 +41,26 @@ class Index(object):
         self.status = consts.IndexStatusCode.CREATED
 
         if wait:
-            self.wait_for_completion()
+            if isinstance(wait, int):
+                self.wait_for_completion(wait, sleep_before_first_check=True)
+            else:
+                self.wait_for_completion(sleep_before_first_check=True)
 
-    def wait_for_completion(self):
+    def wait_for_completion(self, interval: int = None, sleep_before_first_check=False):
+        """
+        Blocks until the index is completed
+        :param interval: The interval to wait between checks
+        :param sleep_before_first_check: Whether to sleep before the first status check
+        """
+        if not interval:
+            interval = consts.CHECK_STATUS_INTERVAL
         if self._is_index_operation_running():
+            if sleep_before_first_check:
+                time.sleep(interval)
             status_code = self.check_status()
 
             while status_code != consts.IndexStatusCode.FINISH:
-                time.sleep(consts.CHECK_STATUS_INTERVAL)
+                time.sleep(interval)
                 status_code = self.check_status()
 
     def check_status(self):
@@ -57,13 +70,13 @@ class Index(object):
         response = self._api.get_index_response(self.index_id)
         if response.status_code == HTTPStatus.OK:
             if response.json()['status'] == 'failed':
-                raise errors.IndexFailed()
+                raise errors.IndexFailed(response)
             else:
                 self.status = consts.IndexStatusCode.FINISH
         elif response.status_code == HTTPStatus.ACCEPTED:
             self.status = consts.IndexStatusCode.IN_PROGRESS
         else:
-            raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
 
         return self.status
 

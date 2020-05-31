@@ -1,3 +1,5 @@
+import datetime
+
 import responses
 
 from intezer_sdk import consts
@@ -133,6 +135,29 @@ class IndexSpec(BaseTest):
 
         # Assert
         self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
+
+    def test_index_by_sha256_waits_specific_time_until_compilation(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/files/{}/index'.format('a'),
+                     status=201,
+                     json={'result_url': '/files/index/testindex'})
+            mock.add('GET',
+                     url=self.full_url + '/files/index/testindex',
+                     status=200,
+                     json={'result_url': '/files/index/testindex',
+                           'status': 'succeeded'})
+            index = Index(sha256='a', index_as=consts.IndexType.TRUSTED)
+            wait = 1
+            # Act
+            start = datetime.datetime.utcnow()
+            index.send(wait=1)
+            duration = (datetime.datetime.utcnow() - start).total_seconds()
+
+        # Assert
+        self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
+        self.assertGreater(duration, wait)
 
     def test_index_by_file_succeeded_status_changed_to_finish(self):
         # Arrange

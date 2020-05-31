@@ -43,7 +43,7 @@ class Analysis(object):
         self._report = None
         self._api = api or get_global_api()
 
-    def send(self, wait: bool = False) -> None:
+    def send(self, wait: typing.Union[bool, int] = False) -> None:
         if self.analysis_id:
             raise errors.AnalysisHasAlreadyBeenSent()
 
@@ -62,14 +62,26 @@ class Analysis(object):
         self.status = consts.AnalysisStatusCode.CREATED
 
         if wait:
-            self.wait_for_completion()
+            if isinstance(wait, int):
+                self.wait_for_completion(wait, sleep_before_first_check=True)
+            else:
+                self.wait_for_completion(sleep_before_first_check=True)
 
-    def wait_for_completion(self):
+    def wait_for_completion(self, interval: int = None, sleep_before_first_check=False):
+        """
+        Blocks until the analysis is completed
+        :param interval: The interval to wait between checks
+        :param sleep_before_first_check: Whether to sleep before the first status check 
+        """
+        if not interval:
+            interval = consts.CHECK_STATUS_INTERVAL
         if self._is_analysis_running():
+            if sleep_before_first_check:
+                time.sleep(interval)
             status_code = self.check_status()
 
             while status_code != consts.AnalysisStatusCode.FINISH:
-                time.sleep(consts.CHECK_STATUS_INTERVAL)
+                time.sleep(interval)
                 status_code = self.check_status()
 
     def check_status(self):

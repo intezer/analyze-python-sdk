@@ -14,6 +14,45 @@ from intezer_sdk.consts import IndexType
 _global_api = None
 
 
+def raise_for_status(response: requests.Response,
+                     statuses_to_ignore: typing.List[HTTPStatus] = None,
+                     allowed_statuses: typing.List[HTTPStatus] = None):
+    """Raises stored :class:`HTTPError`, if one occurred."""
+
+    http_error_msg = ''
+    if isinstance(response.reason, bytes):
+        reason = response.reason.decode('utf-8', 'ignore')
+    else:
+        reason = response.reason
+
+    if statuses_to_ignore and response.status_code in statuses_to_ignore:
+        return
+    elif allowed_statuses and response.status_code not in allowed_statuses:
+        http_error_msg = '%s Custom Error: %s for url: %s' % (response.status_code, reason, response.url)
+    elif 400 <= response.status_code < 500:
+        if response.status_code != 400:
+            http_error_msg = '%s Client Error: %s for url: %s' % (response.status_code, reason, response.url)
+        else:
+            # noinspection PyBroadException
+            try:
+                error = response.json()
+                http_error_msg = '\n'.join(['{}:{}.'.format(key, value) for key, value in error['message'].items()])
+            except Exception:
+                http_error_msg = '%s Client Error: %s for url: %s' % (response.status_code, reason, response.url)
+    elif 500 <= response.status_code < 600:
+        http_error_msg = '%s Server Error: %s for url: %s' % (response.status_code, reason, response.url)
+
+    if http_error_msg:
+        # noinspection PyBroadException
+        try:
+            data = response.json()
+            http_error_msg = '%s, server returns %s, details: %s' % (http_error_msg, data['error'], data.get('details'))
+        except Exception:
+            pass
+
+        raise requests.HTTPError(http_error_msg, response=response)
+
+
 class IntezerApi:
     def __init__(self, api_version: str = None, api_key: str = None, base_url: str = None):
         self.full_url = base_url + api_version
@@ -108,14 +147,14 @@ class IntezerApi:
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
-        response.raise_for_status()
+        raise_for_status(response)
 
         return response.json()['result']
 
     def get_analysis_response(self, analyses_id) -> Response:
         response = self._request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id),
                                                                    method='GET')
-        response.raise_for_status()
+        raise_for_status(response)
 
         return response
 
@@ -150,7 +189,7 @@ class IntezerApi:
     def get_index_response(self, index_id: str) -> Response:
         response = self._request_with_refresh_expired_access_token(path='/files/index/{}'.format(index_id),
                                                                    method='GET')
-        response.raise_for_status()
+        raise_for_status(response)
 
         return response
 
@@ -158,9 +197,9 @@ class IntezerApi:
         response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
 
         if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
-            raise errors.InvalidApiKey()
+            raise errors.InvalidApiKey(response)
         if response.status_code != HTTPStatus.OK:
-            response.raise_for_status()
+            raise_for_status(response)
 
         self._access_token = response.json()['result']
 
@@ -189,20 +228,20 @@ class IntezerApi:
     @staticmethod
     def _assert_analysis_response_status_code(response: Response):
         if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError()
+            raise errors.HashDoesNotExistError(response)
         elif response.status_code == HTTPStatus.CONFLICT:
-            raise errors.AnalysisIsAlreadyRunning()
+            raise errors.AnalysisIsAlreadyRunning(response)
         elif response.status_code == HTTPStatus.FORBIDDEN:
-            raise errors.InsufficientQuota()
+            raise errors.InsufficientQuota(response)
         elif response.status_code != HTTPStatus.CREATED:
-            raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
 
     @staticmethod
     def _assert_index_response_status_code(response: Response):
         if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError()
+            raise errors.HashDoesNotExistError(response)
         elif response.status_code != HTTPStatus.CREATED:
-            raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
 
     @staticmethod
     def _get_analysis_id_from_response(response: Response):
