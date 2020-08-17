@@ -1,6 +1,7 @@
 import logging
 import time
 import typing
+from intezer_sdk.sub_analysis import SubAnalysis
 from http import HTTPStatus
 
 from intezer_sdk import consts
@@ -42,6 +43,8 @@ class Analysis(object):
         self._code_item_type = code_item_type
         self._report = None
         self._api = api or get_global_api()
+        self._sub_analyses = None
+        self._root_analysis = None
 
     def send(self, wait: typing.Union[bool, int] = False) -> None:
         if self.analysis_id:
@@ -118,6 +121,32 @@ class Analysis(object):
     def _is_analysis_running(self):
         return self.status in (consts.AnalysisStatusCode.CREATED, consts.AnalysisStatusCode.IN_PROGRESS)
 
+    def get_sub_analyses(self):
+        if self._sub_analyses is None and self.analysis_id:
+            self._init_sub_analyses()
+        return self._sub_analyses
+
+    def get_root_analysis(self):
+        if self._root_analysis is None and self.analysis_id:
+            self._init_sub_analyses()
+        return self._root_analysis
+
+    def _init_sub_analyses(self):
+        all_sub_analysis = self._api.get_sub_analyses_by_id(self.analysis_id)
+        self._sub_analyses = []
+        for sub_analysis in all_sub_analysis:
+            sub_analysis_object = SubAnalysis(sub_analysis['sub_analysis_id'],
+                                              self.analysis_id,
+                                              sub_analysis['sha256'],
+                                              sub_analysis['source'])
+            if sub_analysis_object.source == 'root':
+                self._root_analysis = sub_analysis_object
+            else:
+                self._sub_analyses.append(sub_analysis_object)
+
+    def download_file(self, path: str):
+        self._api.download_file_by_sha256(self.result()['sha256'], path)
+
 
 def get_latest_analysis(file_hash: str, api: IntezerApi = None) -> typing.Optional[Analysis]:
     api = api or get_global_api()
@@ -127,6 +156,19 @@ def get_latest_analysis(file_hash: str, api: IntezerApi = None) -> typing.Option
         return None
 
     analysis = Analysis(file_hash=file_hash, api=api)
+    analysis.set_report(analysis_report)
+
+    return analysis
+
+
+def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[Analysis]:
+    api = api or get_global_api()
+    analysis_report = api.get_analysis_response(analysis_id).json()['result']
+
+    if not analysis_report:
+        return None
+
+    analysis = Analysis(file_hash=analysis_report['sha256'], api=api)
     analysis.set_report(analysis_report)
 
     return analysis

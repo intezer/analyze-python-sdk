@@ -75,3 +75,9 @@ class InvalidApiKey(ServerError):
 class IndexFailed(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Index operation failed', response)
+
+
+class SubAnalysisOperationStillRunning(IntezerError):
+    def __init__(self, operation):
+        super(SubAnalysisOperationStillRunning, self).__init__('{} is still running'.format(operation))
+
