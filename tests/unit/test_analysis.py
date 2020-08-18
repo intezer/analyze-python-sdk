@@ -11,6 +11,8 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.analysis import Analysis
 from intezer_sdk.analysis import get_latest_analysis
+from intezer_sdk.analysis import get_analysis_by_id
+from intezer_sdk.sub_analysis import SubAnalysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.api import set_global_api
 from tests.unit.base_test import BaseTest
@@ -303,6 +305,138 @@ class AnalysisSpec(BaseTest):
                 analysis.send()
                 analysis.send()
 
+    def test_send_analysis_and_get_sub_analyses(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze-by-hash',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses',
+                     status=200,
+                     json={'sub_analyses': [{'source': 'root', 'sub_analysis_id': 'ab', 'sha256': 'axaxaxax'},
+                                            {'source': 'static_extraction', 'sub_analysis_id': 'ac', 'sha256': 'ba'}]})
+
+            analysis = Analysis(file_hash='a' * 64)
+
+            # Act
+            analysis.send()
+
+            analysis.get_sub_analyses()
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
+        self.assertEqual(len(analysis.get_sub_analyses()), 1)
+        self.assertIsNotNone(analysis.get_root_analysis())
+
+    def test_send_analysis_and_get_root_analyses(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze-by-hash',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses',
+                     status=200,
+                     json={'sub_analyses': [{'source': 'root', 'sub_analysis_id': 'ab', 'sha256': 'axaxaxax'},
+                                            {'source': 'static_extraction', 'sub_analysis_id': 'ac', 'sha256': 'ba'}]})
+
+            analysis = Analysis(file_hash='a' * 64)
+
+            # Act
+            analysis.send()
+
+            analysis.get_root_analysis()
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
+        self.assertEqual(len(analysis.get_sub_analyses()), 1)
+        self.assertIsNotNone(analysis.get_root_analysis())
+
+    def test_send_analysis_and_sub_analyses_metadata_and_code_reuse(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze-by-hash',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses',
+                     status=200,
+                     json={'sub_analyses': [{'source': 'root', 'sub_analysis_id': 'ab', 'sha256': 'axaxaxax'},
+                                            {'source': 'static_extraction', 'sub_analysis_id': 'ac', 'sha256': 'ba'}]})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/code-reuse',
+                     status=200, json={})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/metadata',
+                     status=200, json={})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ac/code-reuse',
+                     status=200, json={})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ac/metadata',
+                     status=200, json={})
+
+            analysis = Analysis(file_hash='a' * 64)
+
+            # Act
+            analysis.send()
+            root_analysis = analysis.get_root_analysis()
+            sub_analyses = analysis.get_sub_analyses()
+            root_code_reuse = root_analysis.code_reuse
+            root_metadata = root_analysis.metadata
+            sub_code_reuse = sub_analyses[0].code_reuse
+            sub_metadata = sub_analyses[0].metadata
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
+        self.assertEqual(len(analysis.get_sub_analyses()), 1)
+        self.assertIsNotNone(analysis.get_root_analysis())
+        self.assertIsNotNone(analysis.get_root_analysis().code_reuse)
+        self.assertIsNotNone(analysis.get_root_analysis().metadata)
+
+    def test_sub_analaysis_operations(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/code-reuse/families/ax/find-related-files',
+                     status=200,
+                     json={'result_url': 'a/b/related-files'})
+            mock.add('POST',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/get-account-related-samples',
+                     status=200,
+                     json={'result_url': 'a/b/related-samples'})
+            mock.add('POST',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/generate-vaccine',
+                     status=200,
+                     json={'result_url': 'a/b/vaccine'})
+
+            mock.add('GET',
+                     url=self.full_url + 'a/b/related-files',
+                     status=200, json={'result': {'files': []}})
+            mock.add('GET',
+                     url=self.full_url + 'a/b/related-samples',
+                     status=200, json={'result': {'related_samples': []}})
+            mock.add('GET',
+                     url=self.full_url + 'a/b/vaccine',
+                     status=200, json={'result': 'abd'})
+
+            sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root')
+
+            # Act
+            related_files_operation = sub_analysis.find_related_files('ax', wait=True)
+            related_samples_operation = sub_analysis.get_account_related_samples(wait=True)
+            vaccine_operation = sub_analysis.generate_vaccine(wait=True)
+
+        # Assert
+
+        self.assertIsNotNone(related_files_operation.get_result())
+        self.assertIsNotNone(related_samples_operation.get_result())
+        self.assertIsNotNone(vaccine_operation.get_result())
+
     def test_send_analysis_that_running_on_server_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:
@@ -397,6 +531,25 @@ class AnalysisSpec(BaseTest):
 
             # Act
             analysis = get_latest_analysis(file_hash)
+
+        self.assertIsNotNone(analysis)
+        self.assertEqual(analysis_id, analysis.analysis_id)
+        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
+        self.assertDictEqual(analysis_report, analysis.result())
+
+    def test_get_analysis_by_id_analysis_object_when_latest_analysis_found(self):
+        # Arrange
+        analysis_id = 'analysis_id'
+        analysis_report = {'analysis_id': analysis_id, 'sha256': 'hash'}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url='{}/analyses/{}'.format(self.full_url, analysis_id),
+                     status=200,
+                     json={'result': analysis_report})
+
+            # Act
+            analysis = get_analysis_by_id(analysis_id)
 
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)

@@ -158,6 +158,87 @@ class IntezerApi:
 
         return response
 
+    def get_sub_analyses_by_id(self, analysis_id: str) -> Optional[list]:
+        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses'.format(analysis_id),
+                                                                   method='GET')
+        raise_for_status(response)
+
+        return response.json()['sub_analyses']
+
+    def get_sub_analysis_code_reuse_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
+        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/code-reuse'
+                                                                   .format(composed_analysis_id, sub_analysis_id),
+                                                                   method='GET')
+        if response.status_code == HTTPStatus.CONFLICT:
+            return None
+
+        raise_for_status(response)
+
+        return response.json()
+
+    def get_sub_analysis_metadata_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
+        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/metadata'
+                                                                   .format(composed_analysis_id, sub_analysis_id),
+                                                                   method='GET')
+        raise_for_status(response)
+
+        return response.json()
+
+    def get_sub_analysis_related_files_by_family_id(self, composed_analysis_id: str, sub_analysis_id: str, family_id: str) -> str:
+        response = self._request_with_refresh_expired_access_token(
+            path='/analyses/{}/sub-analyses/{}/code-reuse/families/{}/find-related-files'.format(
+                composed_analysis_id, sub_analysis_id, family_id),
+            method='POST')
+
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
+    def get_sub_analysis_account_related_samples_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+        response = self._request_with_refresh_expired_access_token(
+            path='/analyses/{}/sub-analyses/{}/get-account-related-samples'.format(composed_analysis_id, sub_analysis_id),
+            method='POST')
+
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
+    def generate_sub_analysis_vaccine_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+        response = self._request_with_refresh_expired_access_token(
+            path='/analyses/{}/sub-analyses/{}/generate-vaccine'.format(composed_analysis_id, sub_analysis_id),
+            method='POST')
+
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
+    def get_url_result(self, url: str) -> Optional[Response]:
+        response = self._request_with_refresh_expired_access_token(path=url, method='GET')
+
+        raise_for_status(response)
+
+        response_json = response.json()
+
+        if 'error' in response_json:
+            raise errors.IntezerError('response error: {}'.format(response_json['error']))
+
+        return response
+
+    def download_file_by_sha256(self, sha256: str, path: str) -> None:
+        if os.path.isdir(path):
+            path = os.path.join(path, sha256 + '.sample')
+        if os.path.isfile(path):
+            raise FileExistsError()
+
+        response = self._request_with_refresh_expired_access_token(path='/files/{}/download'.format(sha256),
+                                                                   method='GET')
+
+        raise_for_status(response)
+
+        with open(path, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+
     def index_by_sha256(self, sha256: str, index_as: IndexType, family_name: str = None) -> Response:
         data = {'index_as': index_as.value}
         if family_name:

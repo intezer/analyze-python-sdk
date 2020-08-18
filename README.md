@@ -80,6 +80,42 @@ analysis = get_latest_analysis(file_hash: <file_sha256>)
 result = analysis.result()
 ```
 
+### Get Sub Analyses
+#### Root Analysis
+```python
+root_analysis = analysis.get_root_analysis()
+```
+#### Sub Analyses
+```python
+sub_analyses = analysis.get_sub_analyses()
+```
+#### Code Reuse and Metadata
+```python
+root_analysis_code_reuse = root_analysis.code_reuse
+root_analysis_metadata = root_analysis.metadata
+
+for sub_analysis in sub_analyses:
+    sub_analyses_code_reuse = sub_analysis.code_reuse
+    sub_analyses_metadata = sub_analysis.metadata
+```
+#### Related Files by Family
+```python
+root_analysis_code_reuse = root_analysis.code_reuse
+
+for family in root_analysis_code_reuse['families']:
+    operation = root_analysis.find_related_files(family['family_id'], wait=True)
+    related_files = operation.get_result()
+```
+#### Account Related Samples
+```python
+operation = root_analysis.get_account_related_samples()
+related_samples = operation.get_result()
+```
+#### Vaccine
+```python
+operation = root_analysis.generate_vaccine()
+vaccine = operation.get_result()
+```
 ## Code examples
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
