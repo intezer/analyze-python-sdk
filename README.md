@@ -12,6 +12,9 @@ Currently the following options are available in the SDK:
 - Index by file
 - Index by SHA256
 - Get Latest Analysis
+- Account and file related samples
+- Code reuse and metadata
+- Strings related samples
 
 ## Installation
 
@@ -120,5 +123,5 @@ vaccine = operation.get_result()
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
 ## Changelog
-### 1.0
+### Breaking changes in 1.0
  - In `Analysis`: Change `dynamic_unpacking` and `static_unpacking` to `disable_dynamic_unpacking` and `disable_static_unpacking`

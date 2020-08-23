@@ -1,3 +1,7 @@
+1.4
+------
+- Add support for strings api calls
+
 1.3
 ------
 - Add all sub-analyses api calls: code reuse, metadata, account related samples and find related samples
