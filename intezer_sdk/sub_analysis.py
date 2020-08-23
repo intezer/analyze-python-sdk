@@ -41,6 +41,14 @@ class SubAnalysis():
         result_url = self._api.generate_sub_analysis_vaccine_by_id(self.composed_analysis_id, self.analysis_id)
         return self._handle_operation('Vaccine', result_url, wait)
 
+    def get_strings(self, wait: typing.Union[bool, int] = False) -> Operation:
+        result_url = self._api.get_strings_by_id(self.composed_analysis_id, self.analysis_id)
+        return self._handle_operation('Strings', result_url, wait)
+
+    def get_string_related_samples(self, string_value: str, wait: typing.Union[bool, int] = False) -> Operation:
+        result_url = self._api.get_string_related_samples_by_id(self.composed_analysis_id, self.analysis_id, string_value)
+        return self._handle_operation(string_value, result_url, wait)
+
     def _handle_operation(self, operation: str, url: str, wait: typing.Union[bool, int]) -> Operation:
         if operation not in self._operations:
             self._operations[operation] = Operation(AnalysisStatusCode.IN_PROGRESS, url)
