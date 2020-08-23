@@ -212,6 +212,25 @@ class IntezerApi:
 
         return response.json()['result_url']
 
+    def get_strings_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+        response = self._request_with_refresh_expired_access_token(
+            path='/analyses/{}/sub-analyses/{}/strings'.format(composed_analysis_id, sub_analysis_id),
+            method='POST')
+
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
+    def get_string_related_samples_by_id(self, composed_analysis_id: str, sub_analysis_id: str, string_value: str) -> str:
+        response = self._request_with_refresh_expired_access_token(
+            path='/analyses/{}/sub-analyses/{}/string-related-samples'.format(composed_analysis_id, sub_analysis_id),
+            method='POST',
+            data={'string_value': string_value})
+
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
     def get_url_result(self, url: str) -> Optional[Response]:
         response = self._request_with_refresh_expired_access_token(path=url, method='GET')
 

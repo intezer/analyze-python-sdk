@@ -413,6 +413,14 @@ class AnalysisSpec(BaseTest):
                      url=self.full_url + '/analyses/asd/sub-analyses/ab/generate-vaccine',
                      status=200,
                      json={'result_url': 'a/b/vaccine'})
+            mock.add('POST',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/strings',
+                     status=200,
+                     json={'result_url': 'a/b/strings'})
+            mock.add('POST',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/string-related-samples',
+                     status=200,
+                     json={'result_url': 'a/b/string-related-samples'})
 
             mock.add('GET',
                      url=self.full_url + 'a/b/related-files',
@@ -423,6 +431,12 @@ class AnalysisSpec(BaseTest):
             mock.add('GET',
                      url=self.full_url + 'a/b/vaccine',
                      status=200, json={'result': 'abd'})
+            mock.add('GET',
+                     url=self.full_url + 'a/b/strings',
+                     status=200, json={'result': 'abd'})
+            mock.add('GET',
+                     url=self.full_url + 'a/b/string-related-samples',
+                     status=200, json={'result': 'abd'})
 
             sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root')
 
@@ -430,12 +444,16 @@ class AnalysisSpec(BaseTest):
             related_files_operation = sub_analysis.find_related_files('ax', wait=True)
             related_samples_operation = sub_analysis.get_account_related_samples(wait=True)
             vaccine_operation = sub_analysis.generate_vaccine(wait=True)
+            strings_operation = sub_analysis.get_strings(wait=True)
+            string_related_operation = sub_analysis.get_string_related_samples('test', wait=True)
 
         # Assert
 
         self.assertIsNotNone(related_files_operation.get_result())
         self.assertIsNotNone(related_samples_operation.get_result())
         self.assertIsNotNone(vaccine_operation.get_result())
+        self.assertIsNotNone(strings_operation.get_result())
+        self.assertIsNotNone(string_related_operation.get_result())
 
     def test_send_analysis_that_running_on_server_raise_error(self):
         # Arrange
