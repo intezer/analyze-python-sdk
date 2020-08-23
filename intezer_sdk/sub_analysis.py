@@ -1,5 +1,4 @@
 import typing
-import hashlib
 
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
@@ -48,7 +47,7 @@ class SubAnalysis():
 
     def get_string_related_samples(self, string_value: str, wait: typing.Union[bool, int] = False) -> Operation:
         result_url = self._api.get_string_related_samples_by_id(self.composed_analysis_id, self.analysis_id, string_value)
-        return self._handle_operation(hashlib.md5(string_value.encode('utf-8')).hexdigest(), result_url, wait)
+        return self._handle_operation(string_value, result_url, wait)
 
     def _handle_operation(self, operation: str, url: str, wait: typing.Union[bool, int]) -> Operation:
         if operation not in self._operations:
