@@ -9,7 +9,7 @@ from intezer_sdk import errors
 from http import HTTPStatus
 
 
-class Operation():
+class Operation:
 
     def __init__(self, status: AnalysisStatusCode, url: str, api: IntezerApi = None):
         self.status = status

@@ -6,7 +6,7 @@ from intezer_sdk.operation import Operation
 from intezer_sdk.consts import AnalysisStatusCode
 
 
-class SubAnalysis():
+class SubAnalysis:
     def __init__(self, analysis_id: str, composed_analysis_id: str, sha256: str, source: str, api: IntezerApi = None):
         self.composed_analysis_id = composed_analysis_id
         self.analysis_id = analysis_id

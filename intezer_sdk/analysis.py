@@ -13,7 +13,7 @@ from intezer_sdk.consts import CodeItemType
 logger = logging.getLogger(__name__)
 
 
-class Analysis(object):
+class Analysis:
     def __init__(self,
                  file_path: str = None,
                  file_hash: str = None,
