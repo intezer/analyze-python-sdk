@@ -119,6 +119,13 @@ related_samples = operation.get_result()
 operation = root_analysis.generate_vaccine()
 vaccine = operation.get_result()
 ```
+
+#### Strings related samples
+```python
+operation = root_analysis.get_string_related_samples('string_to_relate_to', wait=True)
+string_related_samples = operation.get_result()
+```
+
 ## Code examples
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
