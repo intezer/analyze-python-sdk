@@ -32,9 +32,9 @@ class IndexHasAlreadyBeenSent(IntezerError):
         super().__init__('Index already been sent')
 
 
-class AnalysisDoesNotExistError(IntezerError):
-    def __init__(self):
-        super().__init__('Analysis was not found')
+class FamilyNotFoundError(IntezerError):
+    def __init__(self, family_id: str):
+        super().__init__('Family not found: {}'.format(family_id))
 
 
 class HashDoesNotExistError(ServerError):
@@ -80,4 +80,3 @@ class IndexFailed(ServerError):
 class SubAnalysisOperationStillRunning(IntezerError):
     def __init__(self, operation):
         super(SubAnalysisOperationStillRunning, self).__init__('{} is still running'.format(operation))
-
