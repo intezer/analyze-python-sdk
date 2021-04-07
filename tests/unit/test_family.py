@@ -7,7 +7,7 @@ from intezer_sdk import errors
 from intezer_sdk.api import get_global_api
 from intezer_sdk.api import set_global_api
 from intezer_sdk.family import Family
-from intezer_sdk.family import search_family
+from intezer_sdk.family import get_family_by_name
 from tests.unit.base_test import BaseTest
 
 
@@ -106,7 +106,7 @@ class FamilySpec(BaseTest):
             with self.assertRaises(errors.FamilyNotFoundError):
                 family.fetch_info()
 
-    def test_search_family_return_family(self):
+    def test_get_family_by_name_return_family(self):
         # Arrange
         family_id = str(uuid.uuid4())
         family_name = 'Burla'
@@ -117,19 +117,19 @@ class FamilySpec(BaseTest):
                      json={'result': {'family_id': family_id, 'family_name': family_name}})
 
             # Act
-            family = search_family(family_name)
+            family = get_family_by_name(family_name)
 
         # Assert
         self.assertEqual(family.family_id, family_id)
         self.assertEqual(family.name, family_name)
 
-    def test_search_family_return_none_when_family_not_found(self):
+    def test_get_family_by_name_return_none_when_family_not_found(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('GET', '{}/families'.format(self.full_url), status=HTTPStatus.NOT_FOUND)
 
             # Act
-            family = search_family('Burla')
+            family = get_family_by_name('Burla')
 
         # Assert
         self.assertIsNone(family)

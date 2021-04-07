@@ -35,7 +35,7 @@ class Family:
         return self._type
 
 
-def search_family(family_name: str, api: IntezerApi = None) -> typing.Optional[Family]:
+def get_family_by_name(family_name: str, api: IntezerApi = None) -> typing.Optional[Family]:
     api = api or get_global_api()
     family = api.search_family(family_name)
     if family:
