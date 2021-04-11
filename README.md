@@ -15,6 +15,7 @@ Currently the following options are available in the SDK:
 - Account and file related samples
 - Code reuse and metadata
 - Strings related samples
+- Search a family
 
 ## Installation
 

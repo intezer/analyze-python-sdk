@@ -1,7 +1,6 @@
 import os
 import typing
 from http import HTTPStatus
-from typing import Optional
 
 import requests
 import requests.adapters
@@ -15,8 +14,8 @@ _global_api = None
 
 
 def raise_for_status(response: requests.Response,
-                     statuses_to_ignore: typing.List[HTTPStatus] = None,
-                     allowed_statuses: typing.List[HTTPStatus] = None):
+                     statuses_to_ignore: typing.List[typing.Union[HTTPStatus, int]] = None,
+                     allowed_statuses: typing.List[typing.Union[HTTPStatus, int]] = None):
     """Raises stored :class:`HTTPError`, if one occurred."""
 
     http_error_msg = ''
@@ -132,7 +131,7 @@ class IntezerApi:
                         disable_dynamic_unpacking: bool = None,
                         disable_static_unpacking: bool = None,
                         file_name: str = None,
-                        code_item_type: str = None) -> str:
+                        code_item_type: str = None) -> typing.Optional[str]:
         options = self._param_initialize(disable_dynamic_unpacking, disable_static_unpacking, code_item_type)
 
         if file_stream:
@@ -141,7 +140,7 @@ class IntezerApi:
         with open(file_path, 'rb') as file_to_upload:
             return self._analyze_file_stream(file_to_upload, file_name or os.path.basename(file_path), options)
 
-    def get_latest_analysis(self, file_hash: str) -> Optional[dict]:
+    def get_latest_analysis(self, file_hash: str) -> typing.Optional[dict]:
         response = self._request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash), method='GET')
 
         if response.status_code == HTTPStatus.NOT_FOUND:
@@ -151,21 +150,39 @@ class IntezerApi:
 
         return response.json()['result']
 
-    def get_analysis_response(self, analyses_id) -> Response:
+    def get_analysis_response(self, analyses_id: str) -> Response:
         response = self._request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id),
                                                                    method='GET')
         raise_for_status(response)
 
         return response
 
-    def get_sub_analyses_by_id(self, analysis_id: str) -> Optional[list]:
+    def get_family_info(self, family_id: str) -> typing.Optional[dict]:
+        response = self._request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+
+        raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
+        return response.json()['result']
+
+    def get_family_by_name(self, family_name: str) -> typing.Optional[typing.Dict[str, typing.Any]]:
+        response = self._request_with_refresh_expired_access_token('GET', '/families', {'family_name': family_name})
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+
+        raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
+        return response.json()['result']
+
+    def get_sub_analyses_by_id(self, analysis_id: str) -> typing.Optional[list]:
         response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses'.format(analysis_id),
                                                                    method='GET')
         raise_for_status(response)
 
         return response.json()['sub_analyses']
 
-    def get_sub_analysis_code_reuse_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
+    def get_sub_analysis_code_reuse_by_id(self,
+                                          composed_analysis_id: str,
+                                          sub_analysis_id: str) -> typing.Optional[dict]:
         response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/code-reuse'
                                                                    .format(composed_analysis_id, sub_analysis_id),
                                                                    method='GET')
@@ -184,7 +201,10 @@ class IntezerApi:
 
         return response.json()
 
-    def get_sub_analysis_related_files_by_family_id(self, composed_analysis_id: str, sub_analysis_id: str, family_id: str) -> str:
+    def get_sub_analysis_related_files_by_family_id(self,
+                                                    composed_analysis_id: str,
+                                                    sub_analysis_id: str,
+                                                    family_id: str) -> str:
         response = self._request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/code-reuse/families/{}/find-related-files'.format(
                 composed_analysis_id, sub_analysis_id, family_id),
@@ -196,7 +216,8 @@ class IntezerApi:
 
     def get_sub_analysis_account_related_samples_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
         response = self._request_with_refresh_expired_access_token(
-            path='/analyses/{}/sub-analyses/{}/get-account-related-samples'.format(composed_analysis_id, sub_analysis_id),
+            path='/analyses/{}/sub-analyses/{}/get-account-related-samples'.format(composed_analysis_id,
+                                                                                   sub_analysis_id),
             method='POST')
 
         raise_for_status(response)
@@ -221,7 +242,10 @@ class IntezerApi:
 
         return response.json()['result_url']
 
-    def get_string_related_samples_by_id(self, composed_analysis_id: str, sub_analysis_id: str, string_value: str) -> str:
+    def get_string_related_samples_by_id(self,
+                                         composed_analysis_id: str,
+                                         sub_analysis_id: str,
+                                         string_value: str) -> str:
         response = self._request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/string-related-samples'.format(composed_analysis_id, sub_analysis_id),
             method='POST',
@@ -231,7 +255,7 @@ class IntezerApi:
 
         return response.json()['result_url']
 
-    def get_url_result(self, url: str) -> Optional[Response]:
+    def get_url_result(self, url: str) -> typing.Optional[Response]:
         response = self._request_with_refresh_expired_access_token(path=url, method='GET')
 
         raise_for_status(response)

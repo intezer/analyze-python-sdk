@@ -1,6 +1,6 @@
 import time
+import typing
 from http import HTTPStatus
-from typing import Union
 
 from intezer_sdk import consts
 from intezer_sdk import errors
@@ -29,7 +29,7 @@ class Index(object):
         self._index_as = index_as
         self._family_name = family_name
 
-    def send(self, wait: Union[bool, int] = False):
+    def send(self, wait: typing.Union[bool, int] = False):
         if self.index_id:
             raise errors.IndexHasAlreadyBeenSent()
 
