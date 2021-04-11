@@ -165,7 +165,7 @@ class IntezerApi:
         raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
         return response.json()['result']
 
-    def search_family(self, family_name: str) -> typing.Optional[typing.Dict[str, typing.Any]]:
+    def get_family_by_name(self, family_name: str) -> typing.Optional[typing.Dict[str, typing.Any]]:
         response = self._request_with_refresh_expired_access_token('GET', '/families', {'family_name': family_name})
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None

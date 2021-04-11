@@ -37,7 +37,7 @@ class Family:
 
 def get_family_by_name(family_name: str, api: IntezerApi = None) -> typing.Optional[Family]:
     api = api or get_global_api()
-    family = api.search_family(family_name)
+    family = api.get_family_by_name(family_name)
     if family:
         return Family(family['family_id'], family['family_name'])
 
