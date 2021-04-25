@@ -44,4 +44,5 @@ BASE_URL = 'https://analyze.intezer.com/api/'
 API_VERSION = 'v2-0'
 USER_AGENT = 'intezer-python-sdk-{}'.format(__version__)
 CHECK_STATUS_INTERVAL = 1
+DEFAULT_LIMIT = 100
 DEFAULT_FAMILY_FILES_LIMIT = 100

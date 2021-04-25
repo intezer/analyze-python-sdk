@@ -55,14 +55,18 @@ class Operation(BaseOperation):
 
 
 class PaginatedOperation(BaseOperation):
-    def __init__(self, url: str, wait: typing.Union[bool, int], api: IntezerApi = None):
+    def __init__(self, url: str,
+                 wait: typing.Union[bool, int],
+                 api: IntezerApi = None,
+                 default_limit: int = consts.DEFAULT_LIMIT):
         super().__init__(url, wait, api)
+        self._default_limit = default_limit
         self._current_offset = 0
         self._current_limit = 0
 
-    def fetch_next(self, limit: int = consts.DEFAULT_FAMILY_FILES_LIMIT):
-        if self.status != OperationStatusCode.FINISH:
-            raise errors.OperationStillRunning('Fetching current files')
+    def fetch_next(self, limit: int = None):
+        if not limit:
+            limit = self._default_limit
 
         if self.result:
             if len(self.result) < self._current_limit:

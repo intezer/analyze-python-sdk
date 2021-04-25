@@ -103,7 +103,7 @@ class FamilySpec(BaseTest):
                      '{}/families/{}/info'.format(self.full_url, family_id),
                      status=HTTPStatus.NOT_FOUND)
             # Act and assert
-            with self.assertRaises(errors.FamilyNotFoundError):
+            with self.assertRaises(errors.FamilyWasNotFound):
                 family.fetch_info()
 
     def test_get_family_by_name_return_family(self):
@@ -133,3 +133,28 @@ class FamilySpec(BaseTest):
 
         # Assert
         self.assertIsNone(family)
+
+    def test_get_family_related_files(self):
+        # Arrange
+        family_id = str(uuid.uuid4())
+        family_name = 'Burla'
+        expected = [{'test': 'test'}]
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     '{}/families'.format(self.full_url),
+                     json={'result': {'family_id': family_id, 'family_name': family_name}})
+            mock.add('POST',
+                     '{}/families/{}/files'.format(self.full_url, family_id),
+                     json={'result_url': '/families/{}/files'.format(family_id)})
+            mock.add('GET',
+                     '{}/families/{}/files'.format(self.full_url, family_id),
+                     json={'result': expected})
+
+            # Act
+            family = get_family_by_name(family_name)
+            operation = family.find_family_related_files(wait=True)
+            result = operation.fetch_next(10)
+
+        # Assert
+        self.assertEqual(result, expected)

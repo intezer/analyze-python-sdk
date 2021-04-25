@@ -32,11 +32,6 @@ class IndexHasAlreadyBeenSent(IntezerError):
         super().__init__('Index already been sent')
 
 
-class FamilyNotFoundError(IntezerError):
-    def __init__(self, family_id: str):
-        super().__init__('Family not found: {}'.format(family_id))
-
-
 class HashDoesNotExistError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Hash was not found', response)
@@ -87,9 +82,9 @@ class FamilyHasAlreadyBeenInitialized(IntezerError):
         super(FamilyHasAlreadyBeenInitialized, self).__init__('Family already been initialized')
 
 
-class FamilyNotFound(IntezerError):
-    def __init__(self):
-        super(FamilyNotFound, self).__init__('Family not found')
+class FamilyWasNotFound(IntezerError):
+    def __init__(self, family_id: str):
+        super().__init__('Family not found: {}'.format(family_id))
 
 
 class FamilyWasNotCreated(IntezerError):
