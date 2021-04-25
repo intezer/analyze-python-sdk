@@ -173,6 +173,13 @@ class IntezerApi:
         raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
         return response.json()['result']
 
+    def get_family_related_files_by_family_id(self, family_id: str) -> str:
+        response = self._request_with_refresh_expired_access_token('POST', '/families/{}/files'.format(family_id))
+
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
     def get_sub_analyses_by_id(self, analysis_id: str) -> typing.Optional[list]:
         response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses'.format(analysis_id),
                                                                    method='GET')
@@ -255,8 +262,8 @@ class IntezerApi:
 
         return response.json()['result_url']
 
-    def get_url_result(self, url: str) -> typing.Optional[Response]:
-        response = self._request_with_refresh_expired_access_token(path=url, method='GET')
+    def get_url_result(self, url: str, data: dict = None) -> typing.Optional[Response]:
+        response = self._request_with_refresh_expired_access_token(path=url,  data=data, method='GET')
 
         raise_for_status(response)
 

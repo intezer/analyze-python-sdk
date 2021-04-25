@@ -77,6 +77,26 @@ class IndexFailed(ServerError):
         super().__init__('Index operation failed', response)
 
 
-class SubAnalysisOperationStillRunning(IntezerError):
+class OperationStillRunning(IntezerError):
     def __init__(self, operation):
-        super(SubAnalysisOperationStillRunning, self).__init__('{} is still running'.format(operation))
+        super(OperationStillRunning, self).__init__('{} is still running'.format(operation))
+
+
+class FamilyHasAlreadyBeenInitialized(IntezerError):
+    def __init__(self):
+        super(FamilyHasAlreadyBeenInitialized, self).__init__('Family already been initialized')
+
+
+class FamilyNotFound(IntezerError):
+    def __init__(self):
+        super(FamilyNotFound, self).__init__('Family not found')
+
+
+class FamilyWasNotCreated(IntezerError):
+    def __init__(self):
+        super(FamilyWasNotCreated, self).__init__('Family was not created')
+
+
+class EndOfData(IntezerError):
+    def __init__(self):
+        super(EndOfData, self).__init__('All of the data rows fetched')

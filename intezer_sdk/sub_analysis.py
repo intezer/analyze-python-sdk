@@ -51,13 +51,7 @@ class SubAnalysis:
 
     def _handle_operation(self, operation: str, url: str, wait: typing.Union[bool, int]) -> Operation:
         if operation not in self._operations:
-            self._operations[operation] = Operation(AnalysisStatusCode.IN_PROGRESS, url)
-
-            if wait:
-                if isinstance(wait, int):
-                    self._operations[operation].wait_for_completion(wait, sleep_before_first_check=True)
-                else:
-                    self._operations[operation].wait_for_completion(sleep_before_first_check=True)
+            self._operations[operation] = Operation(url, wait)
 
         return self._operations[operation]
 

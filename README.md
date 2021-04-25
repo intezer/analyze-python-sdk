@@ -15,7 +15,7 @@ Currently the following options are available in the SDK:
 - Account and file related samples
 - Code reuse and metadata
 - Strings related samples
-- Search a family
+- Search files by family
 
 ## Installation
 
@@ -125,6 +125,15 @@ vaccine = operation.get_result()
 ```python
 operation = root_analysis.get_string_related_samples('string_to_relate_to', wait=True)
 string_related_samples = operation.get_result()
+```
+
+#### Search files by family
+```python
+from intezer_sdk import family
+
+family = family.get_family_by_name(<family_name>) 
+operation = family.find_family_related_files(wait=True)
+related_files = operation.fetch_next(10)
 ```
 
 ## Code examples
