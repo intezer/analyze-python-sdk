@@ -131,5 +131,10 @@ string_related_samples = operation.get_result()
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
 ## Changelog
+
+### 1.4.2
+ - Fix: Sub analyses should get the API Class like Analysis
+ - Doc: Add description to pypi
+
 ### Breaking changes in 1.0
  - In `Analysis`: Change `dynamic_unpacking` and `static_unpacking` to `disable_dynamic_unpacking` and `disable_static_unpacking`
