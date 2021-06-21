@@ -17,6 +17,9 @@ with open(rel('intezer_sdk', '__init__.py'), 'r') as f:
     else:
         raise RuntimeError('Version marker not found.')
 
+with open('README.md') as f:
+    long_description = f.read()
+
 install_requires = [
     'requests >= 2.22.0,<3'
 ]
@@ -24,11 +27,13 @@ setup(
     name='intezer_sdk',
     version=version,
     packages=['intezer_sdk'],
-    url='',
+    url='https://github.com/intezer/analyze-python-sdk',
     license='Apache License v2',
     author='Intezer Labs ltd.',
     author_email='info@intezer.com',
     description='Intezer Analyze SDK',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     install_requires=install_requires,
     keywords='intezer',
     tests_requires=[
