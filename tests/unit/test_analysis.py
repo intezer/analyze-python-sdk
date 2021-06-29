@@ -1,7 +1,6 @@
 import datetime
 import json
 from http import HTTPStatus
-
 from unittest.mock import mock_open
 from unittest.mock import patch
 
@@ -10,11 +9,11 @@ import responses
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.analysis import Analysis
-from intezer_sdk.analysis import get_latest_analysis
 from intezer_sdk.analysis import get_analysis_by_id
-from intezer_sdk.sub_analysis import SubAnalysis
+from intezer_sdk.analysis import get_latest_analysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.api import set_global_api
+from intezer_sdk.sub_analysis import SubAnalysis
 from tests.unit.base_test import BaseTest
 
 
@@ -272,7 +271,7 @@ class AnalysisSpec(BaseTest):
 
             # Act & Assert
             analysis.send()
-            self.assertEqual(3, len(mock.calls)) # analyze -> refresh access_token -> analyze retry
+            self.assertEqual(3, len(mock.calls))  # analyze -> refresh access_token -> analyze retry
 
     def test_send_analysis_by_sha256_with_expired_jwt_token_doesnt_loop_indefinitley(self):
         # Arrange
@@ -564,7 +563,7 @@ class AnalysisSpec(BaseTest):
             mock.add('GET',
                      url='{}/analyses/{}'.format(self.full_url, analysis_id),
                      status=200,
-                     json={'result': analysis_report})
+                     json={'result': analysis_report, 'status': consts.AnalysisStatusCode.FINISH.value})
 
             # Act
             analysis = get_analysis_by_id(analysis_id)
@@ -573,3 +572,18 @@ class AnalysisSpec(BaseTest):
         self.assertEqual(analysis_id, analysis.analysis_id)
         self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
+
+    def test_get_analysis_by_id_raises_when_analysis_is_not_finished(self):
+        # Arrange
+        analysis_id = 'analysis_id'
+        analysis_report = {'analysis_id': analysis_id, 'sha256': 'hash'}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url='{}/analyses/{}'.format(self.full_url, analysis_id),
+                     status=202,
+                     json={'status': str(consts.AnalysisStatusCode.IN_PROGRESS.value)})
+
+            # Act
+            with self.assertRaises(errors.AnalysisIsStillRunning):
+                analysis = get_analysis_by_id(analysis_id)

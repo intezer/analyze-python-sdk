@@ -1,7 +1,6 @@
 import logging
 import time
 import typing
-from intezer_sdk.sub_analysis import SubAnalysis
 from http import HTTPStatus
 
 from intezer_sdk import consts
@@ -9,6 +8,7 @@ from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import CodeItemType
+from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,12 @@ def get_latest_analysis(file_hash: str, api: IntezerApi = None) -> typing.Option
 
 def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[Analysis]:
     api = api or get_global_api()
-    analysis_report = api.get_analysis_response(analysis_id).json()['result']
+    response = api.get_analysis_response(analysis_id).json()
+
+    if response['status'] != consts.AnalysisStatusCode.FINISH.value:
+        raise errors.AnalysisIsStillRunning()
+
+    analysis_report = response['result']
 
     if not analysis_report:
         return None
