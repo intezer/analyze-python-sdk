@@ -563,7 +563,7 @@ class AnalysisSpec(BaseTest):
             mock.add('GET',
                      url='{}/analyses/{}'.format(self.full_url, analysis_id),
                      status=200,
-                     json={'result': analysis_report, 'status': consts.AnalysisStatusCode.FINISH.value})
+                     json={'result': analysis_report, 'status': 'succeeded'})
 
             # Act
             analysis = get_analysis_by_id(analysis_id)
@@ -582,7 +582,7 @@ class AnalysisSpec(BaseTest):
             mock.add('GET',
                      url='{}/analyses/{}'.format(self.full_url, analysis_id),
                      status=202,
-                     json={'status': str(consts.AnalysisStatusCode.IN_PROGRESS.value)})
+                     json={'status': consts.AnalysisStatusCode.IN_PROGRESS.value})
 
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunning):
