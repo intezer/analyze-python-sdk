@@ -53,11 +53,12 @@ def raise_for_status(response: requests.Response,
 
 
 class IntezerApi:
-    def __init__(self, api_version: str = None, api_key: str = None, base_url: str = None):
+    def __init__(self, api_version: str = None, api_key: str = None, base_url: str = None, verify_ssl: bool = True):
         self.full_url = base_url + api_version
         self.api_key = api_key
         self._access_token = None
         self._session = None
+        self._verify_ssl = verify_ssl
 
     def _request(self,
                  method: str,
@@ -330,6 +331,7 @@ class IntezerApi:
     def set_session(self):
         self._session = requests.session()
         self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
+        self._session.verify = self._verify_ssl
         self._set_access_token(self.api_key)
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = consts.USER_AGENT
@@ -385,7 +387,7 @@ def get_global_api() -> IntezerApi:
     return _global_api
 
 
-def set_global_api(api_key: str = None, api_version: str = None, base_url: str = None):
+def set_global_api(api_key: str = None, api_version: str = None, base_url: str = None, verify_ssl: bool = True):
     global _global_api
     api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
-    _global_api = IntezerApi(api_version or consts.API_VERSION, api_key, base_url or consts.BASE_URL)
+    _global_api = IntezerApi(api_version or consts.API_VERSION, api_key, base_url or consts.BASE_URL, verify_ssl)

@@ -132,6 +132,9 @@ You can find more code examples under [analyze-python-sdk/examples/](https://git
 
 ## Changelog
 
+### 1.4.4
+ - Feat: Add Verify SSL toggle to Intezer api to ignore ssl verification
+
 ### 1.4.2
  - Fix: Sub analyses should get the API Class like Analysis
  - Doc: Add description to pypi
