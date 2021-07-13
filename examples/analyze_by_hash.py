@@ -1,3 +1,4 @@
+import datetime
 import sys
 from pprint import pprint
 
@@ -9,6 +10,13 @@ def analysis_by_hash_with_wait(file_hash):  # type: (str) -> None
     api.set_global_api('<api_key>')
     analysis = Analysis(file_hash=file_hash)
     analysis.send(wait=True)
+    pprint(analysis.result())
+
+
+def analysis_by_hash_with_wait_timeout(file_hash):  # type: (str) -> None
+    api.set_global_api('<api_key>')
+    analysis = Analysis(file_hash=file_hash)
+    analysis.send(wait=True, wait_timeout=datetime.timedelta(minutes=1))
     pprint(analysis.result())
 
 

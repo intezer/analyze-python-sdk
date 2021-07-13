@@ -1,3 +1,4 @@
+import datetime
 import typing
 
 from intezer_sdk.api import IntezerApi
@@ -29,35 +30,54 @@ class SubAnalysis:
             self._metadata = self._api.get_sub_analysis_metadata_by_id(self.composed_analysis_id, self.analysis_id)
         return self._metadata
 
-    def find_related_files(self, family_id: str, wait: typing.Union[bool, int] = False) -> Operation:
+    def find_related_files(self,
+                           family_id: str,
+                           wait: typing.Union[bool, int] = False,
+                           wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
         result_url = self._api.get_sub_analysis_related_files_by_family_id(self.composed_analysis_id, self.analysis_id, family_id)
-        return self._handle_operation(family_id, result_url, wait)
+        return self._handle_operation(family_id, result_url, wait, wait_timeout)
 
-    def get_account_related_samples(self, wait: typing.Union[bool, int] = False) -> Operation:
+    def get_account_related_samples(self,
+                                    wait: typing.Union[bool, int] = False,
+                                    wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
         result_url = self._api.get_sub_analysis_account_related_samples_by_id(self.composed_analysis_id, self.analysis_id)
-        return self._handle_operation('Account related samples', result_url, wait)
+        return self._handle_operation('Account related samples', result_url, wait, wait_timeout)
 
-    def generate_vaccine(self, wait: typing.Union[bool, int] = False) -> Operation:
+    def generate_vaccine(self,
+                         wait: typing.Union[bool, int] = False,
+                         wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
         result_url = self._api.generate_sub_analysis_vaccine_by_id(self.composed_analysis_id, self.analysis_id)
-        return self._handle_operation('Vaccine', result_url, wait)
+        return self._handle_operation('Vaccine', result_url, wait, wait_timeout)
 
-    def get_strings(self, wait: typing.Union[bool, int] = False) -> Operation:
+    def get_strings(self,
+                    wait: typing.Union[bool, int] = False,
+                    wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
         result_url = self._api.get_strings_by_id(self.composed_analysis_id, self.analysis_id)
-        return self._handle_operation('Strings', result_url, wait)
+        return self._handle_operation('Strings', result_url, wait, wait_timeout)
 
-    def get_string_related_samples(self, string_value: str, wait: typing.Union[bool, int] = False) -> Operation:
+    def get_string_related_samples(self,
+                                   string_value: str,
+                                   wait: typing.Union[bool, int] = False,
+                                   wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
         result_url = self._api.get_string_related_samples_by_id(self.composed_analysis_id, self.analysis_id, string_value)
-        return self._handle_operation(string_value, result_url, wait)
+        return self._handle_operation(string_value, result_url, wait, wait_timeout)
 
-    def _handle_operation(self, operation: str, url: str, wait: typing.Union[bool, int]) -> Operation:
+    def _handle_operation(self,
+                          operation: str,
+                          url: str,
+                          wait: typing.Union[bool, int],
+                          wait_timeout: typing.Optional[datetime.timedelta]) -> Operation:
         if operation not in self._operations:
             self._operations[operation] = Operation(AnalysisStatusCode.IN_PROGRESS, url, api=self._api)
 
             if wait:
                 if isinstance(wait, int):
-                    self._operations[operation].wait_for_completion(wait, sleep_before_first_check=True)
+                    self._operations[operation].wait_for_completion(wait,
+                                                                    sleep_before_first_check=True,
+                                                                    wait_timeout=wait_timeout)
                 else:
-                    self._operations[operation].wait_for_completion(sleep_before_first_check=True)
+                    self._operations[operation].wait_for_completion(sleep_before_first_check=True,
+                                                                    wait_timeout=wait_timeout)
 
         return self._operations[operation]
 

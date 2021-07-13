@@ -1,3 +1,4 @@
+import datetime
 import logging
 import time
 import typing
@@ -46,7 +47,9 @@ class Analysis:
         self._sub_analyses = None
         self._root_analysis = None
 
-    def send(self, wait: typing.Union[bool, int] = False) -> None:
+    def send(self,
+             wait: typing.Union[bool, int] = False,
+             wait_timeout: typing.Optional[datetime.timedelta] = None) -> None:
         if self.analysis_id:
             raise errors.AnalysisHasAlreadyBeenSent()
 
@@ -66,16 +69,21 @@ class Analysis:
 
         if wait:
             if isinstance(wait, int):
-                self.wait_for_completion(wait, sleep_before_first_check=True)
+                self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
             else:
-                self.wait_for_completion(sleep_before_first_check=True)
+                self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
 
-    def wait_for_completion(self, interval: int = None, sleep_before_first_check=False):
+    def wait_for_completion(self,
+                            interval: int = None,
+                            sleep_before_first_check=False,
+                            timeout: typing.Optional[datetime.timedelta] = None):
         """
         Blocks until the analysis is completed
         :param interval: The interval to wait between checks
         :param sleep_before_first_check: Whether to sleep before the first status check 
+        :param timeout: Maximum duration to wait for analysis completion
         """
+        start_time = datetime.datetime.utcnow()
         if not interval:
             interval = consts.CHECK_STATUS_INTERVAL
         if self._is_analysis_running():
@@ -84,6 +92,9 @@ class Analysis:
             status_code = self.check_status()
 
             while status_code != consts.AnalysisStatusCode.FINISH:
+                timeout_passed = timeout and datetime.datetime.utcnow() - start_time > timeout
+                if timeout_passed:
+                    raise TimeoutError
                 time.sleep(interval)
                 status_code = self.check_status()
 
