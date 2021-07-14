@@ -127,10 +127,19 @@ operation = root_analysis.get_string_related_samples('string_to_relate_to', wait
 string_related_samples = operation.get_result()
 ```
 
+#### Wait with timeout
+```python
+analysis = Analysis(file_hash=<file_sha256>)
+analysis.send(wait=True, wait_timeout=datetime.timedelta(minutes=1))
+```
+
 ## Code examples
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
 ## Changelog
+
+### 1.4.5
+- Feat: Add a timeout option when waiting for operation completion
 
 ### 1.4.4
  - Feat: Add Verify SSL toggle to Intezer api to ignore ssl verification

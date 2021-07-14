@@ -3,6 +3,10 @@ Not released
 - Add family search
 
 
+1.4.5
+------
+- Add a timeout option when waiting for operation completion
+
 1.4
 ------
 - Add support for strings api calls

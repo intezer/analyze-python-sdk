@@ -1,4 +1,6 @@
+import datetime
 import time
+from typing import Optional
 
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
@@ -29,7 +31,11 @@ class Operation:
                 raise errors.SubAnalysisOperationStillRunning('operation')
         return self.result
 
-    def wait_for_completion(self, interval: int = None, sleep_before_first_check=False) -> None:
+    def wait_for_completion(self,
+                            interval: int = None,
+                            sleep_before_first_check=False,
+                            wait_timeout: Optional[datetime.timedelta] = None) -> None:
+        start_time = datetime.datetime.utcnow()
         if not interval:
             interval = CHECK_STATUS_INTERVAL
 
@@ -38,6 +44,9 @@ class Operation:
         operation_result = self._api.get_url_result(self.url)
 
         while not handle_response_status(operation_result.status_code):
+            timeout_passed = wait_timeout and datetime.datetime.utcnow() - start_time > wait_timeout
+            if timeout_passed:
+                raise TimeoutError
             time.sleep(interval)
             operation_result = self._api.get_url_result(self.url)
 
