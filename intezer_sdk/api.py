@@ -319,7 +319,9 @@ class IntezerApi:
         return response
 
     def _set_access_token(self, api_key: str):
-        response = requests.post(self.full_url + '/get-access-token', json={'api_key': api_key})
+        response = requests.post(self.full_url + '/get-access-token',
+                                 json={'api_key': api_key},
+                                 verify=self._verify_ssl)
 
         if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
             raise errors.InvalidApiKey(response)
