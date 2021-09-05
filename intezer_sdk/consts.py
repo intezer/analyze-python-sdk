@@ -6,6 +6,7 @@ from intezer_sdk import __version__
 class AnalysisStatusCode(Enum):
     CREATED = 'created'
     IN_PROGRESS = 'in_progress'
+    QUEUED = 'queued'
     FINISH = 'finished'
 
 
