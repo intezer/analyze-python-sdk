@@ -13,6 +13,7 @@ from intezer_sdk.analysis import get_analysis_by_id
 from intezer_sdk.analysis import get_latest_analysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.api import set_global_api
+from intezer_sdk.consts import AnalysisStatusCode
 from intezer_sdk.sub_analysis import SubAnalysis
 from tests.unit.base_test import BaseTest
 
@@ -582,7 +583,7 @@ class AnalysisSpec(BaseTest):
             mock.add('GET',
                      url='{}/analyses/{}'.format(self.full_url, analysis_id),
                      status=202,
-                     json={'status': 'in_progress'})
+                     json={'status': AnalysisStatusCode.IN_PROGRESS.value})
 
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunning):
@@ -597,7 +598,7 @@ class AnalysisSpec(BaseTest):
             mock.add('GET',
                      url='{}/analyses/{}'.format(self.full_url, analysis_id),
                      status=202,
-                     json={'status': 'queued'})
+                     json={'status': AnalysisStatusCode.QUEUED.value})
 
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunning):
