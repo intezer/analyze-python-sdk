@@ -582,7 +582,22 @@ class AnalysisSpec(BaseTest):
             mock.add('GET',
                      url='{}/analyses/{}'.format(self.full_url, analysis_id),
                      status=202,
-                     json={'status': consts.AnalysisStatusCode.IN_PROGRESS.value})
+                     json={'status': 'in_progress'})
+
+            # Act
+            with self.assertRaises(errors.AnalysisIsStillRunning):
+                analysis = get_analysis_by_id(analysis_id)
+
+    def test_get_analysis_by_id_raises_when_analysis_is_queued(self):
+        # Arrange
+        analysis_id = 'analysis_id'
+        analysis_report = {'analysis_id': analysis_id, 'sha256': 'hash'}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url='{}/analyses/{}'.format(self.full_url, analysis_id),
+                     status=202,
+                     json={'status': 'queued'})
 
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunning):

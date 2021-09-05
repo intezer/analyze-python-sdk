@@ -177,11 +177,10 @@ def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optio
     api = api or get_global_api()
     response = api.get_analysis_response(analysis_id).json()
 
-    if response['status'] in (consts.AnalysisStatusCode.IN_PROGRESS.value, consts.AnalysisStatusCode.CREATED.value):
+    if response['status'] in ('queued', 'in_progress'):
         raise errors.AnalysisIsStillRunning()
 
     analysis_report = response.get('result')
-
     if not analysis_report:
         return None
 
