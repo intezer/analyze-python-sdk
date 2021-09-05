@@ -8,7 +8,7 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.consts import CodeItemType
+from intezer_sdk.consts import CodeItemType, AnalysisStatusCode
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
@@ -177,11 +177,11 @@ def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optio
     api = api or get_global_api()
     response = api.get_analysis_response(analysis_id).json()
 
-    if response['status'] in (consts.AnalysisStatusCode.IN_PROGRESS.value, consts.AnalysisStatusCode.CREATED.value):
+    if response['status'] in (AnalysisStatusCode.IN_PROGRESS.value,
+                              AnalysisStatusCode.QUEUED.value):
         raise errors.AnalysisIsStillRunning()
 
     analysis_report = response.get('result')
-
     if not analysis_report:
         return None
 

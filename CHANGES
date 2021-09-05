@@ -2,6 +2,9 @@ Not released
 ------
 - Add family search
 
+1.4.5.2
+------
+- Fixes for get_analysis_by_id function
 
 1.4.5
 ------
