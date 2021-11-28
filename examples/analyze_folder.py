@@ -1,14 +1,11 @@
 import os
-from typing import List, Dict, Union
+import sys
 
 from intezer_sdk import api
 from intezer_sdk.analysis import Analysis
 
 API_KEY = os.environ.get('INTEZER_API_KEY')
 DIRECTORY_PATH = ''
-
-# fetch file paths
-file_paths = [file for file in os.listdir(DIRECTORY_PATH)]
 
 
 def send_analysis(analysis: Analysis):
@@ -18,6 +15,7 @@ def send_analysis(analysis: Analysis):
 
 def collect_suspicious_and_malicious_analyses() -> list:
     malicious_and_suspicious_analyses_results = []
+    file_paths = [file for file in os.listdir(DIRECTORY_PATH)]
     analyses = [Analysis(os.path.join(DIRECTORY_PATH, path)) for path in file_paths if
                 os.path.isfile(os.path.join(DIRECTORY_PATH, path))]
 
@@ -40,12 +38,15 @@ def print_analysis_result(analysis_result: dict):
 
 
 if __name__ == '__main__':
-    if DIRECTORY_PATH == '':
-        print("Enter a path to the folder")
-    if API_KEY is None:
+    if not DIRECTORY_PATH:
+        print("Please change the DIRECTORY_PATH variable")
+        sys.exit()
+    if not API_KEY:
         print("Set your Intezer API key in the environment variable")
-    else:
-        api.set_global_api(API_KEY)
-        analysis_list = collect_suspicious_and_malicious_analyses()
-        for analysis in analysis_list:
-            print_analysis_result(analysis)
+        sys.exit()
+
+    api.set_global_api(API_KEY)
+    analyses_list = collect_suspicious_and_malicious_analyses()
+
+    for analysis in analyses_list:
+        print_analysis_result(analysis)
