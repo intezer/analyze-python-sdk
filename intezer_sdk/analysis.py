@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import time
 import typing
 from http import HTTPStatus
@@ -8,7 +9,8 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.consts import CodeItemType, AnalysisStatusCode
+from intezer_sdk.consts import AnalysisStatusCode
+from intezer_sdk.consts import CodeItemType
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
@@ -23,7 +25,8 @@ class Analysis:
                  disable_static_unpacking: bool = None,
                  api: IntezerApi = None,
                  file_name: str = None,
-                 code_item_type: str = None) -> None:
+                 code_item_type: str = None,
+                 zip_password: str = None) -> None:
         if [file_path, file_hash, file_stream].count(None) != 2:
             raise ValueError('Choose between file hash, file stream or file path analysis')
 
@@ -42,28 +45,45 @@ class Analysis:
         self._file_stream = file_stream
         self._file_name = file_name
         self._code_item_type = code_item_type
+        self._zip_password = zip_password
         self._report = None
         self._api = api or get_global_api()
         self._sub_analyses = None
         self._root_analysis = None
+        self._iocs_report = None
+        self._dynamic_ttps_report = None
+
+        if self._file_path and not self._file_name:
+            self._file_name = os.path.basename(file_path)
+
+        if self._zip_password:
+            if self._file_name:
+                if not self._file_name.endswith('.zip'):
+                    self._file_name += '.zip'
+            else:
+                self._file_name = 'file.zip'
 
     def send(self,
              wait: typing.Union[bool, int] = False,
-             wait_timeout: typing.Optional[datetime.timedelta] = None) -> None:
+             wait_timeout: typing.Optional[datetime.timedelta] = None,
+             **additional_parameters) -> None:
         if self.analysis_id:
             raise errors.AnalysisHasAlreadyBeenSent()
 
         if self._file_hash:
             self.analysis_id = self._api.analyze_by_hash(self._file_hash,
                                                          self._disable_dynamic_unpacking,
-                                                         self._disable_static_unpacking)
+                                                         self._disable_static_unpacking,
+                                                         **additional_parameters)
         else:
             self.analysis_id = self._api.analyze_by_file(self._file_path,
                                                          self._file_stream,
                                                          disable_dynamic_unpacking=self._disable_dynamic_unpacking,
                                                          disable_static_unpacking=self._disable_static_unpacking,
                                                          file_name=self._file_name,
-                                                         code_item_type=self._code_item_type)
+                                                         code_item_type=self._code_item_type,
+                                                         zip_password=self._zip_password,
+                                                         **additional_parameters)
 
         self.status = consts.AnalysisStatusCode.CREATED
 
@@ -137,7 +157,7 @@ class Analysis:
             self._init_sub_analyses()
         return self._sub_analyses
 
-    def get_root_analysis(self):
+    def get_root_analysis(self) -> SubAnalysis:
         if self._root_analysis is None and self.analysis_id:
             self._init_sub_analyses()
         return self._root_analysis
@@ -158,6 +178,28 @@ class Analysis:
 
     def download_file(self, path: str):
         self._api.download_file_by_sha256(self.result()['sha256'], path)
+
+    @property
+    def iocs(self) -> dict:
+        self._assert_analysis_finished()
+        if not self._iocs_report:
+            self._iocs_report = self._api.get_iocs(self.analysis_id).json()['result']
+
+        return self._iocs_report
+
+    @property
+    def dynamic_ttps(self) -> dict:
+        self._assert_analysis_finished()
+        if not self._dynamic_ttps_report:
+            self._dynamic_ttps_report = self._api.get_dynamic_ttps(self.analysis_id).json()['result']
+
+        return self._dynamic_ttps_report
+
+    def _assert_analysis_finished(self):
+        if self._is_analysis_running():
+            raise errors.AnalysisIsStillRunning()
+        if self.status != AnalysisStatusCode.FINISH:
+            raise errors.IntezerError('Analysis not finished successfully')
 
 
 def get_latest_analysis(file_hash: str, api: IntezerApi = None) -> typing.Optional[Analysis]:

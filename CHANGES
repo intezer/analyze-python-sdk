@@ -1,6 +1,9 @@
-Not released
+1.5
 ------
 - Add family search
+- Support for zip password
+- Add iocs and dynamic ttps to analysis
+- Add capabilities to sub analysis
 
 1.4.5.2
 ------

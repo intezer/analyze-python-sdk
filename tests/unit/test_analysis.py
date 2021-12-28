@@ -212,6 +212,56 @@ class AnalysisSpec(BaseTest):
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
         self.assertEqual(analysis.result(), 'report')
 
+    def test_send_analysis_by_file_and_get_iocs(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/iocs',
+                     status=200,
+                     json={'result': 'ioc_report'})
+            analysis = Analysis(file_path='a')
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+                iocs = analysis.iocs
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(iocs, 'ioc_report')
+
+    def test_send_analysis_by_file_and_get_dynamic_ttps(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/dynamic-ttps',
+                     status=200,
+                     json={'result': 'ttps_report'})
+            analysis = Analysis(file_path='a')
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+                iocs = analysis.dynamic_ttps
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(iocs, 'ttps_report')
+
     def test_send_analysis_by_file_with_disable_unpacking(self):
         # Arrange
         with responses.RequestsMock() as mock:
@@ -237,6 +287,88 @@ class AnalysisSpec(BaseTest):
             self.assertTrue('Content-Disposition: form-data; name="disable_static_extraction"\r\n\r\nTrue'
                             in request_body)
             self.assertTrue('Content-Disposition: form-data; name="disable_dynamic_execution"\r\n\r\nTrue'
+                            in request_body)
+
+    def test_send_analysis_by_file_with_zip_password(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            analysis = Analysis(file_path='a',
+                                file_name='b.zip',
+                                zip_password='asd')
+
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+
+            # Assert
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+            self.assertEqual(analysis.result(), 'report')
+            request_body = mock.calls[0].request.body.decode()
+            self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
+                            in request_body)
+            self.assertTrue('Content-Disposition: form-data; name="file"; filename="b.zip"'
+                            in request_body)
+
+    def test_send_analysis_by_file_with_zip_password_set_filename_to_generic_one(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            analysis = Analysis(file_stream=__file__,
+                                zip_password='asd')
+
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+
+            # Assert
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+            self.assertEqual(analysis.result(), 'report')
+            request_body = mock.calls[0].request.body.decode()
+            self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
+                            in request_body)
+            self.assertTrue('Content-Disposition: form-data; name="file"; filename="file.zip"'
+                            in request_body)
+
+    def test_send_analysis_by_file_with_zip_password_adds_zip_extension(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            analysis = Analysis(file_path='a',
+                                zip_password='asd')
+
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+
+            # Assert
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+            self.assertEqual(analysis.result(), 'report')
+            request_body = mock.calls[0].request.body.decode()
+            self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
+                            in request_body)
+            self.assertTrue('Content-Disposition: form-data; name="file"; filename="a.zip"'
                             in request_body)
 
     def test_send_analysis_by_sha256_that_dont_exist_raise_error(self):
@@ -398,7 +530,7 @@ class AnalysisSpec(BaseTest):
         self.assertIsNotNone(analysis.get_root_analysis().code_reuse)
         self.assertIsNotNone(analysis.get_root_analysis().metadata)
 
-    def test_sub_analaysis_operations(self):
+    def test_sub_analysis_operations(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
@@ -421,6 +553,10 @@ class AnalysisSpec(BaseTest):
                      url=self.full_url + '/analyses/asd/sub-analyses/ab/string-related-samples',
                      status=200,
                      json={'result_url': 'a/b/string-related-samples'})
+            mock.add('POST',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/capabilities',
+                     status=200,
+                     json={'result_url': 'a/b/capabilities'})
 
             mock.add('GET',
                      url=self.full_url + 'a/b/related-files',
@@ -437,6 +573,9 @@ class AnalysisSpec(BaseTest):
             mock.add('GET',
                      url=self.full_url + 'a/b/string-related-samples',
                      status=200, json={'result': 'abd'})
+            mock.add('GET',
+                     url=self.full_url + 'a/b/capabilities',
+                     status=200, json={'result': 'abd'})
 
             sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root')
 
@@ -446,14 +585,15 @@ class AnalysisSpec(BaseTest):
             vaccine_operation = sub_analysis.generate_vaccine(wait=True)
             strings_operation = sub_analysis.get_strings(wait=True)
             string_related_operation = sub_analysis.get_string_related_samples('test', wait=True)
+            capabilities = sub_analysis.get_capabilities(wait=True)
 
         # Assert
-
         self.assertIsNotNone(related_files_operation.get_result())
         self.assertIsNotNone(related_samples_operation.get_result())
         self.assertIsNotNone(vaccine_operation.get_result())
         self.assertIsNotNone(strings_operation.get_result())
         self.assertIsNotNone(string_related_operation.get_result())
+        self.assertIsNotNone(capabilities.get_result())
 
     def test_send_analysis_that_running_on_server_raise_error(self):
         # Arrange
