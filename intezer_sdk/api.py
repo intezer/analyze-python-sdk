@@ -1,6 +1,7 @@
 import os
 import typing
 from http import HTTPStatus
+from typing import Optional
 
 import requests
 import requests.adapters
@@ -104,9 +105,10 @@ class IntezerApi:
 
     def analyze_by_hash(self,
                         file_hash: str,
-                        disable_dynamic_unpacking: bool = None,
-                        disable_static_unpacking: bool = None) -> str:
-        data = self._param_initialize(disable_dynamic_unpacking, disable_static_unpacking)
+                        disable_dynamic_unpacking: Optional[bool],
+                        disable_static_unpacking: Optional[bool],
+                        **additional_parameters) -> str:
+        data = self._param_initialize(disable_dynamic_unpacking, disable_static_unpacking, **additional_parameters)
 
         data['hash'] = file_hash
         response = self._request_with_refresh_expired_access_token(path='/analyze-by-hash', data=data, method='POST')
@@ -132,14 +134,20 @@ class IntezerApi:
                         disable_dynamic_unpacking: bool = None,
                         disable_static_unpacking: bool = None,
                         file_name: str = None,
-                        code_item_type: str = None) -> typing.Optional[str]:
-        options = self._param_initialize(disable_dynamic_unpacking, disable_static_unpacking, code_item_type)
+                        code_item_type: str = None,
+                        zip_password: str = None,
+                        **additional_parameters) -> typing.Optional[str]:
+        options = self._param_initialize(disable_dynamic_unpacking,
+                                         disable_static_unpacking,
+                                         code_item_type,
+                                         zip_password,
+                                         **additional_parameters)
 
         if file_stream:
             return self._analyze_file_stream(file_stream, file_name, options)
 
         with open(file_path, 'rb') as file_to_upload:
-            return self._analyze_file_stream(file_to_upload, file_name or os.path.basename(file_path), options)
+            return self._analyze_file_stream(file_to_upload, file_name, options)
 
     def get_latest_analysis(self, file_hash: str) -> typing.Optional[dict]:
         response = self._request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash), method='GET')
@@ -153,6 +161,20 @@ class IntezerApi:
 
     def get_analysis_response(self, analyses_id: str) -> Response:
         response = self._request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id),
+                                                                   method='GET')
+        raise_for_status(response)
+
+        return response
+
+    def get_iocs(self, analyses_id: str) -> Response:
+        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
+                                                                   method='GET')
+        raise_for_status(response)
+
+        return response
+
+    def get_dynamic_ttps(self, analyses_id: str):
+        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
                                                                    method='GET')
         raise_for_status(response)
 
@@ -219,6 +241,15 @@ class IntezerApi:
         response = self._request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/get-account-related-samples'.format(composed_analysis_id,
                                                                                    sub_analysis_id),
+            method='POST')
+
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
+    def get_sub_analysis_capabilities_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+        response = self._request_with_refresh_expired_access_token(
+            path='/analyses/{}/sub-analyses/{}/capabilities'.format(composed_analysis_id, sub_analysis_id),
             method='POST')
 
         raise_for_status(response)
@@ -339,9 +370,11 @@ class IntezerApi:
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
     @staticmethod
-    def _param_initialize(disable_dynamic_unpacking: bool = None,
-                          disable_static_unpacking: bool = None,
-                          code_item_type: str = None):
+    def _param_initialize(disable_dynamic_unpacking: bool,
+                          disable_static_unpacking: bool,
+                          code_item_type: str = None,
+                          zip_password: str = None,
+                          **additional_parameters):
         data = {}
 
         if disable_dynamic_unpacking is not None:
@@ -350,6 +383,10 @@ class IntezerApi:
             data['disable_static_extraction'] = disable_static_unpacking
         if code_item_type:
             data['code_item_type'] = code_item_type
+        if zip_password:
+            data['zip_password'] = zip_password
+
+        data.update(additional_parameters)
 
         return data
 

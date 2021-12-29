@@ -3,8 +3,8 @@ import typing
 
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.operation import Operation
 from intezer_sdk.consts import AnalysisStatusCode
+from intezer_sdk.operation import Operation
 
 
 class SubAnalysis:
@@ -16,6 +16,7 @@ class SubAnalysis:
         self._api = api or get_global_api()
         self._code_reuse = None
         self._metadata = None
+        self._capabilities = None
         self._operations = {}
 
     @property
@@ -34,13 +35,16 @@ class SubAnalysis:
                            family_id: str,
                            wait: typing.Union[bool, int] = False,
                            wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
-        result_url = self._api.get_sub_analysis_related_files_by_family_id(self.composed_analysis_id, self.analysis_id, family_id)
+        result_url = self._api.get_sub_analysis_related_files_by_family_id(self.composed_analysis_id,
+                                                                           self.analysis_id,
+                                                                           family_id)
         return self._handle_operation(family_id, result_url, wait, wait_timeout)
 
     def get_account_related_samples(self,
                                     wait: typing.Union[bool, int] = False,
                                     wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
-        result_url = self._api.get_sub_analysis_account_related_samples_by_id(self.composed_analysis_id, self.analysis_id)
+        result_url = self._api.get_sub_analysis_account_related_samples_by_id(self.composed_analysis_id,
+                                                                              self.analysis_id)
         return self._handle_operation('Account related samples', result_url, wait, wait_timeout)
 
     def generate_vaccine(self,
@@ -48,6 +52,12 @@ class SubAnalysis:
                          wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
         result_url = self._api.generate_sub_analysis_vaccine_by_id(self.composed_analysis_id, self.analysis_id)
         return self._handle_operation('Vaccine', result_url, wait, wait_timeout)
+
+    def get_capabilities(self,
+                         wait: typing.Union[bool, int] = False,
+                         wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
+        result_url = self._api.get_sub_analysis_capabilities_by_id(self.composed_analysis_id, self.analysis_id)
+        return self._handle_operation('Capabilities', result_url, wait, wait_timeout)
 
     def get_strings(self,
                     wait: typing.Union[bool, int] = False,
@@ -59,7 +69,9 @@ class SubAnalysis:
                                    string_value: str,
                                    wait: typing.Union[bool, int] = False,
                                    wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
-        result_url = self._api.get_string_related_samples_by_id(self.composed_analysis_id, self.analysis_id, string_value)
+        result_url = self._api.get_string_related_samples_by_id(self.composed_analysis_id,
+                                                                self.analysis_id,
+                                                                string_value)
         return self._handle_operation(string_value, result_url, wait, wait_timeout)
 
     def _handle_operation(self,
