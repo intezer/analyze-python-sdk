@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import collections
 import datetime
@@ -46,12 +48,12 @@ class BaseUrlSession(requests.Session):
         return urllib.parse.urljoin(self.base_url, url)
 
 
-def init_s1_requests_session(api_token: str, base_url: str, verify: bool=False):
+def init_s1_requests_session(api_token: str, base_url: str, skip_ssl_verification: bool=True):
     headers = {'Authorization': 'ApiToken ' + api_token}
     global _s1_session
     _s1_session = BaseUrlSession(base_url)
     _s1_session.headers = headers
-    # _s1_session.verify = verify # TODO
+    # _s1_session.verify = skip_ssl_verification # TODO
     _s1_session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
     _s1_session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
 
@@ -78,9 +80,9 @@ def fetch_file(threat_id: str) -> Tuple[str, Optional[str]]:
                                    params={'threatIds': threat_id,
                                            'activityTypes': 86,
                                            'createdAt__gte': fetch_file_time.isoformat()})
-
         assert_s1_response(response)
         data = response.json()
+
         for activity in data['data']:
             download_url = activity['data'].get('downloadUrl')
             if download_url:
@@ -171,7 +173,7 @@ def find_largest_family(analysis: Analysis) -> dict:
     largest_family_by_software_type = collections.defaultdict(lambda: {'reused_gene_count': 0})
     for sub_analysis in analysis.get_sub_analyses():
         for family in sub_analysis.code_reuse['families']:
-            software_type = family['software_type']
+            software_type = family['family_type']
             if family['reused_gene_count'] > largest_family_by_software_type[software_type]['reused_gene_count']:
                 largest_family_by_software_type[software_type] = family
     return largest_family_by_software_type
@@ -187,7 +189,6 @@ def human_readable_size(num: int) -> str:
 
 def get_note(analysis: Analysis) -> str:
     result = analysis.result()
-
     metadata = analysis.get_root_analysis().metadata
     verdict = result['verdict'].lower()
     sub_verdict = result['sub_verdict'].lower()
@@ -211,6 +212,8 @@ def get_note(analysis: Analysis) -> str:
 
     note = f'{note}{emoji} {verdict.capitalize()}'
 
+    if verdict == 'suspicious' or verdict == 'unknown':
+        note = f'{note} - {sub_verdict.replace("_", " ").title()}'
     if main_family:
         note = f'{note} - {main_family}'
         if gene_count:
@@ -227,9 +230,6 @@ def get_note(analysis: Analysis) -> str:
 
         if dynamic_ttps:
             note = f'{note}TTPs: {dynamic_ttps} techniques\n'
-
-    elif verdict == 'suspicious' or verdict == 'unknown':
-        note = f'{note}{verdict} - {sub_verdict}\n'
 
     note = (f'{note}\nFull report\n'
             f'👉{result["analysis_url"]}')
@@ -250,9 +250,9 @@ def send_failure_note(note: str, threat_id: str):
     assert_s1_response(response)
 
 
-def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, verify: bool=False):
+def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, skip_ssl_verification: bool=True):
     api.set_global_api(intezer_api_key)
-    init_s1_requests_session(s1_api_key, s1_base_address, verify)
+    init_s1_requests_session(s1_api_key, s1_base_address, skip_ssl_verification)
     _logger.info(f'incoming threat: {threat_id}')
     try:
         threat = get_threat(threat_id)
@@ -287,34 +287,26 @@ def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, 
 
 
 def parse_argparse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='This script takes the threat file from Sentinelone threat '
+                                                 'and analyze it in Intezer Analyze, the results will be '
+                                                 'pushed to Sentinelone as a threat note.')
 
-    parser.add_argument('-i', '--intezer-api-key', help='Pass intezer API key', dest='intezer_api_key', required=True)
-    parser.add_argument('-s', '--s1', help='Pass S1 API Key', dest='s1_api_key', required=True)
-    parser.add_argument('-u', '--url', help='Pass S1 base address', dest='s1_base_address', required=True)
-    parser.add_argument('-t', '--threat', help='Pass threat id', dest='threat_id', required=True)
-    parser.add_argument('-v', '--verify', help='Pass verify flag to s1 request', dest='verify', default=False)
+    parser.add_argument('-i', '--intezer-api-key', help='Intezer API key', dest='intezer_api_key', required=True)
+    parser.add_argument('-s', '--s1', help='S1 API Key', dest='s1_api_key', required=True)
+    parser.add_argument('-a', '--s1-base-address', help='S1 base address', required=True)
+    parser.add_argument('-t', '--threat-id', help='S1 threat id', required=True)
+    parser.add_argument('-v', '--skip-ssl-verification', action='store_false',
+                        help='Skipping SSL verification on S1 request')
 
     return parser.parse_args()
 
 
 if __name__ == '__main__':
-    '''
-    The purpose of the script is to extract an analysis from s1 account and analyze it using Intezer analyze.
-    The script generate a note that represents the analysis done by Intezer and sends the note to S1 
-    
-    The script takes 4 command arguments, usage e.g:
-    python3 $PATH/s1_generic.py \
-        -i $INTEZER_API_KEY \
-        -s $S1_API_KEY \
-        -u $S1_ADDRESS \
-        -t $THREAT_ID
-    '''
     args = parse_argparse_args()
 
     analyze_threat(args.intezer_api_key,
                    args.s1_api_key,
                    args.s1_base_address,
                    args.threat_id,
-                   args.verify)
+                   args.skip_ssl_verification)
 
