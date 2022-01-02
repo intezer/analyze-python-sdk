@@ -11,7 +11,7 @@ def analysis_by_hash_with_wait(file_hash):  # type: (str) -> None
     analysis = Analysis(file_hash=file_hash)
     analysis.send(wait=True)
     pprint(analysis.result())
-    print(util.get_note(analysis))
+    print(util.get_analysis_summary(analysis, ))
 
 
 def analysis_by_hash_with_wait_timeout(file_hash):  # type: (str) -> None

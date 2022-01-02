@@ -7,7 +7,7 @@ from intezer_sdk.analysis import Analysis
 logger = logging.getLogger(__name__)
 
 
-def get_note(analysis: Analysis, options: dict) -> str:
+def get_analysis_summary(analysis: Analysis, options: dict) -> str:
     result = analysis.result()
     metadata = analysis.get_root_analysis().metadata
     verdict = result['verdict'].lower()

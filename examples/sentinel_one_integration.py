@@ -16,7 +16,7 @@ import requests.adapters
 from intezer_sdk import api
 from intezer_sdk import errors
 from intezer_sdk.analysis import Analysis
-from intezer_sdk.util import get_note
+from intezer_sdk.util import get_analysis_summary
 
 _s1_session: Optional[requests.Session] = None
 _logger = logging.getLogger('intezer')
@@ -143,7 +143,7 @@ def send_note(threat_id: str, analysis: Analysis, ignore_emojis: bool):
     options = {
         "ignore_emojis": ignore_emojis
     }
-    note = get_note(analysis, options)
+    note = get_analysis_summary(analysis, options)
     response = _s1_session.post('/web/api/v2.1/threats/notes',
                                 json={'data': {'text': note}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
