@@ -46,12 +46,12 @@ class BaseUrlSession(requests.Session):
         return urllib.parse.urljoin(self.base_url, url)
 
 
-def init_s1_requests_session(api_token: str, base_url: str):
+def init_s1_requests_session(api_token: str, base_url: str, verify: bool=False):
     headers = {'Authorization': 'ApiToken ' + api_token}
     global _s1_session
     _s1_session = BaseUrlSession(base_url)
     _s1_session.headers = headers
-    # _s1_session.verify = False  # TODO
+    # _s1_session.verify = verify # TODO
     _s1_session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
     _s1_session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
 
@@ -71,7 +71,8 @@ def fetch_file(threat_id: str) -> Tuple[str, Optional[str]]:
                                 json={'data': {'password': zip_password}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
 
-    for _ in range(20):
+    for c in range(20):
+        _logger.debug(f'starting to fetch file with request number {c}')
         time.sleep(10)
         response = _s1_session.get('/web/api/v2.1/activities',
                                    params={'threatIds': threat_id,
@@ -93,8 +94,13 @@ def fetch_file(threat_id: str) -> Tuple[str, Optional[str]]:
 
 
 def download_file(download_url: str):
+    _logger.debug(f'starting to download file from s1 with download url of {download_url}')
     response = _s1_session.get('/web/api/v2.1' + download_url)
+    _logger.debug(f'got this response from s1 - {response}')
+
     assert_s1_response(response)
+    _logger.debug(f'assert s1 response finished successfully')
+
     file = io.BytesIO(response.content)
     return file
 
@@ -118,7 +124,7 @@ def assert_s1_response(response: requests.Response):
         except Exception:
             error_text = f'Server returned {response.status_code} status code'
 
-        _logger.debug(error_text)
+        _logger.error(error_text)
         raise Exception(error_text)
 
 
@@ -222,8 +228,8 @@ def get_note(analysis: Analysis) -> str:
         if dynamic_ttps:
             note = f'{note}TTPs: {dynamic_ttps} techniques\n'
 
-    else:
-        note = f'{note}Verdict: {verdict}\nSub-verdict: {sub_verdict}\n'
+    elif verdict == 'suspicious' or verdict == 'unknown':
+        note = f'{note}{verdict} - {sub_verdict}\n'
 
     note = (f'{note}\nFull report\n'
             f'👉{result["analysis_url"]}')
@@ -244,9 +250,9 @@ def send_failure_note(note: str, threat_id: str):
     assert_s1_response(response)
 
 
-def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str):
+def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, verify: bool=False):
     api.set_global_api(intezer_api_key)
-    init_s1_requests_session(s1_api_key, s1_base_address)
+    init_s1_requests_session(s1_api_key, s1_base_address, verify)
     _logger.info(f'incoming threat: {threat_id}')
     try:
         threat = get_threat(threat_id)
@@ -267,11 +273,14 @@ def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, 
                 analysis = None
 
         if not analysis:
-            _logger.debug(f'Starting to analyze file')
+            _logger.debug('starting to analyze file')
             analysis = analyze_by_file(threat_id)
             analysis.send(requester='s1')
 
+        _logger.debug('waiting for analysis completion')
         analysis.wait_for_completion()
+        _logger.debug('analysis completed')
+
         send_note(threat_id, analysis)
     except Exception as ex:
         send_failure_note(str(ex), threat_id)
@@ -280,10 +289,11 @@ def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, 
 def parse_argparse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-i', '--Intezer', help='Pass intezer API key', dest='intezer_api_key', required=True)
-    parser.add_argument('-s', '--S1', help='Pass S1 API Key', dest='s1_api_key', required=True)
-    parser.add_argument('-u', '--Url', help='Pass S1 base address', dest='s1_base_address', required=True)
-    parser.add_argument('-t', '--Threat', help='Pass threat id', dest='threat_id', required=True)
+    parser.add_argument('-i', '--intezer-api-key', help='Pass intezer API key', dest='intezer_api_key', required=True)
+    parser.add_argument('-s', '--s1', help='Pass S1 API Key', dest='s1_api_key', required=True)
+    parser.add_argument('-u', '--url', help='Pass S1 base address', dest='s1_base_address', required=True)
+    parser.add_argument('-t', '--threat', help='Pass threat id', dest='threat_id', required=True)
+    parser.add_argument('-v', '--verify', help='Pass verify flag to s1 request', dest='verify', default=False)
 
     return parser.parse_args()
 
@@ -294,7 +304,7 @@ if __name__ == '__main__':
     The script generate a note that represents the analysis done by Intezer and sends the note to S1 
     
     The script takes 4 command arguments, usage e.g:
-    python3 bin/s1_generic.py \
+    python3 $PATH/s1_generic.py \
         -i $INTEZER_API_KEY \
         -s $S1_API_KEY \
         -u $S1_ADDRESS \
@@ -305,5 +315,6 @@ if __name__ == '__main__':
     analyze_threat(args.intezer_api_key,
                    args.s1_api_key,
                    args.s1_base_address,
-                   args.threat_id)
+                   args.threat_id,
+                   args.verify)
 
