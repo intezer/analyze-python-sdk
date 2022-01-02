@@ -53,7 +53,7 @@ def init_s1_requests_session(api_token: str, base_url: str, skip_ssl_verificatio
     global _s1_session
     _s1_session = BaseUrlSession(base_url)
     _s1_session.headers = headers
-    # _s1_session.verify = skip_ssl_verification # TODO
+    _s1_session.verify = skip_ssl_verification
     _s1_session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
     _s1_session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
 
