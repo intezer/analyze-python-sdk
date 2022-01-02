@@ -287,15 +287,15 @@ def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, 
 
 
 def parse_argparse_args():
-    parser = argparse.ArgumentParser(description='This script takes the threat file from Sentinelone threat '
+    parser = argparse.ArgumentParser(description='This script takes the threat file from SentinelOne threat '
                                                  'and analyze it in Intezer Analyze, the results will be '
-                                                 'pushed to Sentinelone as a threat note.')
+                                                 'pushed to SentinelOne as a threat note.')
 
-    parser.add_argument('-i', '--intezer-api-key', help='Intezer API key', dest='intezer_api_key', required=True)
-    parser.add_argument('-s', '--s1', help='S1 API Key', dest='s1_api_key', required=True)
+    parser.add_argument('-i', '--intezer-api-key', help='Intezer API key', required=True)
+    parser.add_argument('-s', '--s1-api-key', help='S1 API Key', required=True)
     parser.add_argument('-a', '--s1-base-address', help='S1 base address', required=True)
     parser.add_argument('-t', '--threat-id', help='S1 threat id', required=True)
-    parser.add_argument('-v', '--skip-ssl-verification', action='store_false',
+    parser.add_argument('-sv', '--skip-ssl-verification', action='store_false',
                         help='Skipping SSL verification on S1 request')
 
     return parser.parse_args()
