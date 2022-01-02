@@ -49,18 +49,13 @@ def get_analysis_summary(analysis: Analysis, options: dict) -> str:
         if iocs:
             note = f'{note}IOCs: {iocs} IOCs\n'
 
-        try:
-            dynamic_ttps = len(analysis.dynamic_ttps)
-        except Exception:
-            logger.debug('no dynamic-ttps found related to analysis')
-            dynamic_ttps = None
-
-        if dynamic_ttps:
-            note = f'{note}TTPs: {dynamic_ttps} techniques\n'
+        if analysis.dynamic_ttps:
+            note = f'{note}TTPs: {len(analysis.dynamic_ttps)} techniques\n'
 
     note = (f'{note}\nFull report:\n'
             f'{get_emoji("result_url", ignore_emojis)} {result["analysis_url"]}')
 
+    print(note)
     return note
 
 

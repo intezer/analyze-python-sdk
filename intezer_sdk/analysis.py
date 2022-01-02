@@ -5,6 +5,8 @@ import time
 import typing
 from http import HTTPStatus
 
+import requests
+
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
@@ -191,7 +193,13 @@ class Analysis:
     def dynamic_ttps(self) -> dict:
         self._assert_analysis_finished()
         if not self._dynamic_ttps_report:
-            self._dynamic_ttps_report = self._api.get_dynamic_ttps(self.analysis_id).json()['result']
+            try:
+                self._dynamic_ttps_report = self._api.get_dynamic_ttps(self.analysis_id).json()['result']
+            except requests.HTTPError as e:
+                if e.response.status_code == HTTPStatus.NOT_FOUND:
+                    self._dynamic_ttps_report = None
+                else:
+                    raise
 
         return self._dynamic_ttps_report
 
