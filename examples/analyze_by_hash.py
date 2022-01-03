@@ -2,7 +2,7 @@ import datetime
 import sys
 from pprint import pprint
 
-from intezer_sdk import api, util
+from intezer_sdk import api
 from intezer_sdk.analysis import Analysis
 
 
@@ -11,7 +11,6 @@ def analysis_by_hash_with_wait(file_hash):  # type: (str) -> None
     analysis = Analysis(file_hash=file_hash)
     analysis.send(wait=True)
     pprint(analysis.result())
-    print(util.get_analysis_summary(analysis, ))
 
 
 def analysis_by_hash_with_wait_timeout(file_hash):  # type: (str) -> None

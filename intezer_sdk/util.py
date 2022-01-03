@@ -55,7 +55,6 @@ def get_analysis_summary(analysis: Analysis, options: dict) -> str:
     note = (f'{note}\nFull report:\n'
             f'{get_emoji("result_url", ignore_emojis)} {result["analysis_url"]}')
 
-    print(note)
     return note
 
 
