@@ -1,12 +1,9 @@
 import collections
-import logging
 from typing import List
 from typing import Optional
 from typing import Tuple
 
 from intezer_sdk.analysis import Analysis
-
-logger = logging.getLogger(__name__)
 
 emojis_by_key = {
     'trusted': '✅',
