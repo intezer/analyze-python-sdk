@@ -40,7 +40,7 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool=False) -> str:
 
     note = f'{note}{emoji} {verdict.capitalize()}'
 
-    if verdict == 'suspicious' or verdict == 'unknown':
+    if verdict in ('suspicious', 'unknown'):
         note = f'{note} - {sub_verdict.replace("_", " ").title()}'
     if main_family:
         note = f'{note} - {main_family}'
