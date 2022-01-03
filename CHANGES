@@ -1,3 +1,8 @@
+1.6
+------
+- Add analysis summary utility function
+- Handle no ttps correctly
+
 1.5
 ------
 - Add family search

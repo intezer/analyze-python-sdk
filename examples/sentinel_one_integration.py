@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import collections
 import datetime
 import io
 import logging
@@ -9,7 +8,6 @@ import secrets
 import time
 import urllib.parse
 from http import HTTPStatus
-from typing import List
 from typing import Optional
 from typing import Tuple
 
@@ -18,6 +16,7 @@ import requests.adapters
 from intezer_sdk import api
 from intezer_sdk import errors
 from intezer_sdk.analysis import Analysis
+from intezer_sdk.util import get_analysis_summary
 
 _s1_session: Optional[requests.Session] = None
 _logger = logging.getLogger('intezer')
@@ -140,105 +139,8 @@ def filter_threat(threat_info: dict) -> bool:
     return threat_info['agentDetectionInfo']['agentOsName'].lower().startswith(('linux', 'windows'))
 
 
-def get_analysis_family(analysis: Analysis, software_type_priorities: List[str]) -> Tuple[Optional[str], Optional[int]]:
-    result = analysis.result()
-    family_name = result.get('family_name')
-    if family_name:
-        reused_gene_count = get_analysis_family_by_family_id(analysis, result['family_id'])
-        return family_name, reused_gene_count
-
-    largest_family_by_software_type = find_largest_family(analysis)
-    for software_type in software_type_priorities:
-        if software_type in largest_family_by_software_type:
-            family = largest_family_by_software_type[software_type]
-            return family['family_name'], family['reused_gene_count']
-
-    return None, None
-
-
-def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> Optional[int]:
-    reused_gene_count = None
-    for sub_analysis in analysis.get_sub_analyses():
-        if not sub_analysis.code_reuse:
-            continue
-        for family in sub_analysis.code_reuse['families']:
-            if family['family_id'] == family_id:
-                reused_gene_count = family['reused_gene_count']
-        if reused_gene_count:
-            break
-    return reused_gene_count
-
-
-def find_largest_family(analysis: Analysis) -> dict:
-    largest_family_by_software_type = collections.defaultdict(lambda: {'reused_gene_count': 0})
-    for sub_analysis in analysis.get_sub_analyses():
-        for family in sub_analysis.code_reuse['families']:
-            software_type = family['family_type']
-            if family['reused_gene_count'] > largest_family_by_software_type[software_type]['reused_gene_count']:
-                largest_family_by_software_type[software_type] = family
-    return largest_family_by_software_type
-
-
-def human_readable_size(num: int) -> str:
-    for unit in ['', 'KB', 'MB', 'GB']:
-        if abs(num) < 1024.0:
-            return f'{num:3.1f}{unit}'
-        num /= 1024.0
-    return f'{num:.1f}GB'
-
-
-def get_note(analysis: Analysis) -> str:
-    result = analysis.result()
-    metadata = analysis.get_root_analysis().metadata
-    verdict = result['verdict'].lower()
-    sub_verdict = result['sub_verdict'].lower()
-
-    note = (f'Intezer Analyze File Scan\n'
-            f'=========================\n\n')
-
-    if verdict == 'malicious':
-        emoji = '🧨'
-        main_family, gene_count = get_analysis_family(analysis, ['malware', 'malicious_packer'])
-    elif verdict == 'trusted':
-        emoji = '🟢'
-        main_family, gene_count = get_analysis_family(analysis, ['application', 'library', 'interpreter', 'installer'])
-    elif verdict == 'suspicious':
-        emoji = '⚠'
-        main_family, gene_count = get_analysis_family(analysis, ['administration_tool', 'packer'])
-    else:
-        emoji = '❔'
-        main_family = None
-        gene_count = None
-
-    note = f'{note}{emoji} {verdict.capitalize()}'
-
-    if verdict == 'suspicious' or verdict == 'unknown':
-        note = f'{note} - {sub_verdict.replace("_", " ").title()}'
-    if main_family:
-        note = f'{note} - {main_family}'
-        if gene_count:
-            note = f'{note} ({gene_count} shared code genes)'
-    note = f'{note}\n\nSize: {human_readable_size(metadata["size_in_bytes"])}\n'
-    if 'file_type' in metadata:
-        note = f'{note}File type: {metadata["file_type"]}\n'
-    if verdict == 'malicious':
-        iocs = len(analysis.iocs['files']) + len(analysis.iocs['network']) - 1
-
-        if iocs:
-            note = f'{note}IOCs: {iocs} IOCs\n'
-        dynamic_ttps = len(analysis.dynamic_ttps)
-
-        if dynamic_ttps:
-            note = f'{note}TTPs: {dynamic_ttps} techniques\n'
-
-    note = (f'{note}\nFull report\n'
-            f'👉{result["analysis_url"]}')
-
-    return note
-
-
-def send_note(threat_id: str, analysis: Analysis):
-    note = get_note(analysis)
+def send_note(threat_id: str, analysis: Analysis, no_emojis: bool):
+    note = get_analysis_summary(analysis, no_emojis)
     response = _s1_session.post('/web/api/v2.1/threats/notes',
                                 json={'data': {'text': note}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
@@ -250,7 +152,7 @@ def send_failure_note(note: str, threat_id: str):
     assert_s1_response(response)
 
 
-def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, skip_ssl_verification: bool=True):
+def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, skip_ssl_verification: bool=True, no_emojis: bool=False):
     api.set_global_api(intezer_api_key)
     init_s1_requests_session(s1_api_key, s1_base_address, skip_ssl_verification)
     _logger.info(f'incoming threat: {threat_id}')
@@ -281,7 +183,7 @@ def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, 
         analysis.wait_for_completion()
         _logger.debug('analysis completed')
 
-        send_note(threat_id, analysis)
+        send_note(threat_id, analysis, no_emojis)
     except Exception as ex:
         send_failure_note(str(ex), threat_id)
 
@@ -297,6 +199,7 @@ def parse_argparse_args():
     parser.add_argument('-t', '--threat-id', help='S1 threat id', required=True)
     parser.add_argument('-sv', '--skip-ssl-verification', action='store_false',
                         help='Skipping SSL verification on S1 request')
+    parser.add_argument('-ne', '--no-emojis', action='store_true', help="Don't show emojis")
 
     return parser.parse_args()
 
@@ -308,5 +211,7 @@ if __name__ == '__main__':
                    args.s1_api_key,
                    args.s1_base_address,
                    args.threat_id,
-                   args.skip_ssl_verification)
+                   args.skip_ssl_verification,
+                   args.no_emojis)
+
 

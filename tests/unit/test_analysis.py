@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import mock_open
 from unittest.mock import patch
 
+import requests
 import responses
 
 from intezer_sdk import consts
@@ -256,11 +257,53 @@ class AnalysisSpec(BaseTest):
             with patch(self.patch_prop, mock_open(read_data='data')):
                 # Act
                 analysis.send(wait=True)
-                iocs = analysis.dynamic_ttps
+                ttps = analysis.dynamic_ttps
 
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
-        self.assertEqual(iocs, 'ttps_report')
+        self.assertEqual(ttps, 'ttps_report')
+
+    def test_send_analysis_by_file_and_get_dynamic_ttps_handle_no_ttps(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/dynamic-ttps',
+                     status=404)
+            analysis = Analysis(file_path='a')
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+                self.assertIsNone(analysis.dynamic_ttps)
+
+    def test_send_analysis_by_file_and_get_dynamic_ttps_handle_no_ttps2(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/dynamic-ttps',
+                     status=405)
+            analysis = Analysis(file_path='a')
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+                with self.assertRaises(requests.HTTPError):
+                    _ = analysis.dynamic_ttps
+
 
     def test_send_analysis_by_file_with_disable_unpacking(self):
         # Arrange
@@ -390,11 +433,11 @@ class AnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             def request_callback(request):
                 if request.headers['Authorization'] == 'Bearer newer-access-token':
-                    return (HTTPStatus.CREATED, {}, json.dumps({'result_url': 'https://analyze.intezer.com/test-url'}))
+                    return HTTPStatus.CREATED, {}, json.dumps({'result_url': 'https://analyze.intezer.com/test-url'})
                 if request.headers['Authorization'] == 'Bearer access-token':
-                    return (HTTPStatus.UNAUTHORIZED, {}, json.dumps({}))
+                    return HTTPStatus.UNAUTHORIZED, {}, json.dumps({})
                 # Fail test completley is unexpected access token received
-                return (HTTPStatus.SERVICE_UNAVAILABLE, {}, json.dumps({}))
+                return HTTPStatus.SERVICE_UNAVAILABLE, {}, json.dumps({})
 
             mock.add_callback('POST', url=self.full_url + '/analyze-by-hash', callback=request_callback)
             mock.add('POST',
@@ -518,10 +561,10 @@ class AnalysisSpec(BaseTest):
             analysis.send()
             root_analysis = analysis.get_root_analysis()
             sub_analyses = analysis.get_sub_analyses()
-            root_code_reuse = root_analysis.code_reuse
-            root_metadata = root_analysis.metadata
-            sub_code_reuse = sub_analyses[0].code_reuse
-            sub_metadata = sub_analyses[0].metadata
+            _ = root_analysis.code_reuse
+            _ = root_analysis.metadata
+            _ = sub_analyses[0].code_reuse
+            _ = sub_analyses[0].metadata
 
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
@@ -727,7 +770,7 @@ class AnalysisSpec(BaseTest):
 
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunning):
-                analysis = get_analysis_by_id(analysis_id)
+                _ = get_analysis_by_id(analysis_id)
 
     def test_get_analysis_by_id_raises_when_analysis_is_queued(self):
         # Arrange
