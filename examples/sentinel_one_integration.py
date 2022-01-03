@@ -139,11 +139,8 @@ def filter_threat(threat_info: dict) -> bool:
     return threat_info['agentDetectionInfo']['agentOsName'].lower().startswith(('linux', 'windows'))
 
 
-def send_note(threat_id: str, analysis: Analysis, ignore_emojis: bool):
-    options = {
-        "ignore_emojis": ignore_emojis
-    }
-    note = get_analysis_summary(analysis, options)
+def send_note(threat_id: str, analysis: Analysis, no_emojis: bool):
+    note = get_analysis_summary(analysis, no_emojis)
     response = _s1_session.post('/web/api/v2.1/threats/notes',
                                 json={'data': {'text': note}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
@@ -155,7 +152,7 @@ def send_failure_note(note: str, threat_id: str):
     assert_s1_response(response)
 
 
-def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, skip_ssl_verification: bool=True, ignore_emojis: bool=False):
+def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, skip_ssl_verification: bool=True, no_emojis: bool=False):
     api.set_global_api(intezer_api_key)
     init_s1_requests_session(s1_api_key, s1_base_address, skip_ssl_verification)
     _logger.info(f'incoming threat: {threat_id}')
@@ -186,7 +183,7 @@ def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, 
         analysis.wait_for_completion()
         _logger.debug('analysis completed')
 
-        send_note(threat_id, analysis, ignore_emojis)
+        send_note(threat_id, analysis, no_emojis)
     except Exception as ex:
         send_failure_note(str(ex), threat_id)
 
@@ -202,7 +199,7 @@ def parse_argparse_args():
     parser.add_argument('-t', '--threat-id', help='S1 threat id', required=True)
     parser.add_argument('-sv', '--skip-ssl-verification', action='store_false',
                         help='Skipping SSL verification on S1 request')
-    parser.add_argument('-iem', '--ignore-emojis', action='store_true',
+    parser.add_argument('-ne', '--no-emojis', action='store_true',
                         help='Ignore emojis on notes')
 
     return parser.parse_args()
@@ -216,6 +213,6 @@ if __name__ == '__main__':
                    args.s1_base_address,
                    args.threat_id,
                    args.skip_ssl_verification,
-                   args.ignore_emojis)
+                   args.no_emojis)
 
 

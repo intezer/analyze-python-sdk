@@ -1,33 +1,34 @@
 import collections
 import logging
-from typing import List, Tuple, Optional
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 from intezer_sdk.analysis import Analysis
 
 logger = logging.getLogger(__name__)
 
 
-def get_analysis_summary(analysis: Analysis, options: dict) -> str:
+def get_analysis_summary(analysis: Analysis, no_emojis: bool=False) -> str:
     result = analysis.result()
     metadata = analysis.get_root_analysis().metadata
     verdict = result['verdict'].lower()
     sub_verdict = result['sub_verdict'].lower()
-    ignore_emojis = options.get('ignore_emojis', False)
 
     note = (f'Intezer Analyze File Scan\n'
             f'=========================\n\n')
 
     if verdict == 'malicious':
-        emoji = get_emoji(verdict, ignore_emojis)
+        emoji = get_emoji(verdict, no_emojis)
         main_family, gene_count = get_analysis_family(analysis, ['malware', 'malicious_packer'])
     elif verdict == 'trusted':
-        emoji = get_emoji(verdict, ignore_emojis)
+        emoji = get_emoji(verdict, no_emojis)
         main_family, gene_count = get_analysis_family(analysis, ['application', 'library', 'interpreter', 'installer'])
     elif verdict == 'suspicious':
-        emoji = get_emoji(verdict, ignore_emojis)
+        emoji = get_emoji(verdict, no_emojis)
         main_family, gene_count = get_analysis_family(analysis, ['administration_tool', 'packer'])
     else:
-        emoji = get_emoji(verdict, ignore_emojis)
+        emoji = get_emoji(verdict, no_emojis)
         main_family = None
         gene_count = None
 
@@ -53,7 +54,7 @@ def get_analysis_summary(analysis: Analysis, options: dict) -> str:
             note = f'{note}TTPs: {len(analysis.dynamic_ttps)} techniques\n'
 
     note = (f'{note}\nFull report:\n'
-            f'{get_emoji("result_url", ignore_emojis)} {result["analysis_url"]}')
+            f'{get_emoji("result_url", no_emojis)} {result["analysis_url"]}')
 
     return note
 
@@ -74,7 +75,7 @@ def get_analysis_family(analysis: Analysis, software_type_priorities: List[str])
     return None, None
 
 
-def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> Optional[int]:
+def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> int:
     reused_gene_count = 0
 
     for sub_analysis in analysis.get_sub_analyses():
@@ -86,7 +87,7 @@ def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> Opti
                 if family['reused_gene_count'] > reused_gene_count:
                     reused_gene_count = family['reused_gene_count']
 
-    return None if reused_gene_count == 0 else reused_gene_count
+    return reused_gene_count
 
 
 def find_largest_family(analysis: Analysis) -> dict:
@@ -107,7 +108,7 @@ def human_readable_size(num: int) -> str:
     return f'{num:.1f}GB'
 
 
-def get_emoji(key: str, ignore_emojis: bool = False):
+def get_emoji(key: str, no_emojis: bool = False):
     emojis_by_verdict = {
         'trusted': '✅',
         'malicious': '🧨',
@@ -116,4 +117,4 @@ def get_emoji(key: str, ignore_emojis: bool = False):
         'result_url': '👉'
     }
 
-    return '' if ignore_emojis else emojis_by_verdict[key]
+    return '' if no_emojis else emojis_by_verdict[key]
