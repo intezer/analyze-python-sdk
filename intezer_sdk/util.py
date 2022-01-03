@@ -16,6 +16,7 @@ emojis_by_key = {
 
 def get_analysis_summary(analysis: Analysis, no_emojis: bool=False) -> str:
     result = analysis.result()
+
     metadata = analysis.get_root_analysis().metadata
     verdict = result['verdict'].lower()
     sub_verdict = result['sub_verdict'].lower()
@@ -27,7 +28,6 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool=False) -> str:
     if not no_emojis:
         emoji = get_emoji(verdict)
 
-    print(emoji)
     if verdict == 'malicious':
         main_family, gene_count = get_analysis_family(analysis, ['malware', 'malicious_packer'])
     elif verdict == 'trusted':
@@ -47,14 +47,26 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool=False) -> str:
         if gene_count:
             note = f'{note} ({gene_count} shared code genes)'
     note = f'{note}\n\nSize: {human_readable_size(metadata["size_in_bytes"])}\n'
+
     if 'file_type' in metadata:
         note = f'{note}File type: {metadata["file_type"]}\n'
 
-    if verdict == 'malicious' or verdict == 'suspicious':
-        iocs = len(analysis.iocs['files']) + len(analysis.iocs['network']) - 1
+    if verdict in ('malicious', 'suspicious'):
+        iocs = analysis.iocs
 
         if iocs:
-            note = f'{note}IOCs: {iocs} IOCs\n'
+            iocs_count = 0
+            files = iocs.get('files')
+            network = iocs.get('network')
+
+            if files:
+                iocs_count += len(files)
+
+            if network:
+                iocs_count += len(network)
+
+            if iocs_count > 1:
+                note = f'{note}IOCs: {iocs_count} IOCs\n'
 
         if analysis.dynamic_ttps:
             note = f'{note}TTPs: {len(analysis.dynamic_ttps)} techniques\n'

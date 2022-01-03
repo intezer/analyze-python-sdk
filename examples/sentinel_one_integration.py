@@ -141,6 +141,7 @@ def filter_threat(threat_info: dict) -> bool:
 
 def send_note(threat_id: str, analysis: Analysis, no_emojis: bool):
     note = get_analysis_summary(analysis, no_emojis)
+
     response = _s1_session.post('/web/api/v2.1/threats/notes',
                                 json={'data': {'text': note}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
