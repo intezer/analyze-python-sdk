@@ -199,8 +199,7 @@ def parse_argparse_args():
     parser.add_argument('-t', '--threat-id', help='S1 threat id', required=True)
     parser.add_argument('-sv', '--skip-ssl-verification', action='store_false',
                         help='Skipping SSL verification on S1 request')
-    parser.add_argument('-ne', '--no-emojis', action='store_true',
-                        help='Ignore emojis on notes')
+    parser.add_argument('-ne', '--no-emojis', action='store_true', help="Don't show emojis")
 
     return parser.parse_args()
 

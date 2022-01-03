@@ -138,6 +138,16 @@ You can find more code examples under [analyze-python-sdk/examples/](https://git
 
 ## Changelog
 
+### 1.6
+- Feat: Add analysis summary utility function
+- Fix: Handle no ttps correctly 
+
+### 1.5
+- Feat: Add family search
+- Feat: Support for zip password
+- Feat: Add iocs and dynamic ttps to analysis
+- Feat: Add capabilities to sub analysis
+
 ### 1.4.5
 - Feat: Add a timeout option when waiting for operation completion
 
