@@ -1,3 +1,7 @@
+1.6.1
+-------
+- Fix: Handle no iocs correctly
+
 1.6
 ------
 - Add analysis summary utility function
