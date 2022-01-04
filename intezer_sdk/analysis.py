@@ -185,7 +185,13 @@ class Analysis:
     def iocs(self) -> dict:
         self._assert_analysis_finished()
         if not self._iocs_report:
-            self._iocs_report = self._api.get_iocs(self.analysis_id).json()['result']
+            try:
+                self._iocs_report = self._api.get_iocs(self.analysis_id).json()['result']
+            except requests.HTTPError as e:
+                if e.response.status_code == HTTPStatus.NOT_FOUND:
+                    self._iocs_report = None
+                else:
+                    raise
 
         return self._iocs_report
 

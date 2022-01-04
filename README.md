@@ -138,6 +138,9 @@ You can find more code examples under [analyze-python-sdk/examples/](https://git
 
 ## Changelog
 
+### 1.6.1
+- Fix: Handle no iocs correctly 
+
 ### 1.6
 - Feat: Add analysis summary utility function
 - Fix: Handle no ttps correctly 
