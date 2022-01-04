@@ -304,7 +304,6 @@ class AnalysisSpec(BaseTest):
                 with self.assertRaises(requests.HTTPError):
                     _ = analysis.dynamic_ttps
 
-
     def test_send_analysis_by_file_and_get_dynamic_ttps_handle_no_iocs(self):
         # Arrange
         with responses.RequestsMock() as mock:
