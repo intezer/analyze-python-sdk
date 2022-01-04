@@ -305,6 +305,50 @@ class AnalysisSpec(BaseTest):
                     _ = analysis.dynamic_ttps
 
 
+    def test_send_analysis_by_file_and_get_dynamic_ttps_handle_no_iocs(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/iocs',
+                     status=405,
+                     json={'result': 'ioc_report'})
+            analysis = Analysis(file_path='a')
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+                with self.assertRaises(requests.HTTPError):
+                    _ = analysis.iocs
+
+    def test_send_analysis_by_file_and_get_dynamic_ttps_handle_no_iocs2(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/iocs',
+                     status=404,
+                     json={'result': 'ioc_report'})
+            analysis = Analysis(file_path='a')
+            with patch(self.patch_prop, mock_open(read_data='data')):
+                # Act
+                analysis.send(wait=True)
+                self.assertIsNone(analysis.iocs)
+
+
     def test_send_analysis_by_file_with_disable_unpacking(self):
         # Arrange
         with responses.RequestsMock() as mock:
