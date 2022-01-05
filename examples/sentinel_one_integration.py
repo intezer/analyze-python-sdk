@@ -47,12 +47,12 @@ class BaseUrlSession(requests.Session):
         return urllib.parse.urljoin(self.base_url, url)
 
 
-def init_s1_requests_session(api_token: str, base_url: str, skip_ssl_verification: bool=True):
+def init_s1_requests_session(api_token: str, base_url: str, skip_ssl_verification: bool=False):
     headers = {'Authorization': 'ApiToken ' + api_token}
     global _s1_session
     _s1_session = BaseUrlSession(base_url)
     _s1_session.headers = headers
-    _s1_session.verify = skip_ssl_verification
+    _s1_session.verify = not skip_ssl_verification
     _s1_session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
     _s1_session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
 
@@ -153,7 +153,7 @@ def send_failure_note(note: str, threat_id: str):
     assert_s1_response(response)
 
 
-def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, skip_ssl_verification: bool=True, no_emojis: bool=False):
+def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, skip_ssl_verification: bool=False, no_emojis: bool=False):
     api.set_global_api(intezer_api_key)
     init_s1_requests_session(s1_api_key, s1_base_address, skip_ssl_verification)
     _logger.info(f'incoming threat: {threat_id}')
@@ -198,7 +198,7 @@ def parse_argparse_args():
     parser.add_argument('-s', '--s1-api-key', help='S1 API Key', required=True)
     parser.add_argument('-a', '--s1-base-address', help='S1 base address', required=True)
     parser.add_argument('-t', '--threat-id', help='S1 threat id', required=True)
-    parser.add_argument('-sv', '--skip-ssl-verification', action='store_false',
+    parser.add_argument('-sv', '--skip-ssl-verification', action='store_true',
                         help='Skipping SSL verification on S1 request')
     parser.add_argument('-ne', '--no-emojis', action='store_true', help="Don't show emojis")
 
