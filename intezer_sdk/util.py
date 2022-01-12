@@ -1,4 +1,5 @@
 import collections
+import itertools
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -14,7 +15,7 @@ emojis_by_key = {
 }
 
 
-def get_analysis_summary(analysis: Analysis, no_emojis: bool=False) -> str:
+def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
     result = analysis.result()
 
     metadata = analysis.get_root_analysis().metadata
@@ -96,7 +97,7 @@ def get_analysis_family(analysis: Analysis, software_type_priorities: List[str])
 def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> int:
     reused_gene_count = 0
 
-    for sub_analysis in analysis.get_sub_analyses():
+    for sub_analysis in itertools.chain([analysis.get_root_analysis()], analysis.get_sub_analyses()):
         if not sub_analysis.code_reuse:
             continue
 
@@ -104,13 +105,14 @@ def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> int:
             if family['family_id'] == family_id:
                 if family['reused_gene_count'] > reused_gene_count:
                     reused_gene_count = family['reused_gene_count']
+                    break
 
     return reused_gene_count
 
 
 def find_largest_family(analysis: Analysis) -> dict:
     largest_family_by_software_type = collections.defaultdict(lambda: {'reused_gene_count': 0})
-    for sub_analysis in analysis.get_sub_analyses():
+    for sub_analysis in itertools.chain([analysis.get_root_analysis()], analysis.get_sub_analyses()):
         for family in sub_analysis.code_reuse['families']:
             software_type = family['family_type']
             if family['reused_gene_count'] > largest_family_by_software_type[software_type]['reused_gene_count']:

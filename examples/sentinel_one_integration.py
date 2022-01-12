@@ -13,16 +13,18 @@ from typing import Tuple
 
 import requests
 import requests.adapters
+
 from intezer_sdk import api
 from intezer_sdk import errors
+from intezer_sdk import util
 from intezer_sdk.analysis import Analysis
-from intezer_sdk.util import get_analysis_summary
 
 _s1_session: Optional[requests.Session] = None
 _logger = logging.getLogger('intezer')
 
 
 class BaseUrlSession(requests.Session):
+    """Taken from https://github.com/requests/toolbelt/blob/master/requests_toolbelt/sessions.py"""
     base_url = None
 
     def __init__(self, base_url=None):
@@ -31,23 +33,23 @@ class BaseUrlSession(requests.Session):
         super(BaseUrlSession, self).__init__()
 
     def request(self, method, url, *args, **kwargs):
-        'Send the request after generating the complete URL.'
+        """Send the request after generating the complete URL."""
         url = self.create_url(url)
         return super(BaseUrlSession, self).request(
             method, url, *args, **kwargs
         )
 
     def prepare_request(self, request):
-        'Prepare the request after generating the complete URL.'
+        """Prepare the request after generating the complete URL."""
         request.url = self.create_url(request.url)
         return super(BaseUrlSession, self).prepare_request(request)
 
     def create_url(self, url):
-        'Create the URL based off this partial path.'
+        """Create the URL based off this partial path."""
         return urllib.parse.urljoin(self.base_url, url)
 
 
-def init_s1_requests_session(api_token: str, base_url: str, skip_ssl_verification: bool=False):
+def init_s1_requests_session(api_token: str, base_url: str, skip_ssl_verification: bool = False):
     headers = {'Authorization': 'ApiToken ' + api_token}
     global _s1_session
     _s1_session = BaseUrlSession(base_url)
@@ -140,7 +142,7 @@ def filter_threat(threat_info: dict) -> bool:
 
 
 def send_note(threat_id: str, analysis: Analysis, no_emojis: bool):
-    note = get_analysis_summary(analysis, no_emojis)
+    note = util.get_analysis_summary(analysis, no_emojis)
 
     response = _s1_session.post('/web/api/v2.1/threats/notes',
                                 json={'data': {'text': note}, 'filter': {'ids': [threat_id]}})
@@ -153,7 +155,8 @@ def send_failure_note(note: str, threat_id: str):
     assert_s1_response(response)
 
 
-def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str, skip_ssl_verification: bool=False, no_emojis: bool=False):
+def analyze_threat(intezer_api_key: str, s1_api_key: str, s1_base_address: str, threat_id: str,
+                   skip_ssl_verification: bool = False, no_emojis: bool = False):
     api.set_global_api(intezer_api_key)
     init_s1_requests_session(s1_api_key, s1_base_address, skip_ssl_verification)
     _logger.info(f'incoming threat: {threat_id}')
@@ -206,13 +209,11 @@ def parse_argparse_args():
 
 
 if __name__ == '__main__':
-    args = parse_argparse_args()
+    _args = parse_argparse_args()
 
-    analyze_threat(args.intezer_api_key,
-                   args.s1_api_key,
-                   args.s1_base_address,
-                   args.threat_id,
-                   args.skip_ssl_verification,
-                   args.no_emojis)
-
-
+    analyze_threat(_args.intezer_api_key,
+                   _args.s1_api_key,
+                   _args.s1_base_address,
+                   _args.threat_id,
+                   _args.skip_ssl_verification,
+                   _args.no_emojis)
