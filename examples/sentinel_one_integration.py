@@ -152,6 +152,7 @@ def send_note(threat_id: str, analysis: Analysis):
 
 
 def send_failure_note(note: str, threat_id: str):
+    note = f'Intezer Analyze File Scan failed: {note}'
     response = _s1_session.post('/web/api/v2.1/threats/notes',
                                 json={'data': {'text': note}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
@@ -188,6 +189,7 @@ def analyze_threat(threat_id: str, threat: dict = None):
 
         send_note(threat_id, analysis)
     except Exception as ex:
+        _logger.exception(f'failed to process threat {threat_id}')
         send_failure_note(str(ex), threat_id)
 
 
@@ -208,7 +210,10 @@ def parse_argparse_args():
     subparsers = parser.add_subparsers(title='valid subcommands', dest='subcommand', **subparser_options)
     threat_parser = subparsers.add_parser('threat', help='Get a threat ID and analyze it')
     threat_parser.add_argument('threat_id', help='SentinelOne threat id')
-    subparsers.add_parser('query', help='Analyze new incoming threat')
+    query_parser = subparsers.add_parser('query', help='Analyze new incoming threat')
+    query_parser.add_argument('--since',
+                              help='query threats from certain date in the format YYYY-MM-DD',
+                              type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%d'),)
 
     return parser.parse_args()
 
@@ -220,8 +225,8 @@ def _init_logger():
     _logger.addHandler(handler)
 
 
-def query_threats():
-    next_time_query = datetime.datetime.utcnow()
+def query_threats(next_time_query: Optional[datetime.datetime]):
+    next_time_query = next_time_query or datetime.datetime.utcnow()
     while True:
         _logger.info('checking for new threats...')
         response = _s1_session.get('/web/api/v2.1/threats', params={'createdAt__gte': next_time_query.isoformat()})
@@ -244,7 +249,7 @@ if __name__ == '__main__':
     if _args.subcommand == 'threat':
         analyze_threat(_args.threat_id)
     elif _args.subcommand == 'query':
-        query_threats()
+        query_threats(_args.since)
     else:
         print('error: the following arguments are required: subcommand')
         sys.exit(1)
