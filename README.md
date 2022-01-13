@@ -139,6 +139,9 @@ You can find more code examples under [analyze-python-sdk/examples/](https://git
 
 ## Changelog
 
+### 1.6.3
+- Fix: analysis summary didn't handle no code reuse report
+
 ### 1.6.2
 - Fix: analysis summary didn't look for genes in root analysis
 

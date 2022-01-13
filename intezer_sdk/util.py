@@ -113,6 +113,9 @@ def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> int:
 def find_largest_family(analysis: Analysis) -> dict:
     largest_family_by_software_type = collections.defaultdict(lambda: {'reused_gene_count': 0})
     for sub_analysis in itertools.chain([analysis.get_root_analysis()], analysis.get_sub_analyses()):
+        if not sub_analysis.code_reuse:
+            continue
+
         for family in sub_analysis.code_reuse['families']:
             software_type = family['family_type']
             if family['reused_gene_count'] > largest_family_by_software_type[software_type]['reused_gene_count']:
