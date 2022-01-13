@@ -5,7 +5,7 @@ Basic SDK for Intezer Analyze API 2.0
 
 [View full API documentation](https://analyze.intezer.com/api/docs/documentation) (Notice - You must be logged in to Intezer Analyze to access the documentation)
 
-Currently the following options are available in the SDK:
+Currently, the following options are available in the SDK:
 
 - Analyze by file
 - Analyze by SHA256
@@ -13,7 +13,8 @@ Currently the following options are available in the SDK:
 - Index by SHA256
 - Get Latest Analysis
 - Account and file related samples
-- Code reuse and metadata
+- Code reuse and Metadata
+- IOCs, Dynamic TTPs and Capabilities
 - Strings related samples
 - Search a family
 
@@ -137,6 +138,9 @@ analysis.send(wait=True, wait_timeout=datetime.timedelta(minutes=1))
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
 ## Changelog
+
+### 1.6.2
+- Fix: analysis summary didn't look for genes in root analysis
 
 ### 1.6.1
 - Fix: Handle no iocs correctly 
