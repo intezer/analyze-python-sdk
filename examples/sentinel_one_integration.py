@@ -64,6 +64,7 @@ def init_s1_requests_session(api_token: str, base_url: str, skip_ssl_verificatio
 def analyze_by_file(threat_id: str):
     download_url, zipp_password = fetch_file(threat_id)
     file = download_file(download_url)
+    _logger.debug('starting to analyze file')
     analysis = Analysis(file_stream=file, file_name=f'{threat_id}.zip', zip_password=zipp_password)
     return analysis
 
@@ -72,12 +73,13 @@ def fetch_file(threat_id: str) -> Tuple[str, Optional[str]]:
     zip_password = secrets.token_urlsafe(32)
     fetch_file_time = datetime.datetime.utcnow() - datetime.timedelta(seconds=5)
 
+    _logger.debug('sending fetch command to the endpoint')
     response = _s1_session.post('/web/api/v2.1/threats/fetch-file',
                                 json={'data': {'password': zip_password}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
 
-    for c in range(20):
-        _logger.debug(f'starting to fetch file with request number {c}')
+    for count in range(20):
+        _logger.debug(f'waiting for s1 to fetch the file from the endpoint ({count})')
         time.sleep(10)
         response = _s1_session.get('/web/api/v2.1/activities',
                                    params={'threatIds': threat_id,
@@ -91,20 +93,18 @@ def fetch_file(threat_id: str) -> Tuple[str, Optional[str]]:
             if download_url:
                 return download_url, zip_password
     else:
-        err_msg = 'Time out fetching the file, this is most likely when the endpoint is powered off' \
-                  'or the agent is shut down'
+        err_msg = ('Time out fetching the file, this is most likely when the endpoint is powered off'
+                   'or the agent is shut down')
 
         _logger.debug(err_msg)
         raise Exception(err_msg)
 
 
 def download_file(download_url: str):
-    _logger.debug(f'starting to download file from s1 with download url of {download_url}')
+    _logger.debug(f'downloading file from s1 (download url of {download_url})')
     response = _s1_session.get('/web/api/v2.1' + download_url)
-    _logger.debug(f'got this response from s1 - {response}')
-
     assert_s1_response(response)
-    _logger.debug(f'assert s1 response finished successfully')
+    _logger.debug(f'download finished')
 
     file = io.BytesIO(response.content)
     return file
@@ -179,7 +179,6 @@ def analyze_threat(threat_id: str, threat: dict = None):
                 analysis = None
 
         if not analysis:
-            _logger.debug('starting to analyze file')
             analysis = analyze_by_file(threat_id)
             analysis.send(requester='s1')
 
@@ -222,15 +221,17 @@ def _init_logger():
 
 
 def query_threats():
+    next_time_query = datetime.datetime.utcnow()
     while True:
         _logger.info('checking for new threats...')
-        now = datetime.datetime.utcnow()
-        response = _s1_session.get('/web/api/v2.1/threats', params={'createdAt__gte': now.isoformat()})
+        response = _s1_session.get('/web/api/v2.1/threats', params={'createdAt__gte': next_time_query.isoformat()})
+        next_time_query = datetime.datetime.utcnow()
         assert_s1_response(response)
         threats = response.json()['data']
         for threat in threats:
             analyze_threat(threat['id'], threat)
-        else:
+
+        if not threats:
             _logger.info('no new threats found')
             time.sleep(10)
 
