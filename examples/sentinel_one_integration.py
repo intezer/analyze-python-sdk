@@ -149,6 +149,7 @@ def send_note(threat_id: str, analysis: Analysis):
     response = _s1_session.post('/web/api/v2.1/threats/notes',
                                 json={'data': {'text': note}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
+    _logger.info('note sent')
 
 
 def send_failure_note(note: str, threat_id: str):
