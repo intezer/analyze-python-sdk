@@ -149,8 +149,11 @@ class IntezerApi:
         with open(file_path, 'rb') as file_to_upload:
             return self._analyze_file_stream(file_to_upload, file_name, options)
 
-    def get_latest_analysis(self, file_hash: str) -> typing.Optional[dict]:
-        response = self._request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash), method='GET')
+    def get_latest_analysis(self, file_hash: str, private_only: bool = False) -> typing.Optional[dict]:
+        options = {'should_get_only_private_analysis': private_only}
+        response = self._request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash),
+                                                                   method='GET',
+                                                                   data=options)
 
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None

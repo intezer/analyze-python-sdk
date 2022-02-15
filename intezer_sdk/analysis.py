@@ -122,7 +122,7 @@ class Analysis:
 
     def check_status(self):
         if not self._is_analysis_running():
-            raise errors.IntezerError('Analysis dont running')
+            raise errors.IntezerError('Analysis is not running')
 
         response = self._api.get_analysis_response(self.analysis_id)
         if response.status_code == HTTPStatus.OK:
@@ -216,9 +216,9 @@ class Analysis:
             raise errors.IntezerError('Analysis not finished successfully')
 
 
-def get_latest_analysis(file_hash: str, api: IntezerApi = None) -> typing.Optional[Analysis]:
+def get_latest_analysis(file_hash: str, api: IntezerApi = None, private_only: bool = False) -> typing.Optional[Analysis]:
     api = api or get_global_api()
-    analysis_report = api.get_latest_analysis(file_hash)
+    analysis_report = api.get_latest_analysis(file_hash, private_only)
 
     if not analysis_report:
         return None
