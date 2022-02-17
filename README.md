@@ -139,6 +139,9 @@ You can find more code examples under [analyze-python-sdk/examples/](https://git
 
 ## Changelog
 
+### 1.6.4
+- Feat: Added functionality
+
 ### 1.6.3
 - Fix: analysis summary didn't handle no code reuse report
 
