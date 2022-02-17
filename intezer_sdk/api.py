@@ -88,12 +88,12 @@ class IntezerApi:
 
         return response
 
-    def _request_with_refresh_expired_access_token(self,
-                                                   method: str,
-                                                   path: str,
-                                                   data: dict = None,
-                                                   headers: dict = None,
-                                                   files: dict = None) -> Response:
+    def request_with_refresh_expired_access_token(self,
+                                                  method: str,
+                                                  path: str,
+                                                  data: dict = None,
+                                                  headers: dict = None,
+                                                  files: dict = None) -> Response:
         response = self._request(method, path, data, headers, files)
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
@@ -111,7 +111,7 @@ class IntezerApi:
         data = self._param_initialize(disable_dynamic_unpacking, disable_static_unpacking, **additional_parameters)
 
         data['hash'] = file_hash
-        response = self._request_with_refresh_expired_access_token(path='/analyze-by-hash', data=data, method='POST')
+        response = self.request_with_refresh_expired_access_token(path='/analyze-by-hash', data=data, method='POST')
         self._assert_analysis_response_status_code(response)
 
         return self._get_analysis_id_from_response(response)
@@ -119,10 +119,10 @@ class IntezerApi:
     def _analyze_file_stream(self, file_stream: typing.BinaryIO, file_name: str, options: dict) -> str:
         file = {'file': (file_name, file_stream)}
 
-        response = self._request_with_refresh_expired_access_token(path='/analyze',
-                                                                   files=file,
-                                                                   data=options,
-                                                                   method='POST')
+        response = self.request_with_refresh_expired_access_token(path='/analyze',
+                                                                  files=file,
+                                                                  data=options,
+                                                                  method='POST')
 
         self._assert_analysis_response_status_code(response)
 
@@ -149,8 +149,11 @@ class IntezerApi:
         with open(file_path, 'rb') as file_to_upload:
             return self._analyze_file_stream(file_to_upload, file_name, options)
 
-    def get_latest_analysis(self, file_hash: str) -> typing.Optional[dict]:
-        response = self._request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash), method='GET')
+    def get_latest_analysis(self, file_hash: str, private_only: bool = False) -> typing.Optional[dict]:
+        options = {'should_get_only_private_analysis': private_only}
+        response = self.request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash),
+                                                                  method='GET',
+                                                                  data=options)
 
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -160,28 +163,28 @@ class IntezerApi:
         return response.json()['result']
 
     def get_analysis_response(self, analyses_id: str) -> Response:
-        response = self._request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id),
-                                                                   method='GET')
+        response = self.request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id),
+                                                                  method='GET')
         raise_for_status(response)
 
         return response
 
     def get_iocs(self, analyses_id: str) -> Response:
-        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
-                                                                   method='GET')
+        response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
+                                                                  method='GET')
         raise_for_status(response)
 
         return response
 
     def get_dynamic_ttps(self, analyses_id: str):
-        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
-                                                                   method='GET')
+        response = self.request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
+                                                                  method='GET')
         raise_for_status(response)
 
         return response
 
     def get_family_info(self, family_id: str) -> typing.Optional[dict]:
-        response = self._request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
+        response = self.request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
@@ -189,7 +192,7 @@ class IntezerApi:
         return response.json()['result']
 
     def get_family_by_name(self, family_name: str) -> typing.Optional[typing.Dict[str, typing.Any]]:
-        response = self._request_with_refresh_expired_access_token('GET', '/families', {'family_name': family_name})
+        response = self.request_with_refresh_expired_access_token('GET', '/families', {'family_name': family_name})
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
@@ -197,8 +200,8 @@ class IntezerApi:
         return response.json()['result']
 
     def get_sub_analyses_by_id(self, analysis_id: str) -> typing.Optional[list]:
-        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses'.format(analysis_id),
-                                                                   method='GET')
+        response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses'.format(analysis_id),
+                                                                  method='GET')
         raise_for_status(response)
 
         return response.json()['sub_analyses']
@@ -206,9 +209,9 @@ class IntezerApi:
     def get_sub_analysis_code_reuse_by_id(self,
                                           composed_analysis_id: str,
                                           sub_analysis_id: str) -> typing.Optional[dict]:
-        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/code-reuse'
-                                                                   .format(composed_analysis_id, sub_analysis_id),
-                                                                   method='GET')
+        response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/code-reuse'
+                                                                  .format(composed_analysis_id, sub_analysis_id),
+                                                                  method='GET')
         if response.status_code == HTTPStatus.CONFLICT:
             return None
 
@@ -217,9 +220,9 @@ class IntezerApi:
         return response.json()
 
     def get_sub_analysis_metadata_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
-        response = self._request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/metadata'
-                                                                   .format(composed_analysis_id, sub_analysis_id),
-                                                                   method='GET')
+        response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/metadata'
+                                                                  .format(composed_analysis_id, sub_analysis_id),
+                                                                  method='GET')
         raise_for_status(response)
 
         return response.json()
@@ -228,7 +231,7 @@ class IntezerApi:
                                                     composed_analysis_id: str,
                                                     sub_analysis_id: str,
                                                     family_id: str) -> str:
-        response = self._request_with_refresh_expired_access_token(
+        response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/code-reuse/families/{}/find-related-files'.format(
                 composed_analysis_id, sub_analysis_id, family_id),
             method='POST')
@@ -238,7 +241,7 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_sub_analysis_account_related_samples_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
-        response = self._request_with_refresh_expired_access_token(
+        response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/get-account-related-samples'.format(composed_analysis_id,
                                                                                    sub_analysis_id),
             method='POST')
@@ -248,7 +251,7 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_sub_analysis_capabilities_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
-        response = self._request_with_refresh_expired_access_token(
+        response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/capabilities'.format(composed_analysis_id, sub_analysis_id),
             method='POST')
 
@@ -257,7 +260,7 @@ class IntezerApi:
         return response.json()['result_url']
 
     def generate_sub_analysis_vaccine_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
-        response = self._request_with_refresh_expired_access_token(
+        response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/generate-vaccine'.format(composed_analysis_id, sub_analysis_id),
             method='POST')
 
@@ -266,7 +269,7 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_strings_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
-        response = self._request_with_refresh_expired_access_token(
+        response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/strings'.format(composed_analysis_id, sub_analysis_id),
             method='POST')
 
@@ -278,7 +281,7 @@ class IntezerApi:
                                          composed_analysis_id: str,
                                          sub_analysis_id: str,
                                          string_value: str) -> str:
-        response = self._request_with_refresh_expired_access_token(
+        response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/string-related-samples'.format(composed_analysis_id, sub_analysis_id),
             method='POST',
             data={'string_value': string_value})
@@ -288,7 +291,7 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_url_result(self, url: str) -> typing.Optional[Response]:
-        response = self._request_with_refresh_expired_access_token(path=url, method='GET')
+        response = self.request_with_refresh_expired_access_token(path=url, method='GET')
 
         raise_for_status(response)
 
@@ -305,8 +308,8 @@ class IntezerApi:
         if os.path.isfile(path):
             raise FileExistsError()
 
-        response = self._request_with_refresh_expired_access_token(path='/files/{}/download'.format(sha256),
-                                                                   method='GET')
+        response = self.request_with_refresh_expired_access_token(path='/files/{}/download'.format(sha256),
+                                                                  method='GET')
 
         raise_for_status(response)
 
@@ -319,8 +322,8 @@ class IntezerApi:
         if family_name:
             data['family_name'] = family_name
 
-        response = self._request_with_refresh_expired_access_token(path='/files/{}/index'.format(sha256), data=data,
-                                                                   method='POST')
+        response = self.request_with_refresh_expired_access_token(path='/files/{}/index'.format(sha256), data=data,
+                                                                  method='POST')
         self._assert_index_response_status_code(response)
 
         return self._get_index_id_from_response(response)
@@ -333,18 +336,18 @@ class IntezerApi:
         with open(file_path, 'rb') as file_to_upload:
             file = {'file': (os.path.basename(file_path), file_to_upload)}
 
-            response = self._request_with_refresh_expired_access_token(path='/files/index',
-                                                                       data=data,
-                                                                       files=file,
-                                                                       method='POST')
+            response = self.request_with_refresh_expired_access_token(path='/files/index',
+                                                                      data=data,
+                                                                      files=file,
+                                                                      method='POST')
 
         self._assert_index_response_status_code(response)
 
         return self._get_index_id_from_response(response)
 
     def get_index_response(self, index_id: str) -> Response:
-        response = self._request_with_refresh_expired_access_token(path='/files/index/{}'.format(index_id),
-                                                                   method='GET')
+        response = self.request_with_refresh_expired_access_token(path='/files/index/{}'.format(index_id),
+                                                                  method='GET')
         raise_for_status(response)
 
         return response
