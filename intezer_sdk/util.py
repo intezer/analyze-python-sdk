@@ -72,6 +72,14 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
         if analysis.dynamic_ttps:
             note = f'{note}TTPs: {len(analysis.dynamic_ttps)} techniques\n'
 
+    related_samples = [sub_analysis.get_account_related_samples(wait=True) for sub_analysis in
+                       analysis.get_sub_analyses()]
+    if related_samples:
+        related_samples_unique_count = len({analysis['analysis']['sha256'] for analysis in
+                                            itertools.chain.from_iterable(
+                                                sample.result['related_samples'] for sample in related_samples)})
+        note = f'{note}Related Samples: {related_samples_unique_count} Related Samples \n'
+
     note = (f'{note}\nFull report:\n'
             f'{"" if no_emojis else get_emoji("result_url")} {result["analysis_url"]}')
 
