@@ -77,7 +77,8 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
     if related_samples:
         related_samples_unique_count = len({analysis['analysis']['sha256'] for analysis in
                                             itertools.chain.from_iterable(
-                                                sample.result['related_samples'] for sample in related_samples)})
+                                                sample.result['related_samples'] for sample in related_samples if sample is not None)
+                                            if analysis['analysis']['verdict'] == 'malicious'})
         note = f'{note}Related Samples: {related_samples_unique_count} Related Samples \n'
 
     note = (f'{note}\nFull report:\n'
