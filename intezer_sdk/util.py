@@ -23,7 +23,7 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
     sub_verdict = result['sub_verdict'].lower()
     emoji = ''
 
-    note = (f'Intezer Analyze File Scan\n'
+    note = (f'Intezer Analysis\n'
             f'=========================\n\n')
 
     if not no_emojis:
@@ -67,7 +67,7 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
                 iocs_count += len(network)
 
             if iocs_count > 1:
-                note = f'{note}IOCs: {iocs_count} IOCs\n'
+                note = f'{note}IOCs: {iocs_count} Indicators\n'
 
         if analysis.dynamic_ttps:
             note = f'{note}TTPs: {len(analysis.dynamic_ttps)} techniques\n'
@@ -77,9 +77,9 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
     if related_samples:
         related_samples_unique_count = len({analysis['analysis']['sha256'] for analysis in
                                             itertools.chain.from_iterable(
-                                                sample.result['related_samples'] for sample in related_samples if sample is not None)
-                                            if analysis['analysis']['verdict'] == 'malicious'})
-        note = f'{note}Related Samples: {related_samples_unique_count} Related Samples \n'
+                                                sample.result['related_samples'] for sample in related_samples
+                                                if sample is not None)})
+        note = f'{note}Similar previous uploads: {related_samples_unique_count} files \n'
 
     note = (f'{note}\nFull report:\n'
             f'{"" if no_emojis else get_emoji("result_url")} {result["analysis_url"]}')
