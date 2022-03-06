@@ -1,6 +1,8 @@
 import datetime
 import typing
 
+from requests import HTTPError
+
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import AnalysisStatusCode
@@ -42,9 +44,13 @@ class SubAnalysis:
 
     def get_account_related_samples(self,
                                     wait: typing.Union[bool, int] = False,
-                                    wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
-        result_url = self._api.get_sub_analysis_account_related_samples_by_id(self.composed_analysis_id,
-                                                                              self.analysis_id)
+                                    wait_timeout: typing.Optional[datetime.timedelta] = None) -> typing.Optional[Operation]:
+        try:
+            result_url = self._api.get_sub_analysis_account_related_samples_by_id(self.composed_analysis_id,
+                                                                                  self.analysis_id)
+        except Exception:
+            return None
+
         return self._handle_operation('Account related samples', result_url, wait, wait_timeout)
 
     def generate_vaccine(self,
