@@ -14,8 +14,14 @@ emojis_by_key = {
     'result_url': '👉'
 }
 
+def _get_title(short: bool) -> str:
+    if short:
+        return 'Intezer Analysis: \n'
+    return (f'Intezer Analysis\n'
+            f'=========================\n\n')
 
-def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
+
+def get_analysis_summary(analysis: Analysis, no_emojis: bool = False, short: bool = False) -> str:
     result = analysis.result()
 
     metadata = analysis.get_root_analysis().metadata
@@ -23,8 +29,7 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
     sub_verdict = result['sub_verdict'].lower()
     emoji = ''
 
-    note = (f'Intezer Analysis\n'
-            f'=========================\n\n')
+    note = _get_title(short)
 
     if not no_emojis:
         emoji = get_emoji(verdict)
@@ -45,8 +50,12 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False) -> str:
         note = f'{note} - {sub_verdict.replace("_", " ").title()}'
     if main_family:
         note = f'{note} - {main_family}'
-        if gene_count:
+        if gene_count and not short:
             note = f'{note} ({gene_count} shared code genes)'
+
+    if short:
+        return f'{note} > {result["analysis_url"]}'
+
     note = f'{note}\n\nSize: {human_readable_size(metadata["size_in_bytes"])}\n'
 
     if 'file_type' in metadata:
