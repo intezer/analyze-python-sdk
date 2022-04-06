@@ -35,7 +35,8 @@ class CodeItemType(Enum):
     MEMORY_MODULE = 'memory_module'
 
 
-BASE_URL = 'https://analyze.intezer.com/api/'
+ANALYZE_URL = 'https://analyze.intezer.com'
+BASE_URL = f'{ANALYZE_URL}/api/'
 API_VERSION = 'v2-0'
 USER_AGENT = 'intezer-python-sdk-{}'.format(__version__)
 CHECK_STATUS_INTERVAL = 1

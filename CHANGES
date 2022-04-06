@@ -1,3 +1,7 @@
+1.6.4 - 1.6.10
+-------
+- Analysis summary utility improvements
+
 1.6.3
 -------
 - Fix: analysis summary didn't handle no code reuse report
