@@ -137,39 +137,3 @@ analysis.send(wait=True, wait_timeout=datetime.timedelta(minutes=1))
 ## Code examples
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
-## Changelog
-
-### 1.6.4
-- Feat: Added functionality
-
-### 1.6.3
-- Fix: analysis summary didn't handle no code reuse report
-
-### 1.6.2
-- Fix: analysis summary didn't look for genes in root analysis
-
-### 1.6.1
-- Fix: Handle no iocs correctly 
-
-### 1.6
-- Feat: Add analysis summary utility function
-- Fix: Handle no ttps correctly 
-
-### 1.5
-- Feat: Add family search
-- Feat: Support for zip password
-- Feat: Add iocs and dynamic ttps to analysis
-- Feat: Add capabilities to sub analysis
-
-### 1.4.5
-- Feat: Add a timeout option when waiting for operation completion
-
-### 1.4.4
- - Feat: Add Verify SSL toggle to Intezer api to ignore ssl verification
-
-### 1.4.2
- - Fix: Sub analyses should get the API Class like Analysis
- - Doc: Add description to pypi
-
-### Breaking changes in 1.0
- - In `Analysis`: Change `dynamic_unpacking` and `static_unpacking` to `disable_dynamic_unpacking` and `disable_static_unpacking`

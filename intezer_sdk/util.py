@@ -5,6 +5,7 @@ from typing import Optional
 from typing import Tuple
 
 from intezer_sdk.analysis import Analysis
+from intezer_sdk.consts import ANALYZE_URL
 
 emojis_by_key = {
     'trusted': '✅',
@@ -14,6 +15,7 @@ emojis_by_key = {
     'result_url': '👉'
 }
 
+
 def _get_title(short: bool) -> str:
     if short:
         return 'Intezer Analysis: \n'
@@ -21,7 +23,7 @@ def _get_title(short: bool) -> str:
             f'=========================\n\n')
 
 
-def get_analysis_summary(analysis: Analysis, no_emojis: bool = False, short: bool = False) -> str:
+def get_analysis_summary(analysis: Analysis, no_emojis: bool = False, short: bool = False, use_hash_link=False) -> str:
     result = analysis.result()
 
     metadata = analysis.get_root_analysis().metadata
@@ -53,8 +55,13 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False, short: boo
         if gene_count and not short:
             note = f'{note} ({gene_count} shared code genes)'
 
+    if use_hash_link:
+        analysis_url = f"{ANALYZE_URL}/files/{result['sha256']}?private=true"
+    else:
+        analysis_url = result['analysis_url']
+
     if short:
-        return f'{note} > {result["analysis_url"]}'
+        return f'{note} > {analysis_url}'
 
     note = f'{note}\n\nSize: {human_readable_size(metadata["size_in_bytes"])}\n'
 
@@ -91,7 +98,7 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False, short: boo
         note = f'{note}Similar previous uploads: {related_samples_unique_count} files \n'
 
     note = (f'{note}\nFull report:\n'
-            f'{"" if no_emojis else get_emoji("result_url")} {result["analysis_url"]}')
+            f'{"" if no_emojis else get_emoji("result_url")} {analysis_url}')
 
     return note
 
