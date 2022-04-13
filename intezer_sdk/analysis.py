@@ -1,24 +1,23 @@
-import datetime
 import logging
 import os
-import time
 import typing
 from http import HTTPStatus
 
 import requests
+from requests import Response
 
 from intezer_sdk import consts
 from intezer_sdk import errors
+from intezer_sdk._util import deprecated
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.consts import AnalysisStatusCode
-from intezer_sdk.consts import CodeItemType
+from intezer_sdk.base_analysis import BaseAnalysis
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
 
 
-class Analysis:
+class FileAnalysis(BaseAnalysis):
     def __init__(self,
                  file_path: str = None,
                  file_hash: str = None,
@@ -28,18 +27,18 @@ class Analysis:
                  api: IntezerApi = None,
                  file_name: str = None,
                  code_item_type: str = None,
-                 zip_password: str = None) -> None:
+                 zip_password: str = None):
+        super().__init__(api)
+
         if [file_path, file_hash, file_stream].count(None) != 2:
             raise ValueError('Choose between file hash, file stream or file path analysis')
 
         if file_hash and code_item_type:
             logger.warning('Analyze by hash ignores code item type')
 
-        if code_item_type and code_item_type not in [c.value for c in CodeItemType]:
+        if code_item_type and code_item_type not in [c.value for c in consts.CodeItemType]:
             raise ValueError('Invalid code item type, possible code item types are: file, memory module')
 
-        self.status = None
-        self.analysis_id = None
         self._file_hash = file_hash
         self._disable_dynamic_unpacking = disable_dynamic_unpacking
         self._disable_static_unpacking = disable_static_unpacking
@@ -48,8 +47,6 @@ class Analysis:
         self._file_name = file_name
         self._code_item_type = code_item_type
         self._zip_password = zip_password
-        self._report = None
-        self._api = api or get_global_api()
         self._sub_analyses = None
         self._root_analysis = None
         self._iocs_report = None
@@ -65,94 +62,24 @@ class Analysis:
             else:
                 self._file_name = 'file.zip'
 
-    def send(self,
-             wait: typing.Union[bool, int] = False,
-             wait_timeout: typing.Optional[datetime.timedelta] = None,
-             **additional_parameters) -> None:
-        if self.analysis_id:
-            raise errors.AnalysisHasAlreadyBeenSent()
+    def _query_status_from_api(self) -> Response:
+        return self._api.get_file_analysis_response(self.analysis_id, False)
 
+    def _send_analyze_to_api(self, **additional_parameters) -> str:
         if self._file_hash:
-            self.analysis_id = self._api.analyze_by_hash(self._file_hash,
-                                                         self._disable_dynamic_unpacking,
-                                                         self._disable_static_unpacking,
-                                                         **additional_parameters)
+            return self._api.analyze_by_hash(self._file_hash,
+                                             self._disable_dynamic_unpacking,
+                                             self._disable_static_unpacking,
+                                             **additional_parameters)
         else:
-            self.analysis_id = self._api.analyze_by_file(self._file_path,
-                                                         self._file_stream,
-                                                         disable_dynamic_unpacking=self._disable_dynamic_unpacking,
-                                                         disable_static_unpacking=self._disable_static_unpacking,
-                                                         file_name=self._file_name,
-                                                         code_item_type=self._code_item_type,
-                                                         zip_password=self._zip_password,
-                                                         **additional_parameters)
-
-        self.status = consts.AnalysisStatusCode.CREATED
-
-        if wait:
-            if isinstance(wait, int):
-                self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
-            else:
-                self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
-
-    def wait_for_completion(self,
-                            interval: int = None,
-                            sleep_before_first_check=False,
-                            timeout: typing.Optional[datetime.timedelta] = None):
-        """
-        Blocks until the analysis is completed
-        :param interval: The interval to wait between checks
-        :param sleep_before_first_check: Whether to sleep before the first status check 
-        :param timeout: Maximum duration to wait for analysis completion
-        """
-        start_time = datetime.datetime.utcnow()
-        if not interval:
-            interval = consts.CHECK_STATUS_INTERVAL
-        if self._is_analysis_running():
-            if sleep_before_first_check:
-                time.sleep(interval)
-            status_code = self.check_status()
-
-            while status_code != consts.AnalysisStatusCode.FINISH:
-                timeout_passed = timeout and datetime.datetime.utcnow() - start_time > timeout
-                if timeout_passed:
-                    raise TimeoutError
-                time.sleep(interval)
-                status_code = self.check_status()
-
-    def check_status(self):
-        if not self._is_analysis_running():
-            raise errors.IntezerError('Analysis is not running')
-
-        response = self._api.get_analysis_response(self.analysis_id)
-        if response.status_code == HTTPStatus.OK:
-            self._report = response.json()['result']
-            self.status = consts.AnalysisStatusCode.FINISH
-        elif response.status_code == HTTPStatus.ACCEPTED:
-            self.status = consts.AnalysisStatusCode.IN_PROGRESS
-        else:
-            raise errors.IntezerError('Error in response status code:{}'.format(response.status_code))
-
-        return self.status
-
-    def result(self):
-        if self._is_analysis_running():
-            raise errors.AnalysisIsStillRunning()
-        if not self._report:
-            raise errors.ReportDoesNotExistError()
-
-        return self._report
-
-    def set_report(self, report: dict):
-        if not report:
-            raise ValueError('Report can not be None')
-
-        self.analysis_id = report['analysis_id']
-        self._report = report
-        self.status = consts.AnalysisStatusCode.FINISH
-
-    def _is_analysis_running(self):
-        return self.status in (consts.AnalysisStatusCode.CREATED, consts.AnalysisStatusCode.IN_PROGRESS)
+            return self._api.analyze_by_file(self._file_path,
+                                             self._file_stream,
+                                             disable_dynamic_unpacking=self._disable_dynamic_unpacking,
+                                             disable_static_unpacking=self._disable_static_unpacking,
+                                             file_name=self._file_name,
+                                             code_item_type=self._code_item_type,
+                                             zip_password=self._zip_password,
+                                             **additional_parameters)
 
     def get_sub_analyses(self):
         if self._sub_analyses is None and self.analysis_id:
@@ -209,39 +136,99 @@ class Analysis:
 
         return self._dynamic_ttps_report
 
-    def _assert_analysis_finished(self):
-        if self._is_analysis_running():
-            raise errors.AnalysisIsStillRunning()
-        if self.status != AnalysisStatusCode.FINISH:
-            raise errors.IntezerError('Analysis not finished successfully')
 
-
-def get_latest_analysis(file_hash: str, api: IntezerApi = None, private_only: bool = False) -> typing.Optional[Analysis]:
+def get_latest_analysis(file_hash: str,
+                        api: IntezerApi = None,
+                        private_only: bool = False,
+                        **additional_parameters) -> typing.Optional[FileAnalysis]:
     api = api or get_global_api()
-    analysis_report = api.get_latest_analysis(file_hash, private_only)
+    analysis_report = api.get_latest_analysis(file_hash, private_only, **additional_parameters)
 
     if not analysis_report:
         return None
 
-    analysis = Analysis(file_hash=file_hash, api=api)
+    analysis = FileAnalysis(file_hash=file_hash, api=api)
     analysis.set_report(analysis_report)
 
     return analysis
 
 
-def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[Analysis]:
+def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[FileAnalysis]:
     api = api or get_global_api()
-    response = api.get_analysis_response(analysis_id).json()
+    response = api.get_file_analysis_response(analysis_id, True)
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        return None
+    response_json = response.json()
 
-    if response['status'] in (AnalysisStatusCode.IN_PROGRESS.value,
-                              AnalysisStatusCode.QUEUED.value):
-        raise errors.AnalysisIsStillRunning()
+    _assert_analysis_status(response_json)
 
-    analysis_report = response.get('result')
+    analysis_report = response_json.get('result')
     if not analysis_report:
         return None
 
-    analysis = Analysis(file_hash=analysis_report['sha256'], api=api)
+    analysis = FileAnalysis(file_hash=analysis_report['sha256'], api=api)
+    analysis.set_report(analysis_report)
+
+    return analysis
+
+
+def _assert_analysis_status(response: dict):
+    if response['status'] in (consts.AnalysisStatusCode.IN_PROGRESS.value,
+                              consts.AnalysisStatusCode.QUEUED.value):
+        raise errors.AnalysisIsStillRunning()
+    if response['status'] == consts.AnalysisStatusCode.FAILED.value:
+        raise errors.AnalysisFailedError()
+
+
+@deprecated('This method is deprecated, use get_file_analysis_by_id instead to be explict')
+def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[FileAnalysis]:
+    return get_file_analysis_by_id(analysis_id, api)
+
+
+Analysis = FileAnalysis
+
+
+class UrlAnalysis(BaseAnalysis):
+    def __init__(self, url: str, api: IntezerApi = None):
+        super().__init__(api)
+        self.url = url
+        self._file_analysis: typing.Optional[FileAnalysis] = None
+
+    def _query_status_from_api(self) -> Response:
+        return self._api.get_url_analysis_response(self.analysis_id, False)
+
+    def _send_analyze_to_api(self, **additional_parameters) -> str:
+        return self._api.analyze_url(self.url)
+
+    @property
+    def downloaded_file_analysis(self) -> typing.Optional[FileAnalysis]:
+        if self.status != consts.AnalysisStatusCode.FINISH:
+            raise
+        if self._file_analysis:
+            return self._file_analysis
+
+        if 'downloaded_file' not in self._report:
+            return None
+
+        file_analysis_id = self._report['downloaded_file']['analysis_id']
+        self._file_analysis = get_file_analysis_by_id(file_analysis_id)
+        return self._file_analysis
+
+
+def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[UrlAnalysis]:
+    api = api or get_global_api()
+    response = api.get_url_analysis_response(analysis_id, True)
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        return None
+
+    response_json = response.json()
+    _assert_analysis_status(response_json)
+
+    analysis_report = response_json.get('result')
+    if not analysis_report:
+        return None
+
+    analysis = UrlAnalysis(analysis_report['submitted_url'], api=api)
     analysis.set_report(analysis_report)
 
     return analysis

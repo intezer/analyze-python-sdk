@@ -2,13 +2,13 @@ import os
 import sys
 
 from intezer_sdk import api
-from intezer_sdk.analysis import Analysis
+from intezer_sdk.analysis import FileAnalysis
 
 API_KEY = os.environ.get('INTEZER_API_KEY')
 DIRECTORY_PATH = ''
 
 
-def send_analysis(analysis: Analysis):
+def send_analysis(analysis: FileAnalysis):
     analysis.send(wait=True)
     return analysis.result()
 
@@ -16,7 +16,7 @@ def send_analysis(analysis: Analysis):
 def collect_suspicious_and_malicious_analyses() -> list:
     malicious_and_suspicious_analyses_results = []
     file_paths = [file for file in os.listdir(DIRECTORY_PATH)]
-    analyses = [Analysis(os.path.join(DIRECTORY_PATH, path)) for path in file_paths if
+    analyses = [FileAnalysis(os.path.join(DIRECTORY_PATH, path)) for path in file_paths if
                 os.path.isfile(os.path.join(DIRECTORY_PATH, path))]
 
     for analysis in analyses:

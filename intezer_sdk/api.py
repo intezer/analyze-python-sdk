@@ -9,9 +9,10 @@ from requests import Response
 
 from intezer_sdk import consts
 from intezer_sdk import errors
+from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 
-_global_api = None
+_global_api: typing.Optional['IntezerApi'] = None
 
 
 def raise_for_status(response: requests.Response,
@@ -149,8 +150,11 @@ class IntezerApi:
         with open(file_path, 'rb') as file_to_upload:
             return self._analyze_file_stream(file_to_upload, file_name, options)
 
-    def get_latest_analysis(self, file_hash: str, private_only: bool = False) -> typing.Optional[dict]:
-        options = {'should_get_only_private_analysis': private_only}
+    def get_latest_analysis(self,
+                            file_hash: str,
+                            private_only: bool = False,
+                            **additional_parameters) -> typing.Optional[dict]:
+        options = {'should_get_only_private_analysis': private_only, **additional_parameters}
         response = self.request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash),
                                                                   method='GET',
                                                                   data=options)
@@ -162,10 +166,21 @@ class IntezerApi:
 
         return response.json()['result']
 
-    def get_analysis_response(self, analyses_id: str) -> Response:
+    def get_file_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id),
                                                                   method='GET')
-        raise_for_status(response)
+        self._assert_result_response(ignore_not_found, response)
+
+        return response
+
+    @deprecated('This method is deprecated, use get_file_analysis_response instead to be explict')
+    def get_analysis_response(self, analyses_id: str) -> Response:
+        return self.get_file_analysis_response(analyses_id, False)
+
+    def get_url_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
+        response = self.request_with_refresh_expired_access_token(path='/url/{}'.format(analyses_id),
+                                                                  method='GET')
+        self._assert_result_response(ignore_not_found, response)
 
         return response
 
@@ -372,6 +387,22 @@ class IntezerApi:
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
+    def analyze_url(self, url: str, **additional_parameters) -> typing.Optional[str]:
+        response = self.request_with_refresh_expired_access_token(method='POST',
+                                                                  path='/url/',
+                                                                  data=dict(url=url, **additional_parameters))
+        self._assert_analysis_response_status_code(response)
+
+        return self._get_analysis_id_from_response(response)
+
+    @staticmethod
+    def _assert_result_response(ignore_not_found: bool, response: Response):
+        if ignore_not_found:
+            statuses_to_ignore = [HTTPStatus.NOT_FOUND]
+        else:
+            statuses_to_ignore = None
+        raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
+
     @staticmethod
     def _param_initialize(disable_dynamic_unpacking: bool,
                           disable_static_unpacking: bool,
@@ -401,6 +432,10 @@ class IntezerApi:
             raise errors.AnalysisIsAlreadyRunning(response)
         elif response.status_code == HTTPStatus.FORBIDDEN:
             raise errors.InsufficientQuota(response)
+        elif response.status_code == HTTPStatus.BAD_REQUEST:
+            data = response.json()
+            error = data.get('error', '')
+            raise errors.ServerError('Bad response from the server, error: {}'.format(error), response)
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
 

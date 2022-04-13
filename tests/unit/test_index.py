@@ -1,34 +1,16 @@
 import datetime
+from unittest.mock import mock_open
+from unittest.mock import patch
 
 import responses
 
 from intezer_sdk import consts
 from intezer_sdk import errors
-from intezer_sdk.api import get_global_api
-from intezer_sdk.api import set_global_api
 from intezer_sdk.index import Index
 from tests.unit.base_test import BaseTest
 
-try:
-    from unittest.mock import mock_open
-    from unittest.mock import patch
-except ImportError:
-    from mock import mock_open
-    from mock import patch
-
 
 class IndexSpec(BaseTest):
-    def setUp(self):
-        super(IndexSpec, self).setUp()
-
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'access-token'})
-            set_global_api()
-            get_global_api().set_session()
-
     def test_index_malicious_without_family_name_raise_value_error(self):
         # Act + Assert
         with self.assertRaises(ValueError):

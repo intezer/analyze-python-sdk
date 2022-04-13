@@ -4,7 +4,7 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-from intezer_sdk.analysis import Analysis
+from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.consts import ANALYZE_URL
 
 emojis_by_key = {
@@ -18,12 +18,13 @@ emojis_by_key = {
 
 def _get_title(short: bool) -> str:
     if short:
-        return 'Intezer Analysis: \n'
-    return (f'Intezer Analysis\n'
-            f'=========================\n\n')
+        return 'Intezer FileAnalysis: \n'
+    return ('Intezer FileAnalysis\n'
+            '=========================\n\n')
 
 
-def get_analysis_summary(analysis: Analysis, no_emojis: bool = False, short: bool = False, use_hash_link=False) -> str:
+def get_analysis_summary(analysis: FileAnalysis, no_emojis: bool = False, short: bool = False,
+                         use_hash_link=False) -> str:
     result = analysis.result()
 
     metadata = analysis.get_root_analysis().metadata
@@ -103,7 +104,8 @@ def get_analysis_summary(analysis: Analysis, no_emojis: bool = False, short: boo
     return note
 
 
-def get_analysis_family(analysis: Analysis, software_type_priorities: List[str]) -> Tuple[Optional[str], Optional[int]]:
+def get_analysis_family(analysis: FileAnalysis,
+                        software_type_priorities: List[str]) -> Tuple[Optional[str], Optional[int]]:
     result = analysis.result()
     family_name = result.get('family_name')
     if family_name:
@@ -119,7 +121,7 @@ def get_analysis_family(analysis: Analysis, software_type_priorities: List[str])
     return None, None
 
 
-def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> int:
+def get_analysis_family_by_family_id(analysis: FileAnalysis, family_id: str) -> int:
     reused_gene_count = 0
 
     for sub_analysis in itertools.chain([analysis.get_root_analysis()], analysis.get_sub_analyses()):
@@ -135,7 +137,7 @@ def get_analysis_family_by_family_id(analysis: Analysis, family_id: str) -> int:
     return reused_gene_count
 
 
-def find_largest_family(analysis: Analysis) -> dict:
+def find_largest_family(analysis: FileAnalysis) -> dict:
     largest_family_by_software_type = collections.defaultdict(lambda: {'reused_gene_count': 0})
     for sub_analysis in itertools.chain([analysis.get_root_analysis()], analysis.get_sub_analyses()):
         if not sub_analysis.code_reuse:
