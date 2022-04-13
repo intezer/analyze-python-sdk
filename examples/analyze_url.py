@@ -5,14 +5,14 @@ from intezer_sdk import api
 from intezer_sdk.analysis import UrlAnalysis
 
 
-def send_file_with_wait(url):
+def send_url_with_wait(url):
     api.set_global_api('<api_key>')
     analysis = UrlAnalysis(url=url)
     analysis.send(wait=True)
     pprint(analysis.result())
 
 
-def send_file_without_wait(url):
+def send_url_without_wait(url):
     api.set_global_api('<api_key>')
     analysis = UrlAnalysis(url=url)
     analysis.send()

@@ -74,7 +74,7 @@ class BaseAnalysis:
 
     def check_status(self):
         if not self._is_analysis_running():
-            raise errors.IntezerError('FileAnalysis is not running')
+            raise errors.IntezerError('Analysis is not running')
 
         response = self._query_status_from_api()
         if response.status_code == HTTPStatus.OK:
@@ -111,4 +111,4 @@ class BaseAnalysis:
         if self._is_analysis_running():
             raise errors.AnalysisIsStillRunning()
         if self.status != consts.AnalysisStatusCode.FINISH:
-            raise errors.IntezerError('FileAnalysis not finished successfully')
+            raise errors.IntezerError('Analysis not finished successfully')

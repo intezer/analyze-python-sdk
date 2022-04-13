@@ -397,7 +397,7 @@ class IntezerApi:
 
     @staticmethod
     def _assert_result_response(ignore_not_found: bool, response: Response):
-        if ignore_not_found:
+        statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
             statuses_to_ignore = [HTTPStatus.NOT_FOUND]
         else:
             statuses_to_ignore = None
@@ -435,7 +435,7 @@ class IntezerApi:
         elif response.status_code == HTTPStatus.BAD_REQUEST:
             data = response.json()
             error = data.get('error', '')
-            raise errors.ServerError('Bad response from the server, error: {}'.format(error), response)
+            raise errors.ServerError('Server returned bad request error: {}'.format(error), response)
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
 
