@@ -23,7 +23,9 @@ def _get_title(short: bool) -> str:
             '=========================\n\n')
 
 
-def get_analysis_summary(analysis: FileAnalysis, no_emojis: bool = False, short: bool = False,
+def get_analysis_summary(analysis: FileAnalysis,
+                         no_emojis: bool = False,
+                         short: bool = False,
                          use_hash_link=False) -> str:
     result = analysis.result()
 

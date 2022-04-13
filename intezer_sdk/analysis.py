@@ -1,7 +1,8 @@
 import logging
 import os
-import typing
 from http import HTTPStatus
+from typing import BinaryIO
+from typing import Optional
 
 import requests
 from requests import Response
@@ -21,7 +22,7 @@ class FileAnalysis(BaseAnalysis):
     def __init__(self,
                  file_path: str = None,
                  file_hash: str = None,
-                 file_stream: typing.BinaryIO = None,
+                 file_stream: BinaryIO = None,
                  disable_dynamic_unpacking: bool = None,
                  disable_static_unpacking: bool = None,
                  api: IntezerApi = None,
@@ -140,7 +141,7 @@ class FileAnalysis(BaseAnalysis):
 def get_latest_analysis(file_hash: str,
                         api: IntezerApi = None,
                         private_only: bool = False,
-                        **additional_parameters) -> typing.Optional[FileAnalysis]:
+                        **additional_parameters) -> Optional[FileAnalysis]:
     api = api or get_global_api()
     analysis_report = api.get_latest_analysis(file_hash, private_only, **additional_parameters)
 
@@ -153,7 +154,7 @@ def get_latest_analysis(file_hash: str,
     return analysis
 
 
-def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[FileAnalysis]:
+def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[FileAnalysis]:
     api = api or get_global_api()
     response = api.get_file_analysis_response(analysis_id, True)
     if response.status_code == HTTPStatus.NOT_FOUND:
@@ -172,16 +173,8 @@ def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.
     return analysis
 
 
-def _assert_analysis_status(response: dict):
-    if response['status'] in (consts.AnalysisStatusCode.IN_PROGRESS.value,
-                              consts.AnalysisStatusCode.QUEUED.value):
-        raise errors.AnalysisIsStillRunning()
-    if response['status'] == consts.AnalysisStatusCode.FAILED.value:
-        raise errors.AnalysisFailedError()
-
-
 @deprecated('This method is deprecated, use get_file_analysis_by_id instead to be explict')
-def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[FileAnalysis]:
+def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[FileAnalysis]:
     return get_file_analysis_by_id(analysis_id, api)
 
 
@@ -192,7 +185,7 @@ class UrlAnalysis(BaseAnalysis):
     def __init__(self, url: str, api: IntezerApi = None):
         super().__init__(api)
         self.url = url
-        self._file_analysis: typing.Optional[FileAnalysis] = None
+        self._file_analysis: Optional[FileAnalysis] = None
 
     def _query_status_from_api(self) -> Response:
         return self._api.get_url_analysis_response(self.analysis_id, False)
@@ -201,7 +194,7 @@ class UrlAnalysis(BaseAnalysis):
         return self._api.analyze_url(self.url)
 
     @property
-    def downloaded_file_analysis(self) -> typing.Optional[FileAnalysis]:
+    def downloaded_file_analysis(self) -> Optional[FileAnalysis]:
         if self.status != consts.AnalysisStatusCode.FINISH:
             raise
         if self._file_analysis:
@@ -215,7 +208,7 @@ class UrlAnalysis(BaseAnalysis):
         return self._file_analysis
 
 
-def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.Optional[UrlAnalysis]:
+def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[UrlAnalysis]:
     api = api or get_global_api()
     response = api.get_url_analysis_response(analysis_id, True)
     if response.status_code == HTTPStatus.NOT_FOUND:
@@ -232,3 +225,11 @@ def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> typing.O
     analysis.set_report(analysis_report)
 
     return analysis
+
+
+def _assert_analysis_status(response: dict):
+    if response['status'] in (consts.AnalysisStatusCode.IN_PROGRESS.value,
+                              consts.AnalysisStatusCode.QUEUED.value):
+        raise errors.AnalysisIsStillRunning()
+    if response['status'] == consts.AnalysisStatusCode.FAILED.value:
+        raise errors.AnalysisFailedError()

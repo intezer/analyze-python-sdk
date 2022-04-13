@@ -398,9 +398,6 @@ class IntezerApi:
     @staticmethod
     def _assert_result_response(ignore_not_found: bool, response: Response):
         statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
-            statuses_to_ignore = [HTTPStatus.NOT_FOUND]
-        else:
-            statuses_to_ignore = None
         raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
 
     @staticmethod

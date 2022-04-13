@@ -66,6 +66,60 @@ analysis = UrlAnalysis(url=<url>)
 analysis.send(wait=True)
 result = analysis.result()
 ```
+### Url Analysis result example
+```python
+{
+    'analysis_id': '70d09f68-c7a3-43a3-a8de-07ec31fbf4ed',
+    'domain_info': {
+        'creation_date': '1997-08-13 04:00:00.000000',
+        'domain_name': 'foo.com',
+        'registrar': 'TUCOWS, INC.'
+    },
+    'indicators': [
+    {
+        'classification': 'informative',
+        'text': 'URL is accessible'
+    },
+    {
+        'classification': 'informative',
+        'text': 'Assigned IPv4 domain'
+    },
+    {
+        'classification': 'informative',
+        'text': 'Vaild IPv4 domain'
+    }
+    ],
+    'ip': '34.206.39.153',
+    'redirect_chain': [
+    {
+        'response_status': 301,
+        'url': 'https://foo.com/'
+    },
+    {
+        'response_status': 200,
+        'url': 'http://www.foo.com/'
+    }
+    ],
+    'scanned_url': 'http://www.foo.com/',
+    'submitted_url': 'foo.com',
+    'downloaded_file': {
+        'analysis_id': '8db9a401-a142-41be-9a31-8e5f3642db62',
+        'analysis_summary': {
+           'verdict_description': 'This file contains code from malicious software, therefore it's very likely that it's malicious.',
+           'verdict_name': 'malicious',
+           'verdict_title': 'Malicious',
+           'verdict_type': 'malicious'
+        },
+        'sha256': '4293c1d8574dc87c58360d6bac3daa182f64f7785c9d41da5e0741d2b1817fc7'
+     },
+    'summary': {
+        'description': 'No suspicious activity was detected for this URL',
+        'title': 'No Threats',
+        'verdict_name': 'no_threats',
+        'verdict_type': 'no_threats'
+    }
+}
+```
 ### Index By File
 ```python
 from intezer_sdk import consts

@@ -1,8 +1,11 @@
 import abc
 import datetime
 import time
-import typing
 from http import HTTPStatus
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Union
 
 from requests import Response
 
@@ -17,7 +20,7 @@ class BaseAnalysis:
         self.status = None
         self.analysis_id = None
         self._api = api or get_global_api()
-        self._report: typing.Optional[typing.Dict[str, typing.Any]] = None
+        self._report: Optional[Dict[str, Any]] = None
 
     @abc.abstractmethod
     def _query_status_from_api(self) -> Response:
@@ -30,7 +33,7 @@ class BaseAnalysis:
     def wait_for_completion(self,
                             interval: int = None,
                             sleep_before_first_check=False,
-                            timeout: typing.Optional[datetime.timedelta] = None):
+                            timeout: Optional[datetime.timedelta] = None):
         """
         Blocks until the analysis is completed
         :param interval: The interval to wait between checks
@@ -52,12 +55,12 @@ class BaseAnalysis:
                 time.sleep(interval)
                 status_code = self.check_status()
 
-    def _is_analysis_running(self):
+    def _is_analysis_running(self) -> bool:
         return self.status in (consts.AnalysisStatusCode.CREATED, consts.AnalysisStatusCode.IN_PROGRESS)
 
     def send(self,
-             wait: typing.Union[bool, int] = False,
-             wait_timeout: typing.Optional[datetime.timedelta] = None,
+             wait: Union[bool, int] = False,
+             wait_timeout: Optional[datetime.timedelta] = None,
              **additional_parameters) -> None:
         if self.analysis_id:
             raise errors.AnalysisHasAlreadyBeenSent()
@@ -72,7 +75,7 @@ class BaseAnalysis:
             else:
                 self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
 
-    def check_status(self):
+    def check_status(self) -> consts.AnalysisStatusCode:
         if not self._is_analysis_running():
             raise errors.IntezerError('Analysis is not running')
 
@@ -91,7 +94,7 @@ class BaseAnalysis:
 
         return self.status
 
-    def result(self):
+    def result(self) -> dict:
         if self._is_analysis_running():
             raise errors.AnalysisIsStillRunning()
         if not self._report:
