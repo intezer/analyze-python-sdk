@@ -67,6 +67,11 @@ class AnalysisIsStillRunning(IntezerError):
         super().__init__('Analysis is still running')
 
 
+class AnalysisFailedError(IntezerError):
+    def __init__(self):
+        super().__init__('Analysis failed')
+
+
 class InvalidApiKey(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Invalid api key', response)

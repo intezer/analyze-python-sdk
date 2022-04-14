@@ -9,6 +9,7 @@ Currently, the following options are available in the SDK:
 
 - Analyze by file
 - Analyze by SHA256
+- Analyze Url
 - Index by file
 - Index by SHA256
 - Get Latest Analysis
@@ -33,7 +34,7 @@ api.set_global_api('<api_key>')
 
 ### Analyze By File
 ```python
-analysis = Analysis(file_path=<file_path>,
+analysis = FileAnalysis(file_path=<file_path>,
                     dynamic_unpacking=<force_dynamic_unpacking>, # optional
                     static_unpacking=<force_static_unpacking>)   # optional
 analysis.send(wait=True) 
@@ -41,12 +42,12 @@ result = analysis.result()
 ```
 ### Analyze By SHA256
 ```python
-analysis = Analysis(file_hash=<file_sha256>)
+analysis = FileAnalysis(file_hash=<file_sha256>)
 analysis.send(wait=True)
 result = analysis.result()
 ```
 
-### Analysis result example
+### File Analysis result example
 ```python
 {
   'analysis_id': '00000000-0000-0000-0000-000000000000', 
@@ -57,6 +58,66 @@ result = analysis.result()
   'sha256': '4e553bce90f0b39cd71ba633da5990259e185979c2859ec2e04dd8efcdafe356', 
   'sub_verdict': 'malicious', 
   'verdict': 'malicious'
+}
+```
+### Analyze Url
+```python
+analysis = UrlAnalysis(url=<url>)
+analysis.send(wait=True)
+result = analysis.result()
+```
+### Url Analysis result example
+```python
+{
+    'analysis_id': '70d09f68-c7a3-43a3-a8de-07ec31fbf4ed',
+    'domain_info': {
+        'creation_date': '1997-08-13 04:00:00.000000',
+        'domain_name': 'foo.com',
+        'registrar': 'TUCOWS, INC.'
+    },
+    'indicators': [
+    {
+        'classification': 'informative',
+        'text': 'URL is accessible'
+    },
+    {
+        'classification': 'informative',
+        'text': 'Assigned IPv4 domain'
+    },
+    {
+        'classification': 'informative',
+        'text': 'Vaild IPv4 domain'
+    }
+    ],
+    'ip': '34.206.39.153',
+    'redirect_chain': [
+    {
+        'response_status': 301,
+        'url': 'https://foo.com/'
+    },
+    {
+        'response_status': 200,
+        'url': 'http://www.foo.com/'
+    }
+    ],
+    'scanned_url': 'http://www.foo.com/',
+    'submitted_url': 'foo.com',
+    'downloaded_file': {
+        'analysis_id': '8db9a401-a142-41be-9a31-8e5f3642db62',
+        'analysis_summary': {
+           'verdict_description': 'This file contains code from malicious software, therefore it's very likely that it's malicious.',
+           'verdict_name': 'malicious',
+           'verdict_title': 'Malicious',
+           'verdict_type': 'malicious'
+        },
+        'sha256': '4293c1d8574dc87c58360d6bac3daa182f64f7785c9d41da5e0741d2b1817fc7'
+     },
+    'summary': {
+        'description': 'No suspicious activity was detected for this URL',
+        'title': 'No Threats',
+        'verdict_name': 'no_threats',
+        'verdict_type': 'no_threats'
+    }
 }
 ```
 ### Index By File
@@ -79,14 +140,14 @@ index.send(wait=True)
 index_id = index.index_id
 ```
 
-### Get Latest Analysis
+### Get Latest File Analysis
 ```python
 analysis = get_latest_analysis(file_hash: <file_sha256>)
 result = analysis.result()
 ```
 
 ### Get Sub Analyses
-#### Root Analysis
+#### Root File Analysis
 ```python
 root_analysis = analysis.get_root_analysis()
 ```
@@ -130,7 +191,7 @@ string_related_samples = operation.get_result()
 
 #### Wait with timeout
 ```python
-analysis = Analysis(file_hash=<file_sha256>)
+analysis = FileAnalysis(file_hash=<file_sha256>)
 analysis.send(wait=True, wait_timeout=datetime.timedelta(minutes=1))
 ```
 

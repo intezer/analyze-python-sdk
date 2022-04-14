@@ -4,24 +4,12 @@ from http import HTTPStatus
 import responses
 
 from intezer_sdk import errors
-from intezer_sdk.api import get_global_api
-from intezer_sdk.api import set_global_api
 from intezer_sdk.family import Family
 from intezer_sdk.family import get_family_by_name
 from tests.unit.base_test import BaseTest
 
 
 class FamilySpec(BaseTest):
-    def setUp(self):
-        super(FamilySpec, self).setUp()
-
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/get-access-token',
-                     status=200,
-                     json={'result': 'access-token'})
-            set_global_api()
-            get_global_api().set_session()
 
     def test_access_to_family_name_fetches_the_data_from_cloud(self):
         # Arrange

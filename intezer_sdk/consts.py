@@ -7,6 +7,7 @@ class AnalysisStatusCode(Enum):
     CREATED = 'created'
     IN_PROGRESS = 'in_progress'
     QUEUED = 'queued'
+    FAILED = 'failed'
     FINISH = 'finished'
 
 
@@ -36,7 +37,7 @@ class CodeItemType(Enum):
 
 
 ANALYZE_URL = 'https://analyze.intezer.com'
-BASE_URL = f'{ANALYZE_URL}/api/'
+BASE_URL = '{}/api/'.format(ANALYZE_URL)
 API_VERSION = 'v2-0'
 USER_AGENT = 'intezer-python-sdk-{}'.format(__version__)
 CHECK_STATUS_INTERVAL = 1

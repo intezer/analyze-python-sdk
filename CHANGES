@@ -1,3 +1,9 @@
+1.7.0
+-------
+- Add UrlAnalysis
+- `Analysis` was renamed to `FileAnalysis`
+- Drop support for python 3.5, add support for python 3.10
+
 1.6.4 - 1.6.10
 -------
 - Analysis summary utility improvements

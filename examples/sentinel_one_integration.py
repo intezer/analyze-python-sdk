@@ -19,7 +19,7 @@ import requests.adapters
 from intezer_sdk import api
 from intezer_sdk import errors
 from intezer_sdk import util
-from intezer_sdk.analysis import Analysis
+from intezer_sdk.analysis import FileAnalysis
 
 _s1_session: Optional[requests.Session] = None
 _logger = logging.getLogger('intezer')
@@ -65,7 +65,7 @@ def analyze_by_file(threat_id: str):
     download_url, zipp_password = fetch_file(threat_id)
     file = download_file(download_url)
     _logger.debug('starting to analyze file')
-    analysis = Analysis(file_stream=file, file_name=f'{threat_id}.zip', zip_password=zipp_password)
+    analysis = FileAnalysis(file_stream=file, file_name=f'{threat_id}.zip', zip_password=zipp_password)
     return analysis
 
 
@@ -143,7 +143,7 @@ def filter_threat(threat_info: dict) -> bool:
     return threat_info['agentDetectionInfo']['agentOsName'].lower().startswith(('linux', 'windows'))
 
 
-def send_note(threat_id: str, analysis: Analysis):
+def send_note(threat_id: str, analysis: FileAnalysis):
     note = util.get_analysis_summary(analysis)
 
     response = _s1_session.post('/web/api/v2.1/threats/notes',
@@ -174,7 +174,7 @@ def analyze_threat(threat_id: str, threat: dict = None):
         if file_hash:
             _logger.debug(f'trying to analyze by hash {file_hash}')
             try:
-                analysis = Analysis(file_hash=file_hash)
+                analysis = FileAnalysis(file_hash=file_hash)
                 analysis.send()
             except errors.HashDoesNotExistError:
                 _logger.debug(f'hash {file_hash} not found on server, fetching the file from endpoint')
