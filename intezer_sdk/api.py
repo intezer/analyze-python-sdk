@@ -265,15 +265,6 @@ class IntezerApi:
 
         return response.json()['result_url']
 
-    def get_sub_analysis_capabilities_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
-        response = self.request_with_refresh_expired_access_token(
-            path='/analyses/{}/sub-analyses/{}/capabilities'.format(composed_analysis_id, sub_analysis_id),
-            method='POST')
-
-        raise_for_status(response)
-
-        return response.json()['result_url']
-
     def generate_sub_analysis_vaccine_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
         response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/generate-vaccine'.format(composed_analysis_id, sub_analysis_id),
