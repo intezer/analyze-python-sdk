@@ -191,13 +191,6 @@ class IntezerApi:
 
         return response
 
-    def get_dynamic_ttps(self, analyses_id: str):
-        response = self.request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
-                                                                  method='GET')
-        raise_for_status(response)
-
-        return response
-
     def get_family_info(self, family_id: str) -> typing.Optional[dict]:
         response = self.request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
         if response.status_code == HTTPStatus.NOT_FOUND:
