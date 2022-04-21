@@ -184,12 +184,11 @@ class IntezerApi:
 
         return response
 
-    def get_iocs(self, analyses_id: str) -> Response:
+    def get_iocs(self, analyses_id: str) -> typing.Optional[dict]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
                                                                   method='GET')
         raise_for_status(response)
-
-        return response
+        return response.json()['result']
 
     def get_dynamic_ttps(self, analyses_id: str):
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
