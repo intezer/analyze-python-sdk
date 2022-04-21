@@ -154,8 +154,12 @@ class IntezerApi:
                             file_hash: str,
                             private_only: bool = False,
                             **additional_parameters) -> typing.Optional[dict]:
-        options = {'should_get_only_private_analysis': private_only, **additional_parameters}
-        response = self.request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash),
+        options = {**additional_parameters}
+        if not private_only:
+            path = '/files/{}'.format(file_hash)
+        else:
+            path = '/files/{}?private=true'.format(file_hash)
+        response = self.request_with_refresh_expired_access_token(path=path,
                                                                   method='GET',
                                                                   data=options)
 
