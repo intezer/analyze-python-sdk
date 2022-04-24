@@ -1,3 +1,9 @@
+1.8.0
+-------
+- Add on-premise compatability
+- Deprecate `get_analysis_by_id` in favor of `Analysis.from_analysis_id`
+
+
 1.7.0
 -------
 - Add UrlAnalysis

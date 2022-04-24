@@ -12,10 +12,9 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.analysis import UrlAnalysis
-from intezer_sdk.analysis import get_file_analysis_by_id
-from intezer_sdk.analysis import get_latest_analysis
-from intezer_sdk.analysis import get_url_analysis_by_id
+from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import AnalysisStatusCode
+from intezer_sdk.consts import OnPremiseVersion
 from intezer_sdk.sub_analysis import SubAnalysis
 from tests.unit.base_test import BaseTest
 
@@ -252,6 +251,16 @@ class FileAnalysisSpec(BaseTest):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
         self.assertEqual(ttps, 'ttps_report')
+
+    def test_get_dynamic_ttps_raises_when_on_premise_on_21_11(self):
+        # Arrange
+        analysis = FileAnalysis(file_path='a')
+        analysis.status = consts.AnalysisStatusCode.FINISH
+        get_global_api().on_premise_version = OnPremiseVersion.V21_11
+
+        # Act and Assert
+        with self.assertRaises(errors.UnsupportedOnPremiseVersion):
+            _ = analysis.dynamic_ttps
 
     def test_send_analysis_by_file_and_get_dynamic_ttps_handle_no_ttps(self):
         # Arrange
@@ -670,6 +679,15 @@ class FileAnalysisSpec(BaseTest):
         self.assertIsNotNone(string_related_operation.get_result())
         self.assertIsNotNone(capabilities.get_result())
 
+    def test_capabilities_raises_when_on_premise_21_11(self):
+        # Arrange
+        sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root')
+        get_global_api().on_premise_version = OnPremiseVersion.V21_11
+
+        # Act and Assert
+        with self.assertRaises(errors.UnsupportedOnPremiseVersion):
+            _ = sub_analysis.get_capabilities()
+
     def test_send_analysis_that_running_on_server_raise_error(self):
         # Arrange
         with responses.RequestsMock() as mock:
@@ -746,7 +764,7 @@ class FileAnalysisSpec(BaseTest):
             mock.add('GET', url='{}/files/{}'.format(self.full_url, file_hash), status=404)
 
             # Act
-            analysis = get_latest_analysis(file_hash)
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
 
         self.assertIsNone(analysis)
 
@@ -763,7 +781,29 @@ class FileAnalysisSpec(BaseTest):
                      json={'result': analysis_report})
 
             # Act
-            analysis = get_latest_analysis(file_hash)
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
+
+        self.assertIsNotNone(analysis)
+        self.assertEqual(analysis_id, analysis.analysis_id)
+        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
+        self.assertDictEqual(analysis_report, analysis.result())
+
+    def test_get_latest_analysis_analysis_object_when_latest_analysis_found_with_on_premise(self):
+        # Arrange
+        get_global_api().on_premise_version = OnPremiseVersion.V21_11
+        file_hash = 'hash'
+        analysis_id = 'analysis_id'
+        analysis_report = {'analysis_id': analysis_id}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url='{}/files/{}'.format(self.full_url, file_hash),
+                     status=200,
+                     json={'result': analysis_report})
+
+            # Act
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
+            self.assertEqual(mock.calls[0].request.body, b'{}')
 
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)
@@ -782,7 +822,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'result': analysis_report, 'status': 'succeeded'})
 
             # Act
-            analysis = get_file_analysis_by_id(analysis_id)
+            analysis = FileAnalysis.from_analysis_id(analysis_id)
 
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)
@@ -801,7 +841,7 @@ class FileAnalysisSpec(BaseTest):
 
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunning):
-                get_file_analysis_by_id(analysis_id)
+                FileAnalysis.from_analysis_id(analysis_id)
 
     def test_get_analysis_by_id_raises_when_analysis_is_queued(self):
         # Arrange
@@ -815,7 +855,7 @@ class FileAnalysisSpec(BaseTest):
 
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunning):
-                get_file_analysis_by_id(analysis_id)
+                FileAnalysis.from_analysis_id(analysis_id)
 
 
 class UrlAnalysisSpec(BaseTest):
@@ -831,7 +871,7 @@ class UrlAnalysisSpec(BaseTest):
                      json={'result': analysis_report, 'status': 'succeeded'})
 
             # Act
-            analysis = get_url_analysis_by_id(analysis_id)
+            analysis = UrlAnalysis.from_analysis_id(analysis_id)
 
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)
@@ -850,7 +890,7 @@ class UrlAnalysisSpec(BaseTest):
 
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunning):
-                get_url_analysis_by_id(analysis_id)
+                UrlAnalysis.from_analysis_id(analysis_id)
 
     def test_get_analysis_by_id_raises_when_analysis_failed(self):
         # Arrange
@@ -864,7 +904,7 @@ class UrlAnalysisSpec(BaseTest):
 
             # Act
             with self.assertRaises(errors.AnalysisFailedError):
-                get_url_analysis_by_id(analysis_id)
+                UrlAnalysis.from_analysis_id(analysis_id)
 
     def test_send_perform_request_and_sets_analysis_status(self):
         # Arrange
@@ -895,6 +935,14 @@ class UrlAnalysisSpec(BaseTest):
             # Act
             with self.assertRaises(errors.ServerError):
                 analysis.send()
+
+    def test_send_fail_when_on_premise(self):
+        # Arrange
+        get_global_api().on_premise_version = OnPremiseVersion.V21_11
+
+        # Act
+        with self.assertRaises(errors.UnsupportedOnPremiseVersion):
+            _ = UrlAnalysis(url='httpdddds://intezer.com')
 
     def test_send_waits_to_compilation_when_requested(self):
         # Arrange

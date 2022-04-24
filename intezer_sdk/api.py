@@ -11,6 +11,7 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
+from intezer_sdk.consts import OnPremiseVersion
 
 _global_api: typing.Optional['IntezerApi'] = None
 
@@ -55,12 +56,18 @@ def raise_for_status(response: requests.Response,
 
 
 class IntezerApi:
-    def __init__(self, api_version: str = None, api_key: str = None, base_url: str = None, verify_ssl: bool = True):
+    def __init__(self,
+                 api_version: str = None,
+                 api_key: str = None,
+                 base_url: str = None,
+                 verify_ssl: bool = True,
+                 on_premise_version: OnPremiseVersion = None):
         self.full_url = base_url + api_version
         self.api_key = api_key
         self._access_token = None
         self._session = None
         self._verify_ssl = verify_ssl
+        self.on_premise_version = on_premise_version
 
     def _request(self,
                  method: str,
@@ -154,7 +161,12 @@ class IntezerApi:
                             file_hash: str,
                             private_only: bool = False,
                             **additional_parameters) -> typing.Optional[dict]:
-        options = {'should_get_only_private_analysis': private_only, **additional_parameters}
+
+        if not self.on_premise_version or self.on_premise_version > OnPremiseVersion.V21_11:
+            options = {'should_get_only_private_analysis': private_only, **additional_parameters}
+        else:
+            options = {}
+
         response = self.request_with_refresh_expired_access_token(path='/files/{}'.format(file_hash),
                                                                   method='GET',
                                                                   data=options)
@@ -184,19 +196,20 @@ class IntezerApi:
 
         return response
 
-    def get_iocs(self, analyses_id: str) -> Response:
+    def get_iocs(self, analyses_id: str) -> typing.Optional[dict]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
                                                                   method='GET')
         raise_for_status(response)
 
-        return response
+        return response.json()['result']
 
-    def get_dynamic_ttps(self, analyses_id: str):
+    def get_dynamic_ttps(self, analyses_id: str) -> typing.Optional[dict]:
+        self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
                                                                   method='GET')
         raise_for_status(response)
 
-        return response
+        return response.json()['result']
 
     def get_family_info(self, family_id: str) -> typing.Optional[dict]:
         response = self.request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
@@ -266,6 +279,7 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_sub_analysis_capabilities_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+        self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/capabilities'.format(composed_analysis_id, sub_analysis_id),
             method='POST')
@@ -283,14 +297,14 @@ class IntezerApi:
 
         return response.json()['result_url']
 
-    def get_strings_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+    def get_strings_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
         response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/strings'.format(composed_analysis_id, sub_analysis_id),
             method='POST')
 
         raise_for_status(response)
 
-        return response.json()['result_url']
+        return response.json()
 
     def get_string_related_samples_by_id(self,
                                          composed_analysis_id: str,
@@ -388,6 +402,7 @@ class IntezerApi:
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
     def analyze_url(self, url: str, **additional_parameters) -> typing.Optional[str]:
+        self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(method='POST',
                                                                   path='/url/',
                                                                   data=dict(url=url, **additional_parameters))
@@ -451,6 +466,10 @@ class IntezerApi:
     def _get_index_id_from_response(response: Response):
         return response.json()['result_url'].split('/')[3]
 
+    def assert_on_premise_above_v21_11(self):
+        if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:
+            raise errors.UnsupportedOnPremiseVersion('This endpoint is not available yet on this on premise')
+
 
 def get_global_api() -> IntezerApi:
     global _global_api
@@ -461,7 +480,15 @@ def get_global_api() -> IntezerApi:
     return _global_api
 
 
-def set_global_api(api_key: str = None, api_version: str = None, base_url: str = None, verify_ssl: bool = True):
+def set_global_api(api_key: str = None,
+                   api_version: str = None,
+                   base_url: str = None,
+                   verify_ssl: bool = True,
+                   on_premise_version: OnPremiseVersion = None):
     global _global_api
     api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
-    _global_api = IntezerApi(api_version or consts.API_VERSION, api_key, base_url or consts.BASE_URL, verify_ssl)
+    _global_api = IntezerApi(api_version or consts.API_VERSION,
+                             api_key,
+                             base_url or consts.BASE_URL,
+                             verify_ssl,
+                             on_premise_version)

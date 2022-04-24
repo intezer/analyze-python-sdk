@@ -1,4 +1,5 @@
 from enum import Enum
+from enum import IntEnum
 
 from intezer_sdk import __version__
 
@@ -34,6 +35,10 @@ class IndexType(Enum):
 class CodeItemType(Enum):
     FILE = 'file'
     MEMORY_MODULE = 'memory_module'
+
+
+class OnPremiseVersion(IntEnum):
+    V21_11 = 21.11
 
 
 ANALYZE_URL = 'https://analyze.intezer.com'

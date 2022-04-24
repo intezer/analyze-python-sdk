@@ -1,11 +1,11 @@
 import datetime
 import typing
 
-from requests import HTTPError
-
+from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import AnalysisStatusCode
+from intezer_sdk.consts import OnPremiseVersion
 from intezer_sdk.operation import Operation
 
 
@@ -68,8 +68,8 @@ class SubAnalysis:
     def get_strings(self,
                     wait: typing.Union[bool, int] = False,
                     wait_timeout: typing.Optional[datetime.timedelta] = None) -> Operation:
-        result_url = self._api.get_strings_by_id(self.composed_analysis_id, self.analysis_id)
-        return self._handle_operation('Strings', result_url, wait, wait_timeout)
+        result = self._api.get_strings_by_id(self.composed_analysis_id, self.analysis_id)
+        return self._handle_operation('Strings', result['result_url'], wait, wait_timeout)
 
     def get_string_related_samples(self,
                                    string_value: str,
