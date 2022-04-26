@@ -1,4 +1,4 @@
-
+![PyPI](https://img.shields.io/pypi/v/intezer_sdk)
 # Intezer SDK
 
 Basic SDK for Intezer Analyze API 2.0 
