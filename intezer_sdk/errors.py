@@ -13,6 +13,10 @@ class IntezerError(Exception):
     pass
 
 
+class UnsupportedOnPremiseVersion(IntezerError):
+    pass
+
+
 class ServerError(IntezerError):
     def __init__(self, message: str, response: requests.Response):
         self.response = response

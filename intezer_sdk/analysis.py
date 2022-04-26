@@ -63,6 +63,42 @@ class FileAnalysis(BaseAnalysis):
             else:
                 self._file_name = 'file.zip'
 
+    @classmethod
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> Optional['FileAnalysis']:
+        api = api or get_global_api()
+        response = api.get_file_analysis_response(analysis_id, True)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+        response_json = response.json()
+
+        _assert_analysis_status(response_json)
+
+        analysis_report = response_json.get('result')
+        if not analysis_report:
+            return None
+
+        analysis = cls(file_hash=analysis_report['sha256'], api=api)
+        analysis.set_report(analysis_report)
+
+        return analysis
+
+    @classmethod
+    def from_latest_hash_analysis(cls,
+                                  file_hash: str,
+                                  api: IntezerApi = None,
+                                  private_only: bool = False,
+                                  **additional_parameters) -> Optional['FileAnalysis']:
+        api = api or get_global_api()
+        analysis_report = api.get_latest_analysis(file_hash, private_only, **additional_parameters)
+
+        if not analysis_report:
+            return None
+
+        analysis = cls(file_hash=file_hash, api=api)
+        analysis.set_report(analysis_report)
+
+        return analysis
+
     def _query_status_from_api(self) -> Response:
         return self._api.get_file_analysis_response(self.analysis_id, False)
 
@@ -114,7 +150,7 @@ class FileAnalysis(BaseAnalysis):
         self._assert_analysis_finished()
         if not self._iocs_report:
             try:
-                self._iocs_report = self._api.get_iocs(self.analysis_id).json()['result']
+                self._iocs_report = self._api.get_iocs(self.analysis_id)
             except requests.HTTPError as e:
                 if e.response.status_code == HTTPStatus.NOT_FOUND:
                     self._iocs_report = None
@@ -128,7 +164,7 @@ class FileAnalysis(BaseAnalysis):
         self._assert_analysis_finished()
         if not self._dynamic_ttps_report:
             try:
-                self._dynamic_ttps_report = self._api.get_dynamic_ttps(self.analysis_id).json()['result']
+                self._dynamic_ttps_report = self._api.get_dynamic_ttps(self.analysis_id)
             except requests.HTTPError as e:
                 if e.response.status_code == HTTPStatus.NOT_FOUND:
                     self._dynamic_ttps_report = None
@@ -138,42 +174,20 @@ class FileAnalysis(BaseAnalysis):
         return self._dynamic_ttps_report
 
 
+@deprecated('This method is deprecated, use FileAnalysis.from_latest_hash_analysis instead to be explict')
 def get_latest_analysis(file_hash: str,
                         api: IntezerApi = None,
                         private_only: bool = False,
                         **additional_parameters) -> Optional[FileAnalysis]:
-    api = api or get_global_api()
-    analysis_report = api.get_latest_analysis(file_hash, private_only, **additional_parameters)
-
-    if not analysis_report:
-        return None
-
-    analysis = FileAnalysis(file_hash=file_hash, api=api)
-    analysis.set_report(analysis_report)
-
-    return analysis
+    return FileAnalysis.from_latest_hash_analysis(file_hash, api, private_only, **additional_parameters)
 
 
+@deprecated('This method is deprecated, use FileAnalysis.from_analysis_by_id instead to be explict')
 def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[FileAnalysis]:
-    api = api or get_global_api()
-    response = api.get_file_analysis_response(analysis_id, True)
-    if response.status_code == HTTPStatus.NOT_FOUND:
-        return None
-    response_json = response.json()
-
-    _assert_analysis_status(response_json)
-
-    analysis_report = response_json.get('result')
-    if not analysis_report:
-        return None
-
-    analysis = FileAnalysis(file_hash=analysis_report['sha256'], api=api)
-    analysis.set_report(analysis_report)
-
-    return analysis
+    return FileAnalysis.from_analysis_id(analysis_id, api)
 
 
-@deprecated('This method is deprecated, use get_file_analysis_by_id instead to be explict')
+@deprecated('This method is deprecated, use FileAnalysis.from_analysis_by_id instead to be explict')
 def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[FileAnalysis]:
     return get_file_analysis_by_id(analysis_id, api)
 
@@ -184,8 +198,28 @@ Analysis = FileAnalysis
 class UrlAnalysis(BaseAnalysis):
     def __init__(self, url: str, api: IntezerApi = None):
         super().__init__(api)
+        self._api.assert_on_premise_above_v21_11()
         self.url = url
         self._file_analysis: Optional[FileAnalysis] = None
+
+    @classmethod
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> Optional['UrlAnalysis']:
+        api = api or get_global_api()
+        response = api.get_url_analysis_response(analysis_id, True)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+
+        response_json = response.json()
+        _assert_analysis_status(response_json)
+
+        analysis_report = response_json.get('result')
+        if not analysis_report:
+            return None
+
+        analysis = UrlAnalysis(analysis_report['submitted_url'], api=api)
+        analysis.set_report(analysis_report)
+
+        return analysis
 
     def _query_status_from_api(self) -> Response:
         return self._api.get_url_analysis_response(self.analysis_id, False)
@@ -208,23 +242,9 @@ class UrlAnalysis(BaseAnalysis):
         return self._file_analysis
 
 
+@deprecated('This method is deprecated, use UrlAnalysis.from_analysis_by_id instead to be explict')
 def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[UrlAnalysis]:
-    api = api or get_global_api()
-    response = api.get_url_analysis_response(analysis_id, True)
-    if response.status_code == HTTPStatus.NOT_FOUND:
-        return None
-
-    response_json = response.json()
-    _assert_analysis_status(response_json)
-
-    analysis_report = response_json.get('result')
-    if not analysis_report:
-        return None
-
-    analysis = UrlAnalysis(analysis_report['submitted_url'], api=api)
-    analysis.set_report(analysis_report)
-
-    return analysis
+    return UrlAnalysis.from_analysis_id(analysis_id, api)
 
 
 def _assert_analysis_status(response: dict):

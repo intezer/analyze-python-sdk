@@ -15,15 +15,20 @@ from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 
 
-class BaseAnalysis:
+class BaseAnalysis(metaclass=abc.ABCMeta):
     def __init__(self, api: IntezerApi = None):
         self.status = None
         self.analysis_id = None
-        self._api = api or get_global_api()
+        self._api: IntezerApi = api or get_global_api()
         self._report: Optional[Dict[str, Any]] = None
 
     @abc.abstractmethod
     def _query_status_from_api(self) -> Response:
+        raise NotImplementedError()
+
+    @classmethod
+    @abc.abstractmethod
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None):
         raise NotImplementedError()
 
     @abc.abstractmethod

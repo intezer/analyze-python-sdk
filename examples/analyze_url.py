@@ -20,5 +20,11 @@ def send_url_without_wait(url):
     pprint(analysis.result())
 
 
+def get_url_by_id(analysis_id):
+    api.set_global_api('<api_key>')
+    analysis = UrlAnalysis.from_analysis_id(analysis_id)
+    pprint(analysis.result())
+
+
 if __name__ == '__main__':
-    send_file_with_wait(*sys.argv[1:])
+    send_url_with_wait(*sys.argv[1:])
