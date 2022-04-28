@@ -19,8 +19,8 @@ emojis_by_key = {
 
 def _get_title(short: bool) -> str:
     if short:
-        return 'Intezer FileAnalysis: \n'
-    return ('Intezer FileAnalysis\n'
+        return 'Intezer Analysis: \n'
+    return ('Intezer File Analysis\n'
             '=========================\n\n')
 
 
