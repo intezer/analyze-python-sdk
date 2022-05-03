@@ -10,6 +10,7 @@ class AnalysisStatusCode(Enum):
     QUEUED = 'queued'
     FAILED = 'failed'
     FINISH = 'finished'
+    SUCCEEDED = 'succeeded'
 
 
 class IndexStatusCode(Enum):
@@ -35,6 +36,24 @@ class IndexType(Enum):
 class CodeItemType(Enum):
     FILE = 'file'
     MEMORY_MODULE = 'memory_module'
+
+
+class FamilyType(Enum):
+    ADMINISTRATION_TOOL = 'administration_tool'
+    APPLICATION = 'application'
+    INSTALLER = 'installer'
+    INTERPRETER = 'interpreter'
+    LIBRARY = 'library'
+    MALWARE = 'malware'
+    PACKER = 'packer'
+
+
+class Verdict(Enum):
+    KNOWN_MALICIOUS = 'known_malicious'
+    MALICIOUS = 'malicious'
+    SUSPICIOUS = 'suspicious'
+    TRUSTED = 'trusted'
+    UNKNOWN = 'unknown'
 
 
 class OnPremiseVersion(IntEnum):
