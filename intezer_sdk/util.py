@@ -12,6 +12,7 @@ emojis_by_key = {
     'malicious': '🧨',
     'suspicious': '⚠️',
     'unknown': '❔',
+    'not_supported': '❔',
     'result_url': '👉',
     'no_threats': '✅'
 }
