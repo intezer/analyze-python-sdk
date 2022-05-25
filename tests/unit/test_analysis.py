@@ -661,7 +661,7 @@ class FileAnalysisSpec(BaseTest):
                      url=self.full_url + 'a/b/capabilities',
                      status=200, json={'result': 'abd'})
 
-            sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root')
+            sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root', None)
 
             # Act
             related_files_operation = sub_analysis.find_related_files('ax', wait=True)
@@ -681,7 +681,7 @@ class FileAnalysisSpec(BaseTest):
 
     def test_capabilities_raises_when_on_premise_21_11(self):
         # Arrange
-        sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root')
+        sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root', None)
         get_global_api().on_premise_version = OnPremiseVersion.V21_11
 
         # Act and Assert

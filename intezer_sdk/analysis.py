@@ -136,6 +136,7 @@ class FileAnalysis(BaseAnalysis):
                                               self.analysis_id,
                                               sub_analysis['sha256'],
                                               sub_analysis['source'],
+                                              sub_analysis.get('extraction_info'),
                                               api=self._api)
             if sub_analysis_object.source == 'root':
                 self._root_analysis = sub_analysis_object
