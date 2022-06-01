@@ -1,7 +1,11 @@
 import os
-import typing
 from http import HTTPStatus
+from typing import Any
+from typing import BinaryIO
+from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Union
 
 import requests
 import requests.adapters
@@ -13,12 +17,12 @@ from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
 
-_global_api: typing.Optional['IntezerApi'] = None
+_global_api: Optional['IntezerApi'] = None
 
 
 def raise_for_status(response: requests.Response,
-                     statuses_to_ignore: typing.List[typing.Union[HTTPStatus, int]] = None,
-                     allowed_statuses: typing.List[typing.Union[HTTPStatus, int]] = None):
+                     statuses_to_ignore: List[Union[HTTPStatus, int]] = None,
+                     allowed_statuses: List[Union[HTTPStatus, int]] = None):
     """Raises stored :class:`HTTPError`, if one occurred."""
 
     http_error_msg = ''
@@ -124,7 +128,7 @@ class IntezerApi:
 
         return self._get_analysis_id_from_response(response)
 
-    def _analyze_file_stream(self, file_stream: typing.BinaryIO, file_name: str, options: dict) -> str:
+    def _analyze_file_stream(self, file_stream: BinaryIO, file_name: str, options: dict) -> str:
         file = {'file': (file_name, file_stream)}
 
         response = self.request_with_refresh_expired_access_token(path='/analyze',
@@ -138,13 +142,13 @@ class IntezerApi:
 
     def analyze_by_file(self,
                         file_path: str = None,
-                        file_stream: typing.BinaryIO = None,
+                        file_stream: BinaryIO = None,
                         disable_dynamic_unpacking: bool = None,
                         disable_static_unpacking: bool = None,
                         file_name: str = None,
                         code_item_type: str = None,
                         zip_password: str = None,
-                        **additional_parameters) -> typing.Optional[str]:
+                        **additional_parameters) -> Optional[str]:
         options = self._param_initialize(disable_dynamic_unpacking,
                                          disable_static_unpacking,
                                          code_item_type,
@@ -160,7 +164,7 @@ class IntezerApi:
     def get_latest_analysis(self,
                             file_hash: str,
                             private_only: bool = False,
-                            **additional_parameters) -> typing.Optional[dict]:
+                            **additional_parameters) -> Optional[dict]:
 
         if not self.on_premise_version or self.on_premise_version > OnPremiseVersion.V21_11:
             options = {'should_get_only_private_analysis': private_only, **additional_parameters}
@@ -196,14 +200,14 @@ class IntezerApi:
 
         return response
 
-    def get_iocs(self, analyses_id: str) -> typing.Optional[dict]:
+    def get_iocs(self, analyses_id: str) -> Optional[dict]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
                                                                   method='GET')
         raise_for_status(response)
 
         return response.json()['result']
 
-    def get_dynamic_ttps(self, analyses_id: str) -> typing.Optional[dict]:
+    def get_dynamic_ttps(self, analyses_id: str) -> Optional[dict]:
         self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
                                                                   method='GET')
@@ -211,7 +215,7 @@ class IntezerApi:
 
         return response.json()['result']
 
-    def get_family_info(self, family_id: str) -> typing.Optional[dict]:
+    def get_family_info(self, family_id: str) -> Optional[dict]:
         response = self.request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -219,7 +223,7 @@ class IntezerApi:
         raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
         return response.json()['result']
 
-    def get_family_by_name(self, family_name: str) -> typing.Optional[typing.Dict[str, typing.Any]]:
+    def get_family_by_name(self, family_name: str) -> Optional[Dict[str, Any]]:
         response = self.request_with_refresh_expired_access_token('GET', '/families', {'family_name': family_name})
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -227,7 +231,7 @@ class IntezerApi:
         raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
         return response.json()['result']
 
-    def get_sub_analyses_by_id(self, analysis_id: str) -> typing.Optional[list]:
+    def get_sub_analyses_by_id(self, analysis_id: str) -> Optional[List[dict]]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses'.format(analysis_id),
                                                                   method='GET')
         raise_for_status(response)
@@ -236,7 +240,7 @@ class IntezerApi:
 
     def get_sub_analysis_code_reuse_by_id(self,
                                           composed_analysis_id: str,
-                                          sub_analysis_id: str) -> typing.Optional[dict]:
+                                          sub_analysis_id: str) -> Optional[dict]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/code-reuse'
                                                                   .format(composed_analysis_id, sub_analysis_id),
                                                                   method='GET')
@@ -319,7 +323,7 @@ class IntezerApi:
 
         return response.json()['result_url']
 
-    def get_url_result(self, url: str) -> typing.Optional[Response]:
+    def get_url_result(self, url: str) -> Optional[Response]:
         response = self.request_with_refresh_expired_access_token(path=url, method='GET')
 
         raise_for_status(response)
@@ -401,7 +405,7 @@ class IntezerApi:
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = consts.USER_AGENT
 
-    def analyze_url(self, url: str, **additional_parameters) -> typing.Optional[str]:
+    def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
         self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(method='POST',
                                                                   path='/url/',
