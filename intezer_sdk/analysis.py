@@ -226,7 +226,7 @@ class UrlAnalysis(BaseAnalysis):
         return self._api.get_url_analysis_response(self.analysis_id, False)
 
     def _send_analyze_to_api(self, **additional_parameters) -> str:
-        return self._api.analyze_url(self.url)
+        return self._api.analyze_url(self.url, **additional_parameters)
 
     @property
     def downloaded_file_analysis(self) -> Optional[FileAnalysis]:
