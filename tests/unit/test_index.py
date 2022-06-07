@@ -46,7 +46,7 @@ class IndexSpec(BaseTest):
             index = Index(sha256='a', index_as=consts.IndexType.TRUSTED)
 
             # Act + Assert
-            with self.assertRaises(errors.IndexFailed):
+            with self.assertRaises(errors.IndexFailedError):
                 index.send(wait=True)
 
     def test_malicious_index_by_sha256_status_change_to_created(self):

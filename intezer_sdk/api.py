@@ -391,7 +391,7 @@ class IntezerApi:
                                  verify=self._verify_ssl)
 
         if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
-            raise errors.InvalidApiKey(response)
+            raise errors.InvalidApiKeyError(response)
         if response.status_code != HTTPStatus.OK:
             raise_for_status(response)
 
@@ -445,9 +445,9 @@ class IntezerApi:
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError(response)
         elif response.status_code == HTTPStatus.CONFLICT:
-            raise errors.AnalysisIsAlreadyRunning(response)
+            raise errors.AnalysisIsAlreadyRunningError(response)
         elif response.status_code == HTTPStatus.FORBIDDEN:
-            raise errors.InsufficientQuota(response)
+            raise errors.InsufficientQuotaError(response)
         elif response.status_code == HTTPStatus.BAD_REQUEST:
             data = response.json()
             error = data.get('error', '')
@@ -472,14 +472,14 @@ class IntezerApi:
 
     def assert_on_premise_above_v21_11(self):
         if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:
-            raise errors.UnsupportedOnPremiseVersion('This endpoint is not available yet on this on premise')
+            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on premise')
 
 
 def get_global_api() -> IntezerApi:
     global _global_api
 
     if not _global_api:
-        raise errors.GlobalApiIsNotInitialized()
+        raise errors.GlobalApiIsNotInitializedError()
 
     return _global_api
 

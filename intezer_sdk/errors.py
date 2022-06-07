@@ -13,8 +13,11 @@ class IntezerError(Exception):
     pass
 
 
-class UnsupportedOnPremiseVersion(IntezerError):
+class UnsupportedOnPremiseVersionError(IntezerError):
     pass
+
+
+UnsupportedOnPremiseVersion = UnsupportedOnPremiseVersionError
 
 
 class ServerError(IntezerError):
@@ -26,14 +29,20 @@ class ServerError(IntezerError):
         super().__init__(message)
 
 
-class AnalysisHasAlreadyBeenSent(IntezerError):
+class AnalysisHasAlreadyBeenSentError(IntezerError):
     def __init__(self):
-        super(AnalysisHasAlreadyBeenSent, self).__init__('Analysis already been sent')
+        super().__init__('Analysis already been sent')
 
 
-class IndexHasAlreadyBeenSent(IntezerError):
+AnalysisHasAlreadyBeenSent = AnalysisHasAlreadyBeenSentError
+
+
+class IndexHasAlreadyBeenSentError(IntezerError):
     def __init__(self):
         super().__init__('Index already been sent')
+
+
+IndexHasAlreadyBeenSent = IndexHasAlreadyBeenSentError
 
 
 class FamilyNotFoundError(IntezerError):
@@ -51,24 +60,36 @@ class ReportDoesNotExistError(IntezerError):
         super().__init__('Report was not found')
 
 
-class AnalysisIsAlreadyRunning(ServerError):
+class AnalysisIsAlreadyRunningError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Analysis already running', response)
 
 
-class InsufficientQuota(ServerError):
+AnalysisIsAlreadyRunning = AnalysisIsAlreadyRunningError
+
+
+class InsufficientQuotaError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Insufficient quota', response)
 
 
-class GlobalApiIsNotInitialized(IntezerError):
+InsufficientQuota = InsufficientQuotaError
+
+
+class GlobalApiIsNotInitializedError(IntezerError):
     def __init__(self):
         super().__init__('Global API is not initialized')
 
 
-class AnalysisIsStillRunning(IntezerError):
+GlobalApiIsNotInitialized = GlobalApiIsNotInitializedError
+
+
+class AnalysisIsStillRunningError(IntezerError):
     def __init__(self):
         super().__init__('Analysis is still running')
+
+
+AnalysisIsStillRunning = AnalysisIsStillRunningError
 
 
 class AnalysisFailedError(IntezerError):
@@ -76,16 +97,30 @@ class AnalysisFailedError(IntezerError):
         super().__init__('Analysis failed')
 
 
-class InvalidApiKey(ServerError):
+class InvalidApiKeyError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Invalid api key', response)
 
 
-class IndexFailed(ServerError):
+InvalidApiKey = InvalidApiKeyError
+
+
+class IndexFailedError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Index operation failed', response)
 
 
-class SubAnalysisOperationStillRunning(IntezerError):
+IndexFailed = IndexFailedError
+
+
+class SubAnalysisOperationStillRunningError(IntezerError):
     def __init__(self, operation):
-        super(SubAnalysisOperationStillRunning, self).__init__('{} is still running'.format(operation))
+        super().__init__('{} is still running'.format(operation))
+
+
+SubAnalysisOperationStillRunning = SubAnalysisOperationStillRunningError
+
+
+class SubAnalysisNotFoundError(IntezerError):
+    def __init__(self, analysis_id: str):
+        super().__init__('analysis {} is not found'.format(analysis_id))

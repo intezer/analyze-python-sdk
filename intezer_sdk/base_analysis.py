@@ -68,7 +68,7 @@ class BaseAnalysis(metaclass=abc.ABCMeta):
              wait_timeout: Optional[datetime.timedelta] = None,
              **additional_parameters) -> None:
         if self.analysis_id:
-            raise errors.AnalysisHasAlreadyBeenSent()
+            raise errors.AnalysisHasAlreadyBeenSentError()
 
         self.analysis_id = self._send_analyze_to_api(**additional_parameters)
 
@@ -101,7 +101,7 @@ class BaseAnalysis(metaclass=abc.ABCMeta):
 
     def result(self) -> dict:
         if self._is_analysis_running():
-            raise errors.AnalysisIsStillRunning()
+            raise errors.AnalysisIsStillRunningError()
         if not self._report:
             raise errors.ReportDoesNotExistError()
 
@@ -117,6 +117,6 @@ class BaseAnalysis(metaclass=abc.ABCMeta):
 
     def _assert_analysis_finished(self):
         if self._is_analysis_running():
-            raise errors.AnalysisIsStillRunning()
+            raise errors.AnalysisIsStillRunningError()
         if self.status != consts.AnalysisStatusCode.FINISH:
             raise errors.IntezerError('Analysis not finished successfully')

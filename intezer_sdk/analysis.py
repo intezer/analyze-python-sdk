@@ -251,6 +251,6 @@ def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional
 def _assert_analysis_status(response: dict):
     if response['status'] in (consts.AnalysisStatusCode.IN_PROGRESS.value,
                               consts.AnalysisStatusCode.QUEUED.value):
-        raise errors.AnalysisIsStillRunning()
+        raise errors.AnalysisIsStillRunningError()
     if response['status'] == consts.AnalysisStatusCode.FAILED.value:
         raise errors.AnalysisFailedError()

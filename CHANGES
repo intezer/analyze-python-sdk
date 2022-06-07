@@ -1,3 +1,9 @@
+1.9.0
+-------
+- Rename exception to have Error suffix
+- Add `SubAnalysis.from_analysis_id` to properly initialize SubAnalysis without the composed analysis
+- Fix URL analysis additional parameters propagation
+
 1.8.3
 -------
 - add extraction info to sub analysis
