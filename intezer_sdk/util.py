@@ -4,7 +4,6 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
-from intezer_sdk import api
 
 from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.consts import ANALYZE_URL
@@ -211,9 +210,3 @@ def human_readable_size(num: int) -> str:
 
 def get_emoji(key: str):
     return emojis_by_key[key]
-
-
-if __name__ == "__main__":
-    api.set_global_api('519643d2-f373-40c1-9616-d4650c4741ee')
-    x = get_analysis_summary_metadata()
-    print(x)
