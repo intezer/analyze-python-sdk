@@ -3,6 +3,7 @@
 - Rename exception to have Error suffix
 - Add `SubAnalysis.from_analysis_id` to properly initialize SubAnalysis without the composed analysis
 - Fix URL analysis additional parameters propagation
+- Add File analysis summary metadata function
 
 1.8.3
 -------
