@@ -1,5 +1,6 @@
 import collections
 import itertools
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -25,6 +26,51 @@ def _get_title(short: bool) -> str:
             '=========================\n\n')
 
 
+def get_analysis_summary_metadata(analysis: FileAnalysis, use_hash_link=False) -> Dict[str, any]:
+    result = analysis.result()
+    verdict = result['verdict'].lower()
+    sub_verdict = result['sub_verdict'].lower()
+    analysis_url = f"{ANALYZE_URL}/files/{result['sha256']}?private=true" if use_hash_link else result['analysis_url']
+    main_family = None
+    gene_count = None
+    iocs = None
+    dynamic_ttps = None
+    related_samples_unique_count = None
+
+    software_type_priorities_by_verdict = {
+        'malicious': [],
+        'trusted': ['application', 'library', 'interpreter', 'installer'],
+        'suspicious': ['administration_tool', 'packer']
+    }
+
+    software_type_priorities = software_type_priorities_by_verdict.get(verdict)
+    if software_type_priorities:
+        main_family, gene_count = get_analysis_family(analysis, software_type_priorities)
+
+    if verdict in ('malicious', 'suspicious'):
+        iocs = analysis.iocs
+        dynamic_ttps = analysis.dynamic_ttps
+
+    related_samples = [sub_analysis.get_account_related_samples(wait=True) for sub_analysis in
+                       analysis.get_sub_analyses()]
+    if related_samples:
+        related_samples_unique_count = len({analysis['analysis']['sha256'] for analysis in
+                                            itertools.chain.from_iterable(
+                                                sample.result['related_samples'] for sample in related_samples
+                                                if sample is not None)})
+
+    return {
+        'verdict': verdict,
+        'sub_verdict': sub_verdict,
+        'analysis_url': analysis_url,
+        'main_family': main_family,
+        'gene_count': gene_count,
+        'iocs': iocs,
+        'dynamic_ttps': dynamic_ttps,
+        'related_samples_unique_count': related_samples_unique_count
+    }
+
+
 def get_analysis_summary(analysis: FileAnalysis,
                          no_emojis: bool = False,
                          short: bool = False,
@@ -42,7 +88,7 @@ def get_analysis_summary(analysis: FileAnalysis,
         emoji = get_emoji(verdict)
 
     if verdict == 'malicious':
-        main_family, gene_count = get_analysis_family(analysis, ['malware', 'malicious_packer'])
+        main_family, gene_count = get_analysis_family(analysis, [])
     elif verdict == 'trusted':
         main_family, gene_count = get_analysis_family(analysis, ['application', 'library', 'interpreter', 'installer'])
     elif verdict == 'suspicious':

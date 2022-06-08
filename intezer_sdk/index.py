@@ -31,7 +31,7 @@ class Index(object):
 
     def send(self, wait: typing.Union[bool, int] = False):
         if self.index_id:
-            raise errors.IndexHasAlreadyBeenSent()
+            raise errors.IndexHasAlreadyBeenSentError()
 
         if self._sha256:
             self.index_id = self._api.index_by_sha256(self._sha256, self._index_as, self._family_name)
@@ -70,7 +70,7 @@ class Index(object):
         response = self._api.get_index_response(self.index_id)
         if response.status_code == HTTPStatus.OK:
             if response.json()['status'] == 'failed':
-                raise errors.IndexFailed(response)
+                raise errors.IndexFailedError(response)
             else:
                 self.status = consts.IndexStatusCode.FINISH
         elif response.status_code == HTTPStatus.ACCEPTED:

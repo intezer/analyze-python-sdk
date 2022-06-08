@@ -259,7 +259,7 @@ class FileAnalysisSpec(BaseTest):
         get_global_api().on_premise_version = OnPremiseVersion.V21_11
 
         # Act and Assert
-        with self.assertRaises(errors.UnsupportedOnPremiseVersion):
+        with self.assertRaises(errors.UnsupportedOnPremiseVersionError):
             _ = analysis.dynamic_ttps
 
     def test_send_analysis_by_file_and_get_dynamic_ttps_handle_no_ttps(self):
@@ -517,7 +517,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'result_url': 'a/sd/asd'})
             analysis = FileAnalysis(file_hash='a' * 64)
             # Act + Assert
-            with self.assertRaises(errors.AnalysisHasAlreadyBeenSent):
+            with self.assertRaises(errors.AnalysisHasAlreadyBeenSentError):
                 analysis.send()
                 analysis.send()
 
@@ -614,6 +614,81 @@ class FileAnalysisSpec(BaseTest):
         self.assertIsNotNone(analysis.get_root_analysis().code_reuse)
         self.assertIsNotNone(analysis.get_root_analysis().metadata)
 
+    def test_sub_analysis_from_id_takes_parameters_from_composed_analysis_lazy_load_is_false(self):
+        # Arrange
+        analysis_id = str(uuid.uuid4())
+        composed_analysis_id = str(uuid.uuid4())
+        sha256 = 'axaxaxax'
+        source = 'root'
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/analyses/{composed_analysis_id}/sub-analyses',
+                     status=HTTPStatus.OK,
+                     json={'sub_analyses': [{'source': source, 'sub_analysis_id': analysis_id, 'sha256': sha256},
+                                            {'source': 'static_extraction', 'sub_analysis_id': 'ac', 'sha256': 'ba'}]})
+
+            # Act
+            sub_analysis = SubAnalysis.from_analysis_id(analysis_id, composed_analysis_id, lazy_load=False)
+
+        # Assert
+        self.assertEqual(sub_analysis.sha256, sha256)
+        self.assertEqual(sub_analysis.source, source)
+        self.assertIsNone(sub_analysis.extraction_info)
+
+    def test_sub_analysis_from_id_takes_parameters_from_composed_analysis_lazy_load_is_true(self):
+        # Arrange
+        analysis_id = str(uuid.uuid4())
+        composed_analysis_id = str(uuid.uuid4())
+        sha256 = 'axaxaxax'
+        source = 'root'
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/analyses/{composed_analysis_id}/sub-analyses',
+                     status=HTTPStatus.OK,
+                     json={'sub_analyses': [{'source': source, 'sub_analysis_id': analysis_id, 'sha256': sha256},
+                                            {'source': 'static_extraction', 'sub_analysis_id': 'ac', 'sha256': 'ba'}]})
+
+            # Act
+            sub_analysis = SubAnalysis.from_analysis_id(analysis_id, composed_analysis_id)
+
+            # Assert
+            self.assertEqual(sub_analysis.sha256, sha256)
+            self.assertEqual(sub_analysis.source, source)
+            self.assertIsNone(sub_analysis.extraction_info)
+
+    def test_sub_analysis_from_id_return_none_when_analysis_not_found_on_composed(self):
+        # Arrange
+        analysis_id = str(uuid.uuid4())
+        composed_analysis_id = str(uuid.uuid4())
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/analyses/{composed_analysis_id}/sub-analyses',
+                     status=HTTPStatus.OK,
+                     json={'sub_analyses': []})
+
+            # Act
+            sub_analysis = SubAnalysis.from_analysis_id(analysis_id, composed_analysis_id, lazy_load=False)
+
+        # Assert
+        self.assertIsNone(sub_analysis)
+
+    def test_sub_analysis_raises_when_getting_sha256_and_analysis_not_found_on_compose(self):
+        # Arrange
+        analysis_id = str(uuid.uuid4())
+        composed_analysis_id = str(uuid.uuid4())
+        sha256 = 'axaxaxax'
+        source = 'root'
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/analyses/{composed_analysis_id}/sub-analyses',
+                     status=HTTPStatus.OK,
+                     json={'sub_analyses': []})
+
+            sub_analysis = SubAnalysis.from_analysis_id(analysis_id, composed_analysis_id)
+            # Act
+            with self.assertRaises(errors.SubAnalysisNotFoundError):
+                _ = sub_analysis.sha256
+
     def test_sub_analysis_operations(self):
         # Arrange
         with responses.RequestsMock() as mock:
@@ -685,7 +760,7 @@ class FileAnalysisSpec(BaseTest):
         get_global_api().on_premise_version = OnPremiseVersion.V21_11
 
         # Act and Assert
-        with self.assertRaises(errors.UnsupportedOnPremiseVersion):
+        with self.assertRaises(errors.UnsupportedOnPremiseVersionError):
             _ = sub_analysis.get_capabilities()
 
     def test_send_analysis_that_running_on_server_raise_error(self):
@@ -697,7 +772,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'result_url': 'a/sd/asd'})
             analysis = FileAnalysis(file_hash='a' * 64)
             # Act + Assert
-            with self.assertRaises(errors.AnalysisIsAlreadyRunning):
+            with self.assertRaises(errors.AnalysisIsAlreadyRunningError):
                 analysis.send()
 
     def test_analysis_raise_value_error_when_no_file_option_given(self):
@@ -840,7 +915,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'status': AnalysisStatusCode.IN_PROGRESS.value})
 
             # Act
-            with self.assertRaises(errors.AnalysisIsStillRunning):
+            with self.assertRaises(errors.AnalysisIsStillRunningError):
                 FileAnalysis.from_analysis_id(analysis_id)
 
     def test_get_analysis_by_id_raises_when_analysis_is_queued(self):
@@ -854,7 +929,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'status': AnalysisStatusCode.QUEUED.value})
 
             # Act
-            with self.assertRaises(errors.AnalysisIsStillRunning):
+            with self.assertRaises(errors.AnalysisIsStillRunningError):
                 FileAnalysis.from_analysis_id(analysis_id)
 
 
@@ -889,7 +964,7 @@ class UrlAnalysisSpec(BaseTest):
                      json={'status': AnalysisStatusCode.IN_PROGRESS.value})
 
             # Act
-            with self.assertRaises(errors.AnalysisIsStillRunning):
+            with self.assertRaises(errors.AnalysisIsStillRunningError):
                 UrlAnalysis.from_analysis_id(analysis_id)
 
     def test_get_analysis_by_id_raises_when_analysis_failed(self):
@@ -941,7 +1016,7 @@ class UrlAnalysisSpec(BaseTest):
         get_global_api().on_premise_version = OnPremiseVersion.V21_11
 
         # Act
-        with self.assertRaises(errors.UnsupportedOnPremiseVersion):
+        with self.assertRaises(errors.UnsupportedOnPremiseVersionError):
             _ = UrlAnalysis(url='httpdddds://intezer.com')
 
     def test_send_waits_to_compilation_when_requested(self):

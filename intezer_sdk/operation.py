@@ -28,7 +28,7 @@ class Operation:
                 self.result = operation_result.json()['result']
                 self.status = AnalysisStatusCode.FINISH
             else:
-                raise errors.SubAnalysisOperationStillRunning('operation')
+                raise errors.SubAnalysisOperationStillRunningError('operation')
         return self.result
 
     def wait_for_completion(self,

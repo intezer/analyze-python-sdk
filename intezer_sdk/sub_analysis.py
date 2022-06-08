@@ -2,6 +2,7 @@ import datetime
 from typing import Optional
 from typing import Union
 
+from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import AnalysisStatusCode
@@ -18,13 +19,49 @@ class SubAnalysis:
                  api: IntezerApi = None):
         self.composed_analysis_id = composed_analysis_id
         self.analysis_id = analysis_id
-        self.sha256 = sha256
-        self.source = source
-        self.extraction_info = extraction_info
+        self._sha256 = sha256
+        self._source = source
+        self._extraction_info = extraction_info
         self._api = api or get_global_api()
         self._code_reuse = None
         self._metadata = None
         self._operations = {}
+
+    @classmethod
+    def from_analysis_id(cls,
+                         analysis_id: str,
+                         composed_analysis_id: str,
+                         lazy_load=True,
+                         api: IntezerApi = None) -> Optional['SubAnalysis']:
+        sub_analysis = cls(analysis_id, composed_analysis_id, '', '', None, api)
+        if not lazy_load:
+            try:
+                sub_analysis._init_sub_analysis_from_parent()
+            except errors.SubAnalysisNotFoundError:
+                return None
+        return sub_analysis
+
+    @property
+    def sha256(self) -> str:
+        if not self._sha256:
+            self._init_sub_analysis_from_parent()
+
+        return self._sha256
+
+    @property
+    def source(self) -> str:
+        if not self._source:
+            self._init_sub_analysis_from_parent()
+
+        return self._source
+
+    @property
+    def extraction_info(self) -> Optional[dict]:
+        # Since extraction_info could be none, we check if the sha256 was provided, signaling we already fetch it
+        if not self._sha256:
+            self._init_sub_analysis_from_parent()
+
+        return self._extraction_info
 
     @property
     def code_reuse(self):
@@ -37,6 +74,18 @@ class SubAnalysis:
         if self._metadata is None:
             self._metadata = self._api.get_sub_analysis_metadata_by_id(self.composed_analysis_id, self.analysis_id)
         return self._metadata
+
+    def _init_sub_analysis_from_parent(self):
+        sub_analyses = self._api.get_sub_analyses_by_id(self.composed_analysis_id)
+        sub_analysis = next((
+            sub_analysis for sub_analysis in sub_analyses if sub_analysis['sub_analysis_id'] == self.analysis_id),
+            None)
+        if not sub_analysis:
+            raise errors.SubAnalysisNotFoundError(self.analysis_id)
+
+        self._sha256 = sub_analysis['sha256']
+        self._source = sub_analysis['source']
+        self._extraction_info = sub_analysis.get('extraction_info')
 
     def find_related_files(self,
                            family_id: str,
