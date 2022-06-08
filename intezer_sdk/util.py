@@ -38,7 +38,7 @@ def get_analysis_summary_metadata(analysis: FileAnalysis, use_hash_link=False) -
     related_samples_unique_count = None
 
     software_type_priorities_by_verdict = {
-        'malicious': ['malware', 'malicious_packer'],
+        'malicious': [],
         'trusted': ['application', 'library', 'interpreter', 'installer'],
         'suspicious': ['administration_tool', 'packer']
     }
@@ -88,7 +88,7 @@ def get_analysis_summary(analysis: FileAnalysis,
         emoji = get_emoji(verdict)
 
     if verdict == 'malicious':
-        main_family, gene_count = get_analysis_family(analysis, ['malware', 'malicious_packer'])
+        main_family, gene_count = get_analysis_family(analysis, [])
     elif verdict == 'trusted':
         main_family, gene_count = get_analysis_family(analysis, ['application', 'library', 'interpreter', 'installer'])
     elif verdict == 'suspicious':
