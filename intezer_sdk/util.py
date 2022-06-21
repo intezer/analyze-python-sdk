@@ -26,7 +26,9 @@ def _get_title(short: bool) -> str:
             '=========================\n\n')
 
 
-def get_analysis_summary_metadata(analysis: FileAnalysis, use_hash_link=False) -> Dict[str, any]:
+def get_analysis_summary_metadata(analysis: FileAnalysis,
+                                  use_hash_link: bool = False,
+                                  should_use_largest_families: bool = True) -> Dict[str, any]:
     result = analysis.result()
     verdict = result['verdict'].lower()
     sub_verdict = result['sub_verdict'].lower()
@@ -38,14 +40,14 @@ def get_analysis_summary_metadata(analysis: FileAnalysis, use_hash_link=False) -
     related_samples_unique_count = None
 
     software_type_priorities_by_verdict = {
-        'malicious': [],
+        'malicious': ['malware', 'malicious_packer'],
         'trusted': ['application', 'library', 'interpreter', 'installer'],
         'suspicious': ['administration_tool', 'packer']
     }
 
     software_type_priorities = software_type_priorities_by_verdict.get(verdict)
     if software_type_priorities:
-        main_family, gene_count = get_analysis_family(analysis, software_type_priorities)
+        main_family, gene_count = get_analysis_family(analysis, software_type_priorities, should_use_largest_families)
 
     if verdict in ('malicious', 'suspicious'):
         iocs = analysis.iocs
@@ -155,18 +157,20 @@ def get_analysis_summary(analysis: FileAnalysis,
 
 
 def get_analysis_family(analysis: FileAnalysis,
-                        software_type_priorities: List[str]) -> Tuple[Optional[str], Optional[int]]:
+                        software_type_priorities: List[str],
+                        should_use_largest_families: bool = True) -> Tuple[Optional[str], Optional[int]]:
     result = analysis.result()
     family_name = result.get('family_name')
     if family_name:
         reused_gene_count = get_analysis_family_by_family_id(analysis, result['family_id'])
         return family_name, reused_gene_count
 
-    largest_family_by_software_type = find_largest_family(analysis)
-    for software_type in software_type_priorities:
-        if software_type in largest_family_by_software_type:
-            family = largest_family_by_software_type[software_type]
-            return family['family_name'], family['reused_gene_count']
+    if should_use_largest_families:
+        largest_family_by_software_type = find_largest_family(analysis)
+        for software_type in software_type_priorities:
+            if software_type in largest_family_by_software_type:
+                family = largest_family_by_software_type[software_type]
+                return family['family_name'], family['reused_gene_count']
 
     return None, None
 
