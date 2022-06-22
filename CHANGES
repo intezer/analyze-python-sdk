@@ -1,3 +1,7 @@
+1.9.1
+-------
+- Optional latest family search on get analysis metadata
+
 1.9.0
 -------
 - Rename exception to have Error suffix
