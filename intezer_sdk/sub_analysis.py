@@ -1,4 +1,5 @@
 import datetime
+from typing import IO
 from typing import Optional
 from typing import Union
 
@@ -153,5 +154,11 @@ class SubAnalysis:
 
         return self._operations[operation]
 
-    def download_file(self, path: str):
-        self._api.download_file_by_sha256(self.sha256, path)
+    def download_file(self, path: str = None, output_stream: IO = None):
+        """
+        Downloads the analysis's file.
+        `path` or `output_stream` must be provided.
+        :param path: A path to where to save the file, it can be either a directory or non-existing file path.
+        :param output_stream: A file-like object to write the file's content to.
+        """
+        self._api.download_file_by_sha256(self.sha256, path, output_stream)

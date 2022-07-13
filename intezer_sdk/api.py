@@ -3,6 +3,7 @@ from http import HTTPStatus
 from typing import Any
 from typing import BinaryIO
 from typing import Dict
+from typing import IO
 from typing import List
 from typing import Optional
 from typing import Union
@@ -78,7 +79,8 @@ class IntezerApi:
                  path: str,
                  data: dict = None,
                  headers: dict = None,
-                 files: dict = None) -> Response:
+                 files: dict = None,
+                 stream: bool = None) -> Response:
         if not self._session:
             self.set_session()
 
@@ -88,14 +90,16 @@ class IntezerApi:
                 self.full_url + path,
                 files=files,
                 data=data or {},
-                headers=headers or {}
+                headers=headers or {},
+                stream=stream
             )
         else:
             response = self._session.request(
                 method,
                 self.full_url + path,
                 json=data or {},
-                headers=headers
+                headers=headers,
+                stream=stream
             )
 
         return response
@@ -105,13 +109,14 @@ class IntezerApi:
                                                   path: str,
                                                   data: dict = None,
                                                   headers: dict = None,
-                                                  files: dict = None) -> Response:
+                                                  files: dict = None,
+                                                  stream: bool = None) -> Response:
         response = self._request(method, path, data, headers, files)
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             self._access_token = None
             self.set_session()
-            response = self._request(method, path, data, headers, files)
+            response = self._request(method, path, data, headers, files, stream)
 
         return response
 
@@ -335,20 +340,38 @@ class IntezerApi:
 
         return response
 
-    def download_file_by_sha256(self, sha256: str, path: str) -> None:
-        if os.path.isdir(path):
-            path = os.path.join(path, sha256 + '.sample')
-        if os.path.isfile(path):
-            raise FileExistsError()
+    def download_file_by_sha256(self, sha256: str, path: str = None, output_stream: IO = None) -> None:
+        if not path and not output_stream:
+            raise ValueError('You must provide either path or output_stream')
+        elif path and output_stream:
+            raise ValueError('You must provide either path or output_stream, not both')
+
+        should_extract_name_from_request = False
+        if path:
+            if os.path.isdir(path):
+                should_extract_name_from_request = True
+            elif os.path.isfile(path):
+                raise FileExistsError()
 
         response = self.request_with_refresh_expired_access_token(path='/files/{}/download'.format(sha256),
-                                                                  method='GET')
+                                                                  method='GET',
+                                                                  stream=bool(path))
 
         raise_for_status(response)
+        if output_stream:
+            output_stream.write(response.content)
+        else:
+            if should_extract_name_from_request:
+                try:
+                    filename = response.headers['content-disposition'].split('filename=')[1]
+                except Exception:
+                    filename = f'{sha256}.sample'
 
-        with open(path, 'wb') as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
+                path = os.path.join(path, filename)
+
+            with open(path, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
 
     def index_by_sha256(self, sha256: str, index_as: IndexType, family_name: str = None) -> Response:
         data = {'index_as': index_as.value}
