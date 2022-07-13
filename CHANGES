@@ -1,3 +1,8 @@
+1.9.2
+-------
+- Allow passing file-like object to download file
+- When providing to download file a directory, the file name is taken from the response
+
 1.9.1
 -------
 - Optional latest family search on get analysis metadata

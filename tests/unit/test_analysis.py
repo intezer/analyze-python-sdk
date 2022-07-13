@@ -1,5 +1,8 @@
 import datetime
+import io
 import json
+import os
+import tempfile
 import uuid
 from http import HTTPStatus
 from unittest.mock import mock_open
@@ -931,6 +934,115 @@ class FileAnalysisSpec(BaseTest):
             # Act
             with self.assertRaises(errors.AnalysisIsStillRunningError):
                 FileAnalysis.from_analysis_id(analysis_id)
+
+    def test_download_file_path_uses_content_disposition(self):
+        # Arrange
+        file_hash = 'hash'
+        result = {'result': {'analysis_id': 'analysis_id', 'sha256': file_hash}}
+        file_name = 'a.sample'
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=200, json=result)
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}/download',
+                     status=200,
+                     body=b'asd',
+                     headers={'content-disposition': f'inline; filename={file_name}'})
+
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Act
+                analysis.download_file(temp_dir)
+
+                # Assert
+                files = os.listdir(temp_dir)
+                self.assertEqual(file_name, files[0])
+
+    def test_download_file_path_uses_default_file_name(self):
+        # Arrange
+        file_hash = 'hash'
+        result = {'result': {'analysis_id': 'analysis_id', 'sha256': file_hash}}
+        file_name = f'{file_hash}.sample'
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=200, json=result)
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}/download', status=200, body=b'asd')
+
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Act
+                analysis.download_file(temp_dir)
+
+                # Assert
+                files = os.listdir(temp_dir)
+                self.assertEqual(file_name, files[0])
+
+    def test_download_file_path(self):
+        # Arrange
+        file_hash = 'hash'
+        result = {'result': {'analysis_id': 'analysis_id', 'sha256': file_hash}}
+        content = b'asd'
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=200, json=result)
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}/download', status=200, body=content)
+
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                file_path = os.path.join(temp_dir, f'{file_hash}.sample')
+
+                # Act
+                analysis.download_file(file_path)
+                with open(file_path, 'rb') as f:
+                    # Assert
+                    self.assertEqual(content, f.read())
+
+    def test_download_file_output_stream(self):
+        # Arrange
+        file_hash = 'hash'
+        result = {'result': {'analysis_id': 'analysis_id', 'sha256': file_hash}}
+        content = b'asd'
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=200, json=result)
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}/download', status=200, body=content)
+
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
+            output_stream = io.BytesIO()
+
+            # Act
+            analysis.download_file(output_stream=output_stream)
+            output_stream.seek(0, 0)
+
+            self.assertEqual(content, output_stream.read())
+
+    def test_download_file_raises_when_providing_output_stream_and_path(self):
+        # Arrange
+        file_hash = 'hash'
+        result = {'result': {'analysis_id': 'analysis_id', 'sha256': file_hash}}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=200, json=result)
+
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
+            output_stream = io.BytesIO()
+
+            # Act and Assert
+            with self.assertRaises(ValueError):
+                analysis.download_file(path='asd', output_stream=output_stream)
+
+    def test_download_file_raises_when_not_providing_output_stream_and_path(self):
+        # Arrange
+        file_hash = 'hash'
+        result = {'result': {'analysis_id': 'analysis_id', 'sha256': file_hash}}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=200, json=result)
+
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
+
+            # Act and Assert
+            with self.assertRaises(ValueError):
+                analysis.download_file()
 
 
 class UrlAnalysisSpec(BaseTest):

@@ -2,6 +2,7 @@ import logging
 import os
 from http import HTTPStatus
 from typing import BinaryIO
+from typing import IO
 from typing import Optional
 
 import requests
@@ -143,8 +144,14 @@ class FileAnalysis(BaseAnalysis):
             else:
                 self._sub_analyses.append(sub_analysis_object)
 
-    def download_file(self, path: str):
-        self._api.download_file_by_sha256(self.result()['sha256'], path)
+    def download_file(self, path: str = None, output_stream: IO = None):
+        """
+        Downloads the analysis's file.
+        `path` or `output_stream` must be provided.
+        :param path: A path to where to save the file, it can be either a directory or non-existing file path.
+        :param output_stream: A file-like object to write the file's content to.
+        """
+        self._api.download_file_by_sha256(self.result()['sha256'], path, output_stream)
 
     @property
     def iocs(self) -> dict:
