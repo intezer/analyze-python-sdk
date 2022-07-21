@@ -28,7 +28,8 @@ def _get_title(short: bool) -> str:
 
 def get_analysis_summary_metadata(analysis: FileAnalysis,
                                   use_hash_link: bool = False,
-                                  should_use_largest_families: bool = True) -> Dict[str, any]:
+                                  should_use_largest_families: bool = True,
+                                  should_include_related_samples: bool = True) -> Dict[str, any]:
     result = analysis.result()
     verdict = result['verdict'].lower()
     sub_verdict = result['sub_verdict'].lower()
@@ -52,14 +53,14 @@ def get_analysis_summary_metadata(analysis: FileAnalysis,
     if verdict in ('malicious', 'suspicious'):
         iocs = analysis.iocs
         dynamic_ttps = analysis.dynamic_ttps
-
-    related_samples = [sub_analysis.get_account_related_samples(wait=True) for sub_analysis in
-                       analysis.get_sub_analyses()]
-    if related_samples:
-        related_samples_unique_count = len({analysis['analysis']['sha256'] for analysis in
-                                            itertools.chain.from_iterable(
-                                                sample.result['related_samples'] for sample in related_samples
-                                                if sample is not None)})
+    if should_include_related_samples:
+        related_samples = [sub_analysis.get_account_related_samples(wait=True) for sub_analysis in
+                           analysis.get_sub_analyses()]
+        if related_samples:
+            related_samples_unique_count = len({analysis['analysis']['sha256'] for analysis in
+                                                itertools.chain.from_iterable(
+                                                    sample.result['related_samples'] for sample in related_samples
+                                                    if sample is not None)})
 
     return {
         'verdict': verdict,
