@@ -17,12 +17,14 @@ class SubAnalysis:
                  sha256: str,
                  source: str,
                  extraction_info: Optional[dict],
-                 api: IntezerApi = None):
+                 api: IntezerApi = None,
+                 verdict=None):
         self.composed_analysis_id = composed_analysis_id
         self.analysis_id = analysis_id
         self._sha256 = sha256
         self._source = source
         self._extraction_info = extraction_info
+        self._verdict = verdict
         self._api = api or get_global_api()
         self._code_reuse = None
         self._metadata = None
@@ -75,6 +77,12 @@ class SubAnalysis:
         if self._metadata is None:
             self._metadata = self._api.get_sub_analysis_metadata_by_id(self.composed_analysis_id, self.analysis_id)
         return self._metadata
+
+    @property
+    def verdict(self) -> str:
+        if self.source != 'endpoint':
+            raise TypeError('Verdict is support only for endpoint sub-analyses that')
+        return self._verdict
 
     def _init_sub_analysis_from_parent(self):
         sub_analyses = self._api.get_sub_analyses_by_id(self.composed_analysis_id)
@@ -144,12 +152,12 @@ class SubAnalysis:
             self._operations[operation] = Operation(AnalysisStatusCode.IN_PROGRESS, url, api=self._api)
 
             if wait:
-                if isinstance(wait, int):
-                    self._operations[operation].wait_for_completion(wait,
-                                                                    sleep_before_first_check=True,
+                if isinstance(wait, bool):
+                    self._operations[operation].wait_for_completion(sleep_before_first_check=True,
                                                                     wait_timeout=wait_timeout)
                 else:
-                    self._operations[operation].wait_for_completion(sleep_before_first_check=True,
+                    self._operations[operation].wait_for_completion(wait,
+                                                                    sleep_before_first_check=True,
                                                                     wait_timeout=wait_timeout)
 
         return self._operations[operation]
