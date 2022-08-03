@@ -60,7 +60,7 @@ def get_analysis_summary_metadata(analysis: FileAnalysis,
             related_samples_unique_count = len({analysis['analysis']['sha256'] for analysis in
                                                 itertools.chain.from_iterable(
                                                     sample.result['related_samples'] for sample in related_samples
-                                                    if sample is not None)})
+                                                    if sample is not None and sample.result is not None)})
 
     return {
         'verdict': verdict,
@@ -148,7 +148,7 @@ def get_analysis_summary(analysis: FileAnalysis,
         related_samples_unique_count = len({analysis['analysis']['sha256'] for analysis in
                                             itertools.chain.from_iterable(
                                                 sample.result['related_samples'] for sample in related_samples
-                                                if sample is not None)})
+                                                if sample is not None and sample.result is not None)})
         note = f'{note}Similar previous uploads: {related_samples_unique_count} files \n'
 
     note = (f'{note}\nFull report:\n'
