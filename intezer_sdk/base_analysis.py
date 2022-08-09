@@ -88,7 +88,7 @@ class Analysis(metaclass=abc.ABCMeta):
 
         return self._report
 
-    def set_report(self, report: dict):
+    def _set_report(self, report: dict):
         if not report:
             raise ValueError('Report can not be None')
 

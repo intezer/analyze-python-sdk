@@ -32,7 +32,7 @@ class EndpointAnalysis(Analysis):
             analysis.analysis_id = analysis_id
         else:
             analysis_report = response_json.get('result')
-            analysis.set_report(analysis_report)
+            analysis._set_report(analysis_report)
 
         return analysis
 
@@ -60,11 +60,3 @@ class EndpointAnalysis(Analysis):
                                               api=self._api,
                                               verdict=sub_analysis['verdict'])
             self._sub_analyses.append(sub_analysis_object)
-
-
-def _assert_analysis_status(response: dict):
-    if response['status'] in (consts.AnalysisStatusCode.IN_PROGRESS.value,
-                              consts.AnalysisStatusCode.QUEUED.value):
-        raise errors.AnalysisIsStillRunningError()
-    if response['status'] == consts.AnalysisStatusCode.FAILED.value:
-        raise errors.AnalysisFailedError()
