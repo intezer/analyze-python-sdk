@@ -1,8 +1,5 @@
-from http import HTTPStatus
 from typing import List
 
-from intezer_sdk import consts
-from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import Analysis
@@ -18,7 +15,6 @@ class EndpointAnalysis(Analysis):
     def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None):
         api = api or get_global_api()
         response = api.get_endpoint_analysis_response(analysis_id, True)
-
         return cls._create_analysis_from_response(response, api, analysis_id)
 
     def _query_status_from_api(self):

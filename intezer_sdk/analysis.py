@@ -9,7 +9,6 @@ import requests
 from requests import Response
 
 from intezer_sdk import consts
-from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
@@ -203,11 +202,12 @@ class UrlAnalysis(BaseAnalysis):
     def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> Optional['UrlAnalysis']:
         api = api or get_global_api()
         response = api.get_url_analysis_response(analysis_id, True)
-        analysis = cls._create_analysis_from_response(response, api, analysis_id)
-        if analysis._report:
-            analysis.url = analysis._report['submitted_url']
+        return cls._create_analysis_from_response(response, api, analysis_id)
 
-        return analysis
+    def _set_report(self, report: dict):
+        super()._set_report(report)
+        if not self.url:
+            self.url = report['submitted_url']
 
     def _query_status_from_api(self) -> Response:
         return self._api.get_url_analysis_response(self.analysis_id, False)

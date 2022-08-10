@@ -1037,7 +1037,8 @@ class UrlAnalysisSpec(BaseTest):
     def test_get_analysis_by_id_analysis_object_when_latest_analysis_found(self):
         # Arrange
         analysis_id = 'analysis_id'
-        analysis_report = {'analysis_id': analysis_id, 'submitted_url': 'https://url.com'}
+        submitted_url = 'https://url.com'
+        analysis_report = {'analysis_id': analysis_id, 'submitted_url': submitted_url}
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
@@ -1050,6 +1051,7 @@ class UrlAnalysisSpec(BaseTest):
 
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)
+        self.assertEqual(submitted_url, analysis.url)
         self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
 
