@@ -79,7 +79,7 @@ class FileAnalysis(BaseAnalysis):
             return None
 
         analysis = cls(file_hash=analysis_report['sha256'], api=api)
-        analysis.set_report(analysis_report)
+        analysis._set_report(analysis_report)
 
         return analysis
 
@@ -96,7 +96,7 @@ class FileAnalysis(BaseAnalysis):
             return None
 
         analysis = cls(file_hash=file_hash, api=api)
-        analysis.set_report(analysis_report)
+        analysis._set_report(analysis_report)
 
         return analysis
 
@@ -225,7 +225,7 @@ class UrlAnalysis(BaseAnalysis):
             return None
 
         analysis = UrlAnalysis(analysis_report['submitted_url'], api=api)
-        analysis.set_report(analysis_report)
+        analysis._set_report(analysis_report)
 
         return analysis
 

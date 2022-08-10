@@ -15,7 +15,7 @@ from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 
 
-class BaseAnalysis(metaclass=abc.ABCMeta):
+class Analysis(metaclass=abc.ABCMeta):
     def __init__(self, api: IntezerApi = None):
         self.status = None
         self.analysis_id = None
@@ -29,10 +29,6 @@ class BaseAnalysis(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _send_analyze_to_api(self, **additional_parameters) -> str:
         raise NotImplementedError()
 
     def wait_for_completion(self,
@@ -61,24 +57,9 @@ class BaseAnalysis(metaclass=abc.ABCMeta):
                 status_code = self.check_status()
 
     def _is_analysis_running(self) -> bool:
-        return self.status in (consts.AnalysisStatusCode.CREATED, consts.AnalysisStatusCode.IN_PROGRESS)
-
-    def send(self,
-             wait: Union[bool, int] = False,
-             wait_timeout: Optional[datetime.timedelta] = None,
-             **additional_parameters) -> None:
-        if self.analysis_id:
-            raise errors.AnalysisHasAlreadyBeenSentError()
-
-        self.analysis_id = self._send_analyze_to_api(**additional_parameters)
-
-        self.status = consts.AnalysisStatusCode.CREATED
-
-        if wait:
-            if isinstance(wait, int):
-                self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
-            else:
-                self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
+        return self.status in (consts.AnalysisStatusCode.CREATED,
+                               consts.AnalysisStatusCode.IN_PROGRESS,
+                               consts.AnalysisStatusCode.QUEUED)
 
     def check_status(self) -> consts.AnalysisStatusCode:
         if not self._is_analysis_running():
@@ -107,7 +88,7 @@ class BaseAnalysis(metaclass=abc.ABCMeta):
 
         return self._report
 
-    def set_report(self, report: dict):
+    def _set_report(self, report: dict):
         if not report:
             raise ValueError('Report can not be None')
 
@@ -120,3 +101,27 @@ class BaseAnalysis(metaclass=abc.ABCMeta):
             raise errors.AnalysisIsStillRunningError()
         if self.status != consts.AnalysisStatusCode.FINISH:
             raise errors.IntezerError('Analysis not finished successfully')
+
+
+class BaseAnalysis(Analysis):
+    @abc.abstractmethod
+    def _send_analyze_to_api(self, **additional_parameters) -> str:
+        raise NotImplementedError()
+
+    def send(self,
+             wait: Union[bool, int] = False,
+             wait_timeout: Optional[datetime.timedelta] = None,
+             **additional_parameters) -> None:
+        if self.analysis_id:
+            raise errors.AnalysisHasAlreadyBeenSentError()
+
+        self.analysis_id = self._send_analyze_to_api(**additional_parameters)
+
+        self.status = consts.AnalysisStatusCode.CREATED
+
+        if wait:
+            if isinstance(wait, bool):
+                self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
+            else:
+                self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
+

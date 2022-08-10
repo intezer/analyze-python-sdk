@@ -41,10 +41,10 @@ class Index(object):
         self.status = consts.IndexStatusCode.CREATED
 
         if wait:
-            if isinstance(wait, int):
-                self.wait_for_completion(wait, sleep_before_first_check=True)
-            else:
+            if isinstance(wait, bool):
                 self.wait_for_completion(sleep_before_first_check=True)
+            else:
+                self.wait_for_completion(wait, sleep_before_first_check=True)
 
     def wait_for_completion(self, interval: int = None, sleep_before_first_check=False):
         """

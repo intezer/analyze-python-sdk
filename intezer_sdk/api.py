@@ -205,6 +205,22 @@ class IntezerApi:
 
         return response
 
+    def get_endpoint_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
+        response = self.request_with_refresh_expired_access_token(path=f'/endpoint-analyses/{analyses_id}',
+                                                                  method='GET')
+        self._assert_result_response(ignore_not_found, response)
+
+        return response
+
+    def get_endpoint_sub_analyses(self, analyses_id: str, verdicts: Optional[List[str]]) -> List[dict]:
+        data = dict(verdicts=verdicts) if verdicts is not None else None
+        response = self.request_with_refresh_expired_access_token(path=f'/endpoint-analyses/{analyses_id}/sub-analyses',
+                                                                  method='GET',
+                                                                  data=data)
+        self._assert_result_response(False, response)
+
+        return response.json()['sub_analyses']
+
     def get_iocs(self, analyses_id: str) -> Optional[dict]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
                                                                   method='GET')

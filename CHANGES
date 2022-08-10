@@ -1,3 +1,7 @@
+1.10
+-------
+- Add endpoint analysis
+
 1.9.2
 -------
 - Allow passing file-like object to download file
