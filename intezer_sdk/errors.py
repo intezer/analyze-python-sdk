@@ -1,3 +1,5 @@
+from typing import Optional
+
 import requests
 
 
@@ -61,8 +63,9 @@ class ReportDoesNotExistError(IntezerError):
 
 
 class AnalysisIsAlreadyRunningError(ServerError):
-    def __init__(self, response: requests.Response):
+    def __init__(self, response: requests.Response, running_analysis_id: Optional[str]):
         super().__init__('Analysis already running', response)
+        self.analysis_id = running_analysis_id
 
 
 AnalysisIsAlreadyRunning = AnalysisIsAlreadyRunningError

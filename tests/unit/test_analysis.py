@@ -773,7 +773,7 @@ class FileAnalysisSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + '/analyze-by-hash',
                      status=409,
-                     json={'result_url': 'a/sd/asd'})
+                     json={'result_url': 'a/sd/asd', 'result': {}})
             analysis = FileAnalysis(file_hash='a' * 64)
             # Act + Assert
             with self.assertRaises(errors.AnalysisIsAlreadyRunningError):
@@ -782,7 +782,7 @@ class FileAnalysisSpec(BaseTest):
     def test_analysis_raise_value_error_when_no_file_option_given(self):
         # Assert
         with self.assertRaises(ValueError):
-            FileAnalysis()
+            FileAnalysis().send()
 
     def test_analysis_by_sha256_and_file_sent_analysis_and_raise_value_error(self):
         # Assert
@@ -908,7 +908,7 @@ class FileAnalysisSpec(BaseTest):
         self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
 
-    def test_get_analysis_by_id_raises_when_analysis_is_not_finished(self):
+    def test_get_analysis_by_id_in_progress(self):
         # Arrange
         analysis_id = 'analysis_id'
 
@@ -919,22 +919,9 @@ class FileAnalysisSpec(BaseTest):
                      json={'status': AnalysisStatusCode.IN_PROGRESS.value})
 
             # Act
-            with self.assertRaises(errors.AnalysisIsStillRunningError):
-                FileAnalysis.from_analysis_id(analysis_id)
-
-    def test_get_analysis_by_id_raises_when_analysis_is_queued(self):
-        # Arrange
-        analysis_id = 'analysis_id'
-
-        with responses.RequestsMock() as mock:
-            mock.add('GET',
-                     url='{}/analyses/{}'.format(self.full_url, analysis_id),
-                     status=202,
-                     json={'status': AnalysisStatusCode.QUEUED.value})
-
-            # Act
-            with self.assertRaises(errors.AnalysisIsStillRunningError):
-                FileAnalysis.from_analysis_id(analysis_id)
+            analysis = FileAnalysis.from_analysis_id(analysis_id)
+            self.assertEqual(AnalysisStatusCode.IN_PROGRESS, analysis.status)
+            self.assertEqual(analysis_id, analysis.analysis_id)
 
     def test_download_file_path_uses_content_disposition(self):
         # Arrange
@@ -1066,7 +1053,7 @@ class UrlAnalysisSpec(BaseTest):
         self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
 
-    def test_get_analysis_by_id_raises_when_analysis_is_not_finished(self):
+    def test_get_analysis_by_id_in_progress(self):
         # Arrange
         analysis_id = 'analysis_id'
 
@@ -1077,8 +1064,11 @@ class UrlAnalysisSpec(BaseTest):
                      json={'status': AnalysisStatusCode.IN_PROGRESS.value})
 
             # Act
-            with self.assertRaises(errors.AnalysisIsStillRunningError):
-                UrlAnalysis.from_analysis_id(analysis_id)
+            analysis = UrlAnalysis.from_analysis_id(analysis_id)
+
+            # Assert
+            self.assertEqual(AnalysisStatusCode.IN_PROGRESS, analysis.status)
+            self.assertEqual(analysis_id, analysis.analysis_id)
 
     def test_get_analysis_by_id_raises_when_analysis_failed(self):
         # Arrange
@@ -1350,7 +1340,8 @@ class EndpointAnalysisSpec(BaseTest):
         }
 
         with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}/sub-analyses', status=HTTPStatus.OK, json=result)
+            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}/sub-analyses', status=HTTPStatus.OK,
+                     json=result)
 
             sub_analyses = analysis.get_sub_analyses()[0]
 

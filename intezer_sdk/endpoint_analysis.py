@@ -18,23 +18,8 @@ class EndpointAnalysis(Analysis):
     def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None):
         api = api or get_global_api()
         response = api.get_endpoint_analysis_response(analysis_id, True)
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            return None
 
-        response_json = response.json()
-        status = response_json['status']
-        if status == consts.AnalysisStatusCode.FAILED.value:
-            raise errors.AnalysisFailedError()
-
-        analysis = EndpointAnalysis(api=api)
-        if status != 'succeeded':
-            analysis.status = consts.AnalysisStatusCode(status)
-            analysis.analysis_id = analysis_id
-        else:
-            analysis_report = response_json.get('result')
-            analysis._set_report(analysis_report)
-
-        return analysis
+        return cls._create_analysis_from_response(response, api, analysis_id)
 
     def _query_status_from_api(self):
         return self._api.get_endpoint_analysis_response(self.analysis_id, False)
