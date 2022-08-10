@@ -9,7 +9,6 @@ import requests
 from requests import Response
 
 from intezer_sdk import consts
-from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
@@ -31,8 +30,7 @@ class FileAnalysis(BaseAnalysis):
                  code_item_type: str = None,
                  zip_password: str = None):
         super().__init__(api)
-
-        if [file_path, file_hash, file_stream].count(None) != 2:
+        if [file_path, file_hash, file_stream].count(None) < 2:
             raise ValueError('Choose between file hash, file stream or file path analysis')
 
         if file_hash and code_item_type:
@@ -68,20 +66,7 @@ class FileAnalysis(BaseAnalysis):
     def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> Optional['FileAnalysis']:
         api = api or get_global_api()
         response = api.get_file_analysis_response(analysis_id, True)
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            return None
-        response_json = response.json()
-
-        _assert_analysis_status(response_json)
-
-        analysis_report = response_json.get('result')
-        if not analysis_report:
-            return None
-
-        analysis = cls(file_hash=analysis_report['sha256'], api=api)
-        analysis._set_report(analysis_report)
-
-        return analysis
+        return cls._create_analysis_from_response(response, api, analysis_id)
 
     @classmethod
     def from_latest_hash_analysis(cls,
@@ -104,6 +89,9 @@ class FileAnalysis(BaseAnalysis):
         return self._api.get_file_analysis_response(self.analysis_id, False)
 
     def _send_analyze_to_api(self, **additional_parameters) -> str:
+        if [self._file_path, self._file_hash, self._file_stream].count(None) == 3:
+            raise ValueError('Choose between file hash, file stream or file path analysis')
+
         if self._file_hash:
             return self._api.analyze_by_hash(self._file_hash,
                                              self._disable_dynamic_unpacking,
@@ -204,7 +192,7 @@ Analysis = FileAnalysis
 
 
 class UrlAnalysis(BaseAnalysis):
-    def __init__(self, url: str, api: IntezerApi = None):
+    def __init__(self, url: Optional[str] = None, api: IntezerApi = None):
         super().__init__(api)
         self._api.assert_on_premise_above_v21_11()
         self.url = url
@@ -214,25 +202,19 @@ class UrlAnalysis(BaseAnalysis):
     def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> Optional['UrlAnalysis']:
         api = api or get_global_api()
         response = api.get_url_analysis_response(analysis_id, True)
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            return None
+        return cls._create_analysis_from_response(response, api, analysis_id)
 
-        response_json = response.json()
-        _assert_analysis_status(response_json)
-
-        analysis_report = response_json.get('result')
-        if not analysis_report:
-            return None
-
-        analysis = UrlAnalysis(analysis_report['submitted_url'], api=api)
-        analysis._set_report(analysis_report)
-
-        return analysis
+    def _set_report(self, report: dict):
+        super()._set_report(report)
+        if not self.url:
+            self.url = report['submitted_url']
 
     def _query_status_from_api(self) -> Response:
         return self._api.get_url_analysis_response(self.analysis_id, False)
 
     def _send_analyze_to_api(self, **additional_parameters) -> str:
+        if not self.url:
+            raise ValueError('url must be provided')
         return self._api.analyze_url(self.url, **additional_parameters)
 
     @property
@@ -253,11 +235,3 @@ class UrlAnalysis(BaseAnalysis):
 @deprecated('This method is deprecated, use UrlAnalysis.from_analysis_by_id instead to be explict')
 def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[UrlAnalysis]:
     return UrlAnalysis.from_analysis_id(analysis_id, api)
-
-
-def _assert_analysis_status(response: dict):
-    if response['status'] in (consts.AnalysisStatusCode.IN_PROGRESS.value,
-                              consts.AnalysisStatusCode.QUEUED.value):
-        raise errors.AnalysisIsStillRunningError()
-    if response['status'] == consts.AnalysisStatusCode.FAILED.value:
-        raise errors.AnalysisFailedError()

@@ -102,6 +102,26 @@ class Analysis(metaclass=abc.ABCMeta):
         if self.status != consts.AnalysisStatusCode.FINISH:
             raise errors.IntezerError('Analysis not finished successfully')
 
+    @classmethod
+    def _create_analysis_from_response(cls, response: Response, api: IntezerApi, analysis_id: str):
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+
+        response_json = response.json()
+        status = response_json['status']
+        if status == consts.AnalysisStatusCode.FAILED.value:
+            raise errors.AnalysisFailedError()
+
+        analysis = cls(api=api)
+        if status != 'succeeded':
+            analysis.status = consts.AnalysisStatusCode(status)
+            analysis.analysis_id = analysis_id
+        else:
+            analysis_report = response_json.get('result')
+            analysis._set_report(analysis_report)
+
+        return analysis
+
 
 class BaseAnalysis(Analysis):
     @abc.abstractmethod

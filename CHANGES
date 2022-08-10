@@ -1,6 +1,7 @@
 1.10
 -------
 - Add endpoint analysis
+- Support getting analysis by analysis id while in progress
 
 1.9.2
 -------
