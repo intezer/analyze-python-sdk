@@ -1,5 +1,6 @@
 import datetime
 from typing import IO
+from typing import List
 from typing import Optional
 from typing import Union
 
@@ -29,6 +30,7 @@ class SubAnalysis:
         self._code_reuse = None
         self._metadata = None
         self._operations = {}
+        self._indicators = None
 
     @classmethod
     def from_analysis_id(cls,
@@ -83,6 +85,13 @@ class SubAnalysis:
         if self.source != 'endpoint':
             raise TypeError('Verdict is support only for endpoint sub-analyses that')
         return self._verdict
+
+    @property
+    def indicators(self) -> List[dict]:
+        if self._indicators is None:
+            self._indicators = self.metadata.get('indicators', [])
+
+        return self._indicators
 
     def _init_sub_analysis_from_parent(self):
         sub_analyses = self._api.get_sub_analyses_by_id(self.composed_analysis_id)

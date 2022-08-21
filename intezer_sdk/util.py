@@ -15,7 +15,8 @@ emojis_by_key = {
     'unknown': '❔',
     'not_supported': '❔',
     'result_url': '👉',
-    'no_threats': '✅'
+    'no_threats': '✅',
+    'password_protected': '🔒'
 }
 
 
@@ -70,7 +71,8 @@ def get_analysis_summary_metadata(analysis: FileAnalysis,
         'gene_count': gene_count,
         'iocs': iocs,
         'dynamic_ttps': dynamic_ttps,
-        'related_samples_unique_count': related_samples_unique_count
+        'related_samples_unique_count': related_samples_unique_count,
+        'indicators': analysis.get_root_analysis().indicators
     }
 
 
