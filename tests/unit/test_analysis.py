@@ -618,6 +618,31 @@ class FileAnalysisSpec(BaseTest):
         self.assertIsNotNone(analysis.get_root_analysis().code_reuse)
         self.assertIsNotNone(analysis.get_root_analysis().metadata)
 
+    def test_sub_analysis_with_indicators(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze-by-hash',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses',
+                     status=200,
+                     json={'sub_analyses': [{'source': 'root', 'sub_analysis_id': 'ab', 'sha256': 'axaxaxax'}]})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd/sub-analyses/ab/metadata',
+                     status=200, json={'indicators': [{'name': 'password_protected', 'classification': 'neutral'}]})
+
+            analysis = FileAnalysis(file_hash='a' * 64)
+
+            # Act
+            analysis.send()
+            root_analysis = analysis.get_root_analysis()
+            indicators = root_analysis.indicators
+
+        # Assert
+        self.assertEqual([{'name': 'password_protected', 'classification': 'neutral'}], indicators)
+
     def test_sub_analysis_from_id_takes_parameters_from_composed_analysis_lazy_load_is_false(self):
         # Arrange
         analysis_id = str(uuid.uuid4())
