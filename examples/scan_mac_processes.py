@@ -26,12 +26,12 @@ def scan(api_key):
 
             # check if hash already exists
             try:
-                analysis = FileAnalysis.from_latest_hash_analysis(sha256)
+                analysis = FileAnalysis.from_latest_hash_analysis(sha256, file_name=process_path)
             except Exception:
                 analysis = None
             if analysis is None:
-                analysis_op = FileAnalysis(file_path=process_path)
-                print('uploading {}'.format(proc.name()))
+                analysis_op = FileAnalysis(file_path=process_path, file_name=process_path)
+                print('uploading {}'.format(process_path))
                 try:
                     analysis_op.send(wait=False, source='Mac scan')
                 except Exception:
@@ -39,13 +39,13 @@ def scan(api_key):
             else:
                 # analyze again by hash to get an updated analysis
                 try:
-                    print('analyzing by hash {}'.format(proc.name()))
-                    analysis_op = FileAnalysis(file_hash=sha256)
+                    print('analyzing by hash {}'.format(process_path))
+                    analysis_op = FileAnalysis(file_hash=sha256, file_name=process_path)
                     analysis_op.send(wait=False, source='Mac scan')
                 except Exception:
                     print('error scanning hash, skipped {}'.format(proc.name()))
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
+            print('error in reading process, skipped {}'.format(proc.name()))
         except Exception:
             traceback.print_exc()
 
