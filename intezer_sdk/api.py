@@ -66,13 +66,19 @@ class IntezerApi:
                  api_key: str = None,
                  base_url: str = None,
                  verify_ssl: bool = True,
-                 on_premise_version: OnPremiseVersion = None):
+                 on_premise_version: OnPremiseVersion = None,
+                 user_agent: str = None):
         self.full_url = base_url + api_version
         self.api_key = api_key
         self._access_token = None
         self._session = None
         self._verify_ssl = verify_ssl
         self.on_premise_version = on_premise_version
+        if user_agent:
+            user_agent = f'{consts.USER_AGENT}/{user_agent}'
+        else:
+            user_agent = consts.USER_AGENT
+        self.user_agent = user_agent
 
     def _request(self,
                  method: str,
@@ -442,7 +448,7 @@ class IntezerApi:
         self._session.verify = self._verify_ssl
         self._set_access_token(self.api_key)
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
-        self._session.headers['User-Agent'] = consts.USER_AGENT
+        self._session.headers['User-Agent'] = self.user_agent
 
     def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
         self.assert_on_premise_above_v21_11()
