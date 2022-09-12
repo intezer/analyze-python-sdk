@@ -16,7 +16,8 @@ emojis_by_key = {
     'not_supported': '❔',
     'result_url': '👉',
     'no_threats': '✅',
-    'password_protected': '🔒'
+    'password_protected': '🔒',
+    'action_taken': '⚙️'
 }
 
 
