@@ -1,3 +1,7 @@
+1.11.3
+-------
+- Get EDR alert assessments by edr alert ids
+
 1.11.2
 -------
 - Add action taken emoji
