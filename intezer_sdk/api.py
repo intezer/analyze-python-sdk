@@ -139,6 +139,25 @@ class IntezerApi:
 
         return self._get_analysis_id_from_response(response)
 
+    def analyze_by_download_url(self,
+                                download_url: str,
+                                disable_dynamic_unpacking: bool = None,
+                                disable_static_unpacking: bool = None,
+                                code_item_type: str = None,
+                                zip_password: str = None,
+                                **additional_parameters) -> str:
+        data = self._param_initialize(disable_dynamic_unpacking,
+                                      disable_static_unpacking,
+                                      code_item_type,
+                                      zip_password,
+                                      **additional_parameters)
+
+        data['download_url'] = download_url
+        response = self.request_with_refresh_expired_access_token(path='/analyze-by-url', data=data, method='POST')
+        self._assert_analysis_response_status_code(response)
+
+        return self._get_analysis_id_from_response(response)
+
     def _analyze_file_stream(self, file_stream: BinaryIO, file_name: str, options: dict) -> str:
         file = {'file': (file_name, file_stream)}
 

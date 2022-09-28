@@ -28,10 +28,11 @@ class FileAnalysis(BaseAnalysis):
                  api: IntezerApi = None,
                  file_name: str = None,
                  code_item_type: str = None,
-                 zip_password: str = None):
+                 zip_password: str = None,
+                 download_url: str = None):
         super().__init__(api)
-        if [file_path, file_hash, file_stream].count(None) < 2:
-            raise ValueError('Choose between file hash, file stream or file path analysis')
+        if [file_path, file_hash, file_stream, download_url].count(None) < 3:
+            raise ValueError('Choose between file hash, file stream, file path, or download from url analysis')
 
         if file_hash and code_item_type:
             logger.warning('Analyze by hash ignores code item type')
@@ -39,11 +40,14 @@ class FileAnalysis(BaseAnalysis):
         if code_item_type and code_item_type not in [c.value for c in consts.CodeItemType]:
             raise ValueError('Invalid code item type, possible code item types are: file, memory module')
 
+        # Input sources
         self._file_hash = file_hash
-        self._disable_dynamic_unpacking = disable_dynamic_unpacking
-        self._disable_static_unpacking = disable_static_unpacking
         self._file_path = file_path
         self._file_stream = file_stream
+        self._download_url = download_url
+
+        self._disable_dynamic_unpacking = disable_dynamic_unpacking
+        self._disable_static_unpacking = disable_static_unpacking
         self._file_name = file_name
         self._code_item_type = code_item_type
         self._zip_password = zip_password
@@ -89,14 +93,21 @@ class FileAnalysis(BaseAnalysis):
         return self._api.get_file_analysis_response(self.analysis_id, False)
 
     def _send_analyze_to_api(self, **additional_parameters) -> str:
-        if [self._file_path, self._file_hash, self._file_stream].count(None) == 3:
-            raise ValueError('Choose between file hash, file stream or file path analysis')
+        if all(param is None for param in [self._file_path, self._file_hash, self._file_stream, self._download_url]):
+            raise ValueError('Choose between file hash, file stream, file path, or download from url analysis')
 
         if self._file_hash:
             return self._api.analyze_by_hash(self._file_hash,
                                              self._disable_dynamic_unpacking,
                                              self._disable_static_unpacking,
                                              **additional_parameters)
+        elif self._download_url:
+            return self._api.analyze_by_download_url(download_url=self._download_url,
+                                                     disable_dynamic_unpacking=self._disable_dynamic_unpacking,
+                                                     disable_static_unpacking=self._disable_static_unpacking,
+                                                     code_item_type=self._code_item_type,
+                                                     zip_password=self._zip_password,
+                                                     **additional_parameters)
         else:
             return self._api.analyze_by_file(self._file_path,
                                              self._file_stream,
