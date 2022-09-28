@@ -206,6 +206,26 @@ class FileAnalysisSpec(BaseTest):
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
         self.assertEqual(analysis.result(), 'report')
 
+    def test_send_analysis_by_download_url_and_get_report(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze-by-url',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report', 'status': 'succeeded'})
+            analysis = FileAnalysis(download_url='http://intezer-download.com')
+
+            # Act
+            analysis.send(wait=True)
+
+        # Assert
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(analysis.result(), 'report')
+
     def test_send_analysis_by_file_and_get_iocs(self):
         # Arrange
         with responses.RequestsMock() as mock:
