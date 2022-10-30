@@ -7,8 +7,7 @@ from typing import Union
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.consts import AnalysisStatusCode
-from intezer_sdk.operation import Operation
+from intezer_sdk import operation
 
 
 class SubAnalysis:
@@ -108,68 +107,68 @@ class SubAnalysis:
     def find_related_files(self,
                            family_id: str,
                            wait: Union[bool, int] = False,
-                           wait_timeout: Optional[datetime.timedelta] = None) -> Operation:
+                           wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
         result_url = self._api.get_sub_analysis_related_files_by_family_id(self.composed_analysis_id,
                                                                            self.analysis_id,
                                                                            family_id)
-        return self._handle_operation(family_id, result_url, wait, wait_timeout)
+        return operation.handle_operation(self._operations,
+                                          self._api,
+                                          f'Related files: {family_id}',
+                                          result_url,
+                                          wait,
+                                          wait_timeout)
 
     def get_account_related_samples(self,
                                     wait: Union[bool, int] = False,
-                                    wait_timeout: Optional[datetime.timedelta] = None) -> Optional[Operation]:
+                                    wait_timeout: Optional[datetime.timedelta] = None) -> Optional[operation.Operation]:
         try:
             result_url = self._api.get_sub_analysis_account_related_samples_by_id(self.composed_analysis_id,
                                                                                   self.analysis_id)
         except Exception:
             return None
 
-        return self._handle_operation('Account related samples', result_url, wait, wait_timeout)
+        return operation.handle_operation(self._operations,
+                                          self._api,
+                                          'Account files related samples',
+                                          result_url,
+                                          wait,
+                                          wait_timeout)
 
     def generate_vaccine(self,
                          wait: Union[bool, int] = False,
-                         wait_timeout: Optional[datetime.timedelta] = None) -> Operation:
+                         wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
         result_url = self._api.generate_sub_analysis_vaccine_by_id(self.composed_analysis_id, self.analysis_id)
-        return self._handle_operation('Vaccine', result_url, wait, wait_timeout)
+        return operation.handle_operation(self._operations, self._api, 'Vaccine', result_url, wait, wait_timeout)
 
     def get_capabilities(self,
                          wait: Union[bool, int] = False,
-                         wait_timeout: Optional[datetime.timedelta] = None) -> Operation:
+                         wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
         result_url = self._api.get_sub_analysis_capabilities_by_id(self.composed_analysis_id, self.analysis_id)
-        return self._handle_operation('Capabilities', result_url, wait, wait_timeout)
+        return operation.handle_operation(self._operations, self._api, 'Capabilities', result_url, wait, wait_timeout)
 
     def get_strings(self,
                     wait: Union[bool, int] = False,
-                    wait_timeout: Optional[datetime.timedelta] = None) -> Operation:
+                    wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
         result = self._api.get_strings_by_id(self.composed_analysis_id, self.analysis_id)
-        return self._handle_operation('Strings', result['result_url'], wait, wait_timeout)
+        return operation.handle_operation(self._operations,
+                                          self._api,
+                                          'Strings',
+                                          result['result_url'],
+                                          wait, wait_timeout)
 
     def get_string_related_samples(self,
                                    string_value: str,
                                    wait: Union[bool, int] = False,
-                                   wait_timeout: Optional[datetime.timedelta] = None) -> Operation:
+                                   wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
         result_url = self._api.get_string_related_samples_by_id(self.composed_analysis_id,
                                                                 self.analysis_id,
                                                                 string_value)
-        return self._handle_operation(string_value, result_url, wait, wait_timeout)
-
-    def _handle_operation(self,
-                          operation: str,
-                          url: str,
-                          wait: Union[bool, int],
-                          wait_timeout: Optional[datetime.timedelta]) -> Operation:
-        if operation not in self._operations:
-            self._operations[operation] = Operation(AnalysisStatusCode.IN_PROGRESS, url, api=self._api)
-
-            if wait:
-                if isinstance(wait, bool):
-                    self._operations[operation].wait_for_completion(sleep_before_first_check=True,
-                                                                    wait_timeout=wait_timeout)
-                else:
-                    self._operations[operation].wait_for_completion(wait,
-                                                                    sleep_before_first_check=True,
-                                                                    wait_timeout=wait_timeout)
-
-        return self._operations[operation]
+        return operation.handle_operation(self._operations,
+                                          self._api,
+                                          f'Strings related samples: {string_value}',
+                                          result_url,
+                                          wait,
+                                          wait_timeout)
 
     def download_file(self, path: str = None, output_stream: IO = None):
         """

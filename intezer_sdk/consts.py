@@ -10,6 +10,7 @@ class AnalysisStatusCode(Enum):
     QUEUED = 'queued'
     FAILED = 'failed'
     FINISH = 'finished'
+    FINISHED = 'finished'
 
 
 class IndexStatusCode(Enum):

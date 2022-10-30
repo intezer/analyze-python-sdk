@@ -253,6 +253,15 @@ class IntezerApi:
 
         return response.json()['result']
 
+    def get_detection_result_url(self, analyses_id: str) -> Optional[str]:
+        response = self.request_with_refresh_expired_access_token(path=f'/analyses/{analyses_id}/detect',
+                                                                  method='GET')
+        if response.status_code == HTTPStatus.CONFLICT:
+            return None
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
     def get_dynamic_ttps(self, analyses_id: str) -> Optional[dict]:
         self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),

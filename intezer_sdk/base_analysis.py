@@ -49,7 +49,7 @@ class Analysis(metaclass=abc.ABCMeta):
                 time.sleep(interval)
             status_code = self.check_status()
 
-            while status_code != consts.AnalysisStatusCode.FINISH:
+            while status_code != consts.AnalysisStatusCode.FINISHED:
                 timeout_passed = timeout and datetime.datetime.utcnow() - start_time > timeout
                 if timeout_passed:
                     raise TimeoutError
@@ -72,7 +72,7 @@ class Analysis(metaclass=abc.ABCMeta):
                 self.status = consts.AnalysisStatusCode.FAILED
                 raise errors.IntezerError('Analysis failed')
             self._report = result['result']
-            self.status = consts.AnalysisStatusCode.FINISH
+            self.status = consts.AnalysisStatusCode.FINISHED
         elif response.status_code == HTTPStatus.ACCEPTED:
             self.status = consts.AnalysisStatusCode.IN_PROGRESS
         else:
@@ -94,12 +94,12 @@ class Analysis(metaclass=abc.ABCMeta):
 
         self.analysis_id = report['analysis_id']
         self._report = report
-        self.status = consts.AnalysisStatusCode.FINISH
+        self.status = consts.AnalysisStatusCode.FINISHED
 
     def _assert_analysis_finished(self):
         if self._is_analysis_running():
             raise errors.AnalysisIsStillRunningError()
-        if self.status != consts.AnalysisStatusCode.FINISH:
+        if self.status != consts.AnalysisStatusCode.FINISHED:
             raise errors.IntezerError('Analysis not finished successfully')
 
     @classmethod
