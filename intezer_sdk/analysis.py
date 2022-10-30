@@ -1,18 +1,22 @@
+import datetime
 import logging
 import os
 from http import HTTPStatus
 from typing import BinaryIO
 from typing import IO
 from typing import Optional
+from typing import Union
 
 import requests
 from requests import Response
 
 from intezer_sdk import consts
+from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import BaseAnalysis
+from intezer_sdk import operation
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
@@ -55,6 +59,7 @@ class FileAnalysis(BaseAnalysis):
         self._root_analysis = None
         self._iocs_report = None
         self._dynamic_ttps_report = None
+        self._operations = {}
 
         if self._file_path and not self._file_name:
             self._file_name = os.path.basename(file_path)
@@ -166,6 +171,18 @@ class FileAnalysis(BaseAnalysis):
 
         return self._iocs_report
 
+    def get_detections(self,
+                       wait: Union[bool, int] = False,
+                       wait_timeout: Optional[datetime.timedelta] = None) -> Optional[operation.Operation]:
+        if self._api.on_premise_version:
+            raise errors.UnsupportedOnPremiseVersionError("Detection isn't supported yet on on-premise")
+        self._assert_analysis_finished()
+        result_url = self._api.get_detection_result_url(self.analysis_id)
+        if not result_url:
+            return None
+
+        return operation.handle_operation(self._operations, self._api, 'Detection', result_url, wait, wait_timeout)
+
     @property
     def dynamic_ttps(self) -> dict:
         self._assert_analysis_finished()
@@ -230,7 +247,7 @@ class UrlAnalysis(BaseAnalysis):
 
     @property
     def downloaded_file_analysis(self) -> Optional[FileAnalysis]:
-        if self.status != consts.AnalysisStatusCode.FINISH:
+        if self.status != consts.AnalysisStatusCode.FINISHED:
             raise
         if self._file_analysis:
             return self._file_analysis

@@ -1,6 +1,8 @@
 import datetime
 import time
+from typing import Dict
 from typing import Optional
+from typing import Union
 
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
@@ -20,13 +22,13 @@ class Operation:
         self._api = api or get_global_api()
 
     def get_result(self):
-        if self.status != AnalysisStatusCode.FINISH:
+        if self.status != AnalysisStatusCode.FINISHED:
 
             operation_result = self._api.get_url_result(self.url)
 
             if handle_response_status(operation_result.status_code):
                 self.result = operation_result.json()['result']
-                self.status = AnalysisStatusCode.FINISH
+                self.status = AnalysisStatusCode.FINISHED
             else:
                 raise errors.SubAnalysisOperationStillRunningError('operation')
         return self.result
@@ -50,7 +52,7 @@ class Operation:
             time.sleep(interval)
             operation_result = self._api.get_url_result(self.url)
 
-        self.status = AnalysisStatusCode.FINISH
+        self.status = AnalysisStatusCode.FINISHED
         self.result = operation_result.json()['result']
 
 
@@ -59,3 +61,24 @@ def handle_response_status(status):
         raise errors.IntezerError('Error in response status code:{}'.format(status))
 
     return status == HTTPStatus.OK
+
+
+def handle_operation(operations: Dict[str, Operation],
+                     api: IntezerApi,
+                     operation: str,
+                     result_url: str,
+                     wait: Union[bool, int],
+                     wait_timeout: Optional[datetime.timedelta]) -> Operation:
+    if operation not in operations:
+        operations[operation] = Operation(AnalysisStatusCode.IN_PROGRESS, result_url, api=api)
+
+        if wait:
+            if isinstance(wait, bool):
+                operations[operation].wait_for_completion(sleep_before_first_check=True,
+                                                          wait_timeout=wait_timeout)
+            else:
+                operations[operation].wait_for_completion(wait,
+                                                          sleep_before_first_check=True,
+                                                          wait_timeout=wait_timeout)
+
+    return operations[operation]

@@ -14,9 +14,7 @@ import responses
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.analysis import FileAnalysis
-from intezer_sdk.analysis import UrlAnalysis
 from intezer_sdk.api import get_global_api
-from intezer_sdk.consts import AnalysisStatusCode
 from intezer_sdk.consts import OnPremiseVersion
 from intezer_sdk.endpoint_analysis import EndpointAnalysis
 from intezer_sdk.sub_analysis import SubAnalysis
@@ -110,7 +108,7 @@ class FileAnalysisSpec(BaseTest):
                 analysis.send(wait=True)
 
         # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
 
     def test_send_analysis_by_file_sends_analysis_and_waits_specific_time_until_compilation(self):
         # Arrange
@@ -133,7 +131,7 @@ class FileAnalysisSpec(BaseTest):
                 duration = (datetime.datetime.utcnow() - start).total_seconds()
 
         # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
         self.assertGreater(duration, wait)
 
     def test_send_analysis_by_file_sent_analysis_without_wait_and_get_status_finish(self):
@@ -155,7 +153,7 @@ class FileAnalysisSpec(BaseTest):
                 analysis.wait_for_completion()
 
         # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
 
     def test_send_analysis_by_file_sent_analysis_with_pulling_and_get_status_finish(self):
         # Arrange
@@ -184,7 +182,7 @@ class FileAnalysisSpec(BaseTest):
                 analysis.check_status()
 
         # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
 
     def test_send_analysis_by_file_and_get_report(self):
         # Arrange
@@ -203,7 +201,7 @@ class FileAnalysisSpec(BaseTest):
                 analysis.send(wait=True)
 
         # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
         self.assertEqual(analysis.result(), 'report')
 
     def test_send_analysis_by_download_url_and_get_report(self):
@@ -248,7 +246,7 @@ class FileAnalysisSpec(BaseTest):
                 iocs = analysis.iocs
 
         # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
         self.assertEqual(iocs, 'ioc_report')
 
     def test_send_analysis_by_file_and_get_dynamic_ttps(self):
@@ -273,13 +271,13 @@ class FileAnalysisSpec(BaseTest):
                 ttps = analysis.dynamic_ttps
 
         # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
         self.assertEqual(ttps, 'ttps_report')
 
     def test_get_dynamic_ttps_raises_when_on_premise_on_21_11(self):
         # Arrange
         analysis = FileAnalysis(file_path='a')
-        analysis.status = consts.AnalysisStatusCode.FINISH
+        analysis.status = consts.AnalysisStatusCode.FINISHED
         get_global_api().on_premise_version = OnPremiseVersion.V21_11
 
         # Act and Assert
@@ -389,7 +387,7 @@ class FileAnalysisSpec(BaseTest):
                 analysis.send(wait=True)
 
             # Assert
-            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
             self.assertEqual(analysis.result(), 'report')
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="disable_static_extraction"\r\n\r\nTrue'
@@ -417,7 +415,7 @@ class FileAnalysisSpec(BaseTest):
                 analysis.send(wait=True)
 
             # Assert
-            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
             self.assertEqual(analysis.result(), 'report')
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
@@ -444,7 +442,7 @@ class FileAnalysisSpec(BaseTest):
                 analysis.send(wait=True)
 
             # Assert
-            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
             self.assertEqual(analysis.result(), 'report')
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
@@ -471,7 +469,7 @@ class FileAnalysisSpec(BaseTest):
                 analysis.send(wait=True)
 
             # Assert
-            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
             self.assertEqual(analysis.result(), 'report')
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
@@ -885,7 +883,7 @@ class FileAnalysisSpec(BaseTest):
         file_hash = 'hash'
 
         with responses.RequestsMock() as mock:
-            mock.add('GET', url='{}/files/{}'.format(self.full_url, file_hash), status=404)
+            mock.add('GET', url=f'{self.full_url}/files/{file_hash}', status=404)
 
             # Act
             analysis = FileAnalysis.from_latest_hash_analysis(file_hash)
@@ -900,7 +898,7 @@ class FileAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/files/{}'.format(self.full_url, file_hash),
+                     url=f'{self.full_url}/files/{file_hash}',
                      status=200,
                      json={'result': analysis_report})
 
@@ -909,7 +907,7 @@ class FileAnalysisSpec(BaseTest):
 
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)
-        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
+        self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
 
     def test_get_latest_analysis_analysis_object_when_latest_analysis_found_with_on_premise(self):
@@ -921,7 +919,7 @@ class FileAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/files/{}'.format(self.full_url, file_hash),
+                     url=f'{self.full_url}/files/{file_hash}',
                      status=200,
                      json={'result': analysis_report})
 
@@ -931,7 +929,7 @@ class FileAnalysisSpec(BaseTest):
 
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)
-        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
+        self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
 
     def test_get_analysis_by_id_analysis_object_when_latest_analysis_found(self):
@@ -941,7 +939,7 @@ class FileAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/analyses/{}'.format(self.full_url, analysis_id),
+                     url=f'{self.full_url}/analyses/{analysis_id}',
                      status=200,
                      json={'result': analysis_report, 'status': 'succeeded'})
 
@@ -950,7 +948,7 @@ class FileAnalysisSpec(BaseTest):
 
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)
-        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
+        self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
 
     def test_get_analysis_by_id_in_progress(self):
@@ -959,13 +957,13 @@ class FileAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/analyses/{}'.format(self.full_url, analysis_id),
+                     url=f'{self.full_url}/analyses/{analysis_id}',
                      status=202,
-                     json={'status': AnalysisStatusCode.IN_PROGRESS.value})
+                     json={'status': consts.AnalysisStatusCode.IN_PROGRESS.value})
 
             # Act
             analysis = FileAnalysis.from_analysis_id(analysis_id)
-            self.assertEqual(AnalysisStatusCode.IN_PROGRESS, analysis.status)
+            self.assertEqual(consts.AnalysisStatusCode.IN_PROGRESS, analysis.status)
             self.assertEqual(analysis_id, analysis.analysis_id)
 
     def test_download_file_path_uses_content_disposition(self):
@@ -1077,198 +1075,69 @@ class FileAnalysisSpec(BaseTest):
             with self.assertRaises(ValueError):
                 analysis.download_file()
 
-
-class UrlAnalysisSpec(BaseTest):
-    def test_get_analysis_by_id_analysis_object_when_latest_analysis_found(self):
+    def test_get_detection(self):
         # Arrange
+        analysis = FileAnalysis(file_hash='a' * 64)
+        analysis.status = consts.AnalysisStatusCode.FINISHED
         analysis_id = 'analysis_id'
-        submitted_url = 'https://url.com'
-        analysis_report = {'analysis_id': analysis_id, 'submitted_url': submitted_url}
+        analysis.analysis_id = analysis_id
+        result_url = f'{self.full_url}/analyses/{analysis_id}/detect'
+        result = {
+            'families': [{'family_id': 'string', 'family_name': 'string'}],
+            'software_type': 'administration_tool',
+            'source': 'string',
+            'severity': 0,
+            'type': 'string',
+            'value': None
+        }
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
-                     json={'result': analysis_report, 'status': 'succeeded'})
+                     url=result_url,
+                     status=HTTPStatus.CREATED,
+                     json={'status': consts.AnalysisStatusCode.IN_PROGRESS.value,
+                           'result_url': f'/analyses/{analysis_id}/detect'})
 
-            # Act
-            analysis = UrlAnalysis.from_analysis_id(analysis_id)
-
-        self.assertIsNotNone(analysis)
-        self.assertEqual(analysis_id, analysis.analysis_id)
-        self.assertEqual(submitted_url, analysis.url)
-        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
-        self.assertDictEqual(analysis_report, analysis.result())
-
-    def test_get_analysis_by_id_in_progress(self):
-        # Arrange
-        analysis_id = 'analysis_id'
-
-        with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=202,
-                     json={'status': AnalysisStatusCode.IN_PROGRESS.value})
+                     url=f'{self.full_url}/analyses/{analysis_id}/detect',
+                     status=HTTPStatus.OK,
+                     json={'status': consts.AnalysisStatusCode.FINISHED.value, 'result': [result]}
+                     )
 
             # Act
-            analysis = UrlAnalysis.from_analysis_id(analysis_id)
-
-            # Assert
-            self.assertEqual(AnalysisStatusCode.IN_PROGRESS, analysis.status)
-            self.assertEqual(analysis_id, analysis.analysis_id)
-
-    def test_get_analysis_by_id_raises_when_analysis_failed(self):
-        # Arrange
-        analysis_id = 'analysis_id'
-
-        with responses.RequestsMock() as mock:
-            mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
-                     json={'status': AnalysisStatusCode.FAILED.value})
-
-            # Act
-            with self.assertRaises(errors.AnalysisFailedError):
-                UrlAnalysis.from_analysis_id(analysis_id)
-
-    def test_send_perform_request_and_sets_analysis_status(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/url/',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(analysis_id)})
-            analysis = UrlAnalysis(url='https://intezer.com')
-
-            # Act
-            analysis.send()
+            operation = analysis.get_detections(wait=True)
 
         # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
-        self.assertEqual(analysis_id, analysis.analysis_id)
+        self.assertEqual(operation.status, consts.AnalysisStatusCode.FINISHED)
+        self.assertDictEqual(operation.result[0], result)
 
-    def test_send_fail_when_invalid_url(self):
+    def test_get_detection_return_none_when_no_report(self):
         # Arrange
+        analysis = FileAnalysis(file_hash='a' * 64)
+        analysis.status = consts.AnalysisStatusCode.FINISHED
+        analysis_id = 'analysis_id'
+        analysis.analysis_id = analysis_id
+
         with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/url/',
-                     status=400,
-                     json={'error': 'Some error description'})
-            analysis = UrlAnalysis(url='httpdddds://intezer.com')
+            mock.add('GET', url=f'{self.full_url}/analyses/{analysis_id}/detect', status=HTTPStatus.CONFLICT, json={})
 
             # Act
-            with self.assertRaises(errors.ServerError):
-                analysis.send()
+            operation = analysis.get_detections(wait=True)
 
-    def test_send_fail_when_on_premise(self):
+        # Assert
+        self.assertIsNone(operation)
+
+    def test_get_detection_raises_on_on_premise(self):
         # Arrange
         get_global_api().on_premise_version = OnPremiseVersion.V21_11
+        analysis = FileAnalysis(file_hash='a' * 64)
+        analysis.status = consts.AnalysisStatusCode.FINISHED
+        analysis_id = 'analysis_id'
+        analysis.analysis_id = analysis_id
 
-        # Act
+        # Act and Assert
         with self.assertRaises(errors.UnsupportedOnPremiseVersionError):
-            _ = UrlAnalysis(url='httpdddds://intezer.com')
-
-    def test_send_waits_to_compilation_when_requested(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/url/',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(analysis_id)})
-            result = {'analysis_id': analysis_id}
-            mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
-                     json={'result': result, 'status': 'succeeded'})
-            analysis = UrlAnalysis('https://intezer.com')
-
-            # Act
-            analysis.send(wait=True)
-
-        # Assert
-        self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
-        self.assertDictEqual(analysis.result(), result)
-
-    def test_send_waits_to_compilation_when_requested_and_handles_failure(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/url/',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(analysis_id)})
-            result = {'analysis_id': analysis_id}
-            mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
-                     json={'result': result, 'status': 'failed'})
-            analysis = UrlAnalysis('https://intezer.com')
-
-            with self.assertRaises(errors.IntezerError):
-                # Act
-                analysis.send(wait=True)
-
-        # Assert
-        self.assertEqual(consts.AnalysisStatusCode.FAILED, analysis.status)
-
-    def test_url_analysis_references_file_analysis(self):
-        # Arrange
-        url_analysis_id = str(uuid.uuid4())
-        file_analysis_id = str(uuid.uuid4())
-        url_result = {'analysis_id': url_analysis_id,
-                      'downloaded_file': {
-                          'analysis_id': file_analysis_id
-                      }}
-        file_analysis_report = {'analysis_id': file_analysis_id, 'sha256': 'hash'}
-
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/url/',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(url_analysis_id)})
-            mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, url_analysis_id),
-                     status=200,
-                     json={'result': url_result, 'status': 'succeeded'})
-            mock.add('GET',
-                     url='{}/analyses/{}'.format(self.full_url, file_analysis_id),
-                     status=200,
-                     json={'result': file_analysis_report, 'status': 'succeeded'})
-            analysis = UrlAnalysis('https://intezer.com')
-
-            # Act
-            analysis.send(wait=True)
-            file_analysis = analysis.downloaded_file_analysis
-
-            # Assert
-            self.assertEqual(file_analysis.analysis_id, file_analysis_id)
-            self.assertEqual(file_analysis.result(), file_analysis_report)
-
-    def test_url_analysis_doesnt_reference_file_analysis_when_not_exists(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-        result = {'analysis_id': analysis_id}
-
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + '/url/',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(analysis_id)})
-            mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
-                     json={'result': result, 'status': 'succeeded'})
-            analysis = UrlAnalysis('https://intezer.com')
-
-            # Act
-            analysis.send(wait=True)
-
-            # Assert
-            self.assertIsNone(analysis.downloaded_file_analysis)
+            operation = analysis.get_detections(wait=True)
 
 
 class EndpointAnalysisSpec(BaseTest):
@@ -1316,7 +1185,7 @@ class EndpointAnalysisSpec(BaseTest):
 
         # Assert
         self.assertIsNotNone(analysis)
-        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
+        self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
 
     def test_analysis_done(self):
         # Arrange
@@ -1337,7 +1206,7 @@ class EndpointAnalysisSpec(BaseTest):
         # Assert
         self.assertIsNotNone(analysis)
         self.assertEqual(analysis_id, analysis.analysis_id)
-        self.assertEqual(consts.AnalysisStatusCode.FINISH, analysis.status)
+        self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
         self.assertDictEqual(result['result'], analysis.result())
 
     def test_analysis_failed(self):
@@ -1373,7 +1242,7 @@ class EndpointAnalysisSpec(BaseTest):
         analysis_id = str(uuid.uuid4())
         sub_analysis_id = str(uuid.uuid4())
         analysis = EndpointAnalysis()
-        analysis.status = consts.AnalysisStatusCode.FINISH
+        analysis.status = consts.AnalysisStatusCode.FINISHED
         analysis.analysis_id = analysis_id
         sha256 = 'a' * 64
         verdict = 'malicious'
