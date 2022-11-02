@@ -1,6 +1,7 @@
-Not released yet
+1.13
 -------
 - Add detection report
+- Add sandbox command line arguments option for analyses
 
 1.12
 -------
