@@ -130,8 +130,12 @@ class IntezerApi:
                         file_hash: str,
                         disable_dynamic_unpacking: Optional[bool],
                         disable_static_unpacking: Optional[bool],
+                        sandbox_command_line_arguments: str = None,
                         **additional_parameters) -> str:
-        data = self._param_initialize(disable_dynamic_unpacking, disable_static_unpacking, **additional_parameters)
+        data = self._param_initialize(disable_dynamic_unpacking,
+                                      disable_static_unpacking,
+                                      sandbox_command_line_arguments,
+                                      **additional_parameters)
 
         data['hash'] = file_hash
         response = self.request_with_refresh_expired_access_token(path='/analyze-by-hash', data=data, method='POST')
@@ -145,11 +149,13 @@ class IntezerApi:
                                 disable_static_unpacking: bool = None,
                                 code_item_type: str = None,
                                 zip_password: str = None,
+                                sandbox_command_line_arguments: str = None,
                                 **additional_parameters) -> str:
         data = self._param_initialize(disable_dynamic_unpacking,
                                       disable_static_unpacking,
                                       code_item_type,
                                       zip_password,
+                                      sandbox_command_line_arguments,
                                       **additional_parameters)
 
         data['download_url'] = download_url
@@ -178,11 +184,13 @@ class IntezerApi:
                         file_name: str = None,
                         code_item_type: str = None,
                         zip_password: str = None,
+                        sandbox_command_line_arguments: str = None,
                         **additional_parameters) -> Optional[str]:
         options = self._param_initialize(disable_dynamic_unpacking,
                                          disable_static_unpacking,
                                          code_item_type,
                                          zip_password,
+                                         sandbox_command_line_arguments,
                                          **additional_parameters)
 
         if file_stream:
@@ -506,6 +514,7 @@ class IntezerApi:
                           disable_static_unpacking: bool,
                           code_item_type: str = None,
                           zip_password: str = None,
+                          sandbox_command_line_arguments: str = None,
                           **additional_parameters):
         data = {}
 
@@ -517,6 +526,8 @@ class IntezerApi:
             data['code_item_type'] = code_item_type
         if zip_password:
             data['zip_password'] = zip_password
+        if sandbox_command_line_arguments:
+            data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
 
         data.update(additional_parameters)
 
