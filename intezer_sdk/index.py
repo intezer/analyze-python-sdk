@@ -59,7 +59,7 @@ class Index(object):
                 time.sleep(interval)
             status_code = self.check_status()
 
-            while status_code != consts.IndexStatusCode.FINISH:
+            while status_code != consts.IndexStatusCode.FINISHED:
                 time.sleep(interval)
                 status_code = self.check_status()
 
@@ -72,7 +72,7 @@ class Index(object):
             if response.json()['status'] == 'failed':
                 raise errors.IndexFailedError(response)
             else:
-                self.status = consts.IndexStatusCode.FINISH
+                self.status = consts.IndexStatusCode.FINISHED
         elif response.status_code == HTTPStatus.ACCEPTED:
             self.status = consts.IndexStatusCode.IN_PROGRESS
         else:

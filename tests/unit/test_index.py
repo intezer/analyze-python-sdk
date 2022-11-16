@@ -116,7 +116,7 @@ class IndexSpec(BaseTest):
             index.send(wait=True)
 
         # Assert
-        self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
+        self.assertEqual(index.status, consts.IndexStatusCode.FINISHED)
 
     def test_index_by_sha256_waits_specific_time_until_compilation(self):
         # Arrange
@@ -138,7 +138,7 @@ class IndexSpec(BaseTest):
             duration = (datetime.datetime.utcnow() - start).total_seconds()
 
         # Assert
-        self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
+        self.assertEqual(index.status, consts.IndexStatusCode.FINISHED)
         self.assertGreater(duration, wait)
 
     def test_index_by_file_succeeded_status_changed_to_finish(self):
@@ -166,7 +166,7 @@ class IndexSpec(BaseTest):
                 index.send(wait=True)
 
         # Assert
-        self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
+        self.assertEqual(index.status, consts.IndexStatusCode.FINISHED)
 
     def test_check_status_before_index_sent_raise_status(self):
         # Arrange
@@ -204,7 +204,7 @@ class IndexSpec(BaseTest):
                 index.check_status()
 
         # Assert
-        self.assertEqual(index.status, consts.IndexStatusCode.FINISH)
+        self.assertEqual(index.status, consts.IndexStatusCode.FINISHED)
 
     def test_parallel_index_by_sha256_succeeded_status_changed_to_finish(self):
         # Arrange
@@ -239,5 +239,5 @@ class IndexSpec(BaseTest):
             second_index.wait_for_completion()
 
         # Assert
-        self.assertEqual(first_index.status, consts.IndexStatusCode.FINISH)
-        self.assertEqual(second_index.status, consts.IndexStatusCode.FINISH)
+        self.assertEqual(first_index.status, consts.IndexStatusCode.FINISHED)
+        self.assertEqual(second_index.status, consts.IndexStatusCode.FINISHED)
