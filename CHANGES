@@ -1,3 +1,7 @@
+unreleased
+-------
+- Add enums for the basic consts: SoftwareType, FileAnalysisVerdict, URLAnalysisVerdict, EndpointAnalysisVerdict
+
 1.13
 -------
 - Add detection report
