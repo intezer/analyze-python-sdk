@@ -1,3 +1,4 @@
+import datetime
 import os
 from http import HTTPStatus
 from typing import Any
@@ -17,6 +18,7 @@ from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
+from intezer_sdk.pagination import Pagination
 
 _global_api: Optional['IntezerApi'] = None
 
@@ -567,6 +569,169 @@ class IntezerApi:
     def assert_on_premise_above_v21_11(self):
         if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:
             raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on premise')
+
+    def file_analyses_history(self, *,
+                              start_date: int,
+                              end_date: int,
+                              aggregate_view: bool = None,
+                              sources: List[str] = None,
+                              verdicts: List[str] = None,
+                              hash_data: str = None,
+                              family_names: List[str] = None,
+                              file_name: str = None,
+                              limit: int = 100,
+                              offset: int = 0
+                              ):
+        """
+        Query for file analyses history.
+        :param start_date: Date to query from.
+        :param end_date: Date to query until.
+        :param aggregate_view: Should the result be aggregated by latest hash/url/computer.
+        :param sources: Filter the analyses by its source.
+        :param verdicts: Filter by the analysis's verdict
+        :param file_name: Filter by the uploaded file's name
+        :param family_names: Filter by the analysis's malicious family name
+        :param hash_data: Filter by the file's hash, in one of the following formats: SHA256, SHA1 or MD5
+        :param limit: Number of analyses returned by the query.
+        :param offset: Number of analyses to skips the before beginning to return the analyses.
+        :return: all file history analyses.
+        """
+        data = _data_analyses_history(
+            start_date, end_date, aggregate_view, sources, verdicts, limit, offset
+        )
+        if hash_data is not None:
+            data["hash"] = hash_data
+        if family_names is not None:
+            data["family_names"] = family_names
+        if file_name is not None:
+            data["file_name"] = file_name
+
+        return self._request_analyses_with_pagination('analyses/history', data, 'POST')
+
+    def end_point_analyses_history(self, *,
+                                   start_date: int,
+                                   end_date: int,
+                                   aggregate_view: bool = None,
+                                   sources: List[str] = None,
+                                   verdicts: List[str] = None,
+                                   limit: int = 100,
+                                   offset: int = 0
+                                   ):
+        """
+        Query for endpoint analyses history.
+
+        :param start_date: Date to query from.
+        :param end_date: Date to query until.
+        :param aggregate_view: Should the result be aggregated by latest hash/url/computer.
+        :param sources: Filter the analyses by its source.
+        :param verdicts: Filter by the analysis's verdict
+        :param limit: Number of analyses returned by the query.
+        :param offset: Number of analyses to skips the before beginning to return the analyses.
+        :return: all endpoint history analyses.
+        """
+        data = _data_analyses_history(
+            start_date, end_date, aggregate_view, sources, verdicts, limit, offset
+        )
+        return self._request_analyses_with_pagination('endpoint-analyses/history', data, 'POST')
+
+    def url_analyses_history(self, *,
+                             start_date: int,
+                             end_date: int,
+                             sources: List[str] = None,
+                             verdicts: List[str] = None,
+                             sub_verdicts: List[str] = None,
+                             did_download_file: bool = None,
+                             submitted_url: str = None,
+                             aggregate_view: bool = False,
+                             limit: int = 100,
+                             offset: int = 0
+                             ):
+        """
+        Query for url analyses history.
+
+        :param start_date: Date to query from.
+        :param end_date: Date to query until.
+        :param sources: Filter the analyses by its source.
+        :param verdicts: Filter by the analysis's verdict
+        :param sub_verdicts: Filter by the analysis's verdict
+        :param did_download_file: Should the result be aggregated by latest hash/url/computer.
+        :param submitted_url: Filter by specific url
+        :param aggregate_view: Should the result be aggregated by latest hash/url/computer.
+        :param limit: Number of analyses returned by the query.
+        :param offset: Number of analyses to skips the before beginning to return the analyses.
+        :return: All url history analyses.
+        """
+        data = _data_analyses_history(
+            start_date, end_date, aggregate_view, sources, verdicts, limit, offset
+        )
+
+        if did_download_file:
+            data["did_download_file"] = did_download_file
+        if submitted_url:
+            data["submitted_url"] = submitted_url
+        if sub_verdicts:
+            data["sub_verdicts"] = sub_verdicts
+
+        return self._request_analyses_with_pagination('url-analyses/history', data, 'POST')
+
+    def _request_analyses_with_pagination(self, url_path: str, data: Dict, method: str):
+        """
+        Send pagination requests for getting all analyses.
+
+        :param url_path: Path of url to request.
+        :param data: Jsonable data for api request.
+        :return: List of all analyses.
+        """
+        offset = 0
+
+        response = self.request_with_refresh_expired_access_token(path=url_path, method=method, data=data)
+        raise_for_status(response)
+        total_count = response.json()["total_count"]
+        results = Pagination()
+        results.total_count = total_count
+
+        while len(response.json()[0]) + offset < total_count:
+            results.add_page(response.json()["analyses"])
+            offset += 100
+            data["offset"] = offset
+            raise_for_status(response)
+            response = self.request_with_refresh_expired_access_token(path=url_path, method=method, data=data)
+        return results
+
+
+def _data_analyses_history(*,
+                           start_date: datetime.datetime,
+                           end_date: datetime.datetime,
+                           aggregate_view: bool = None,
+                           sources: List[str] = None,
+                           verdicts: List[str] = None,
+                           limit: int = 100,
+                           offset: int = 0
+                           ) -> Dict[str, Union[str, int, List]]:
+    """
+    Set common vals for analyses history api request.
+    :param start_date: Date to query from.
+    :param end_date: Date to query until.
+    :param aggregate_view: Should the result be aggregated by latest hash/url/computer.
+    :param sources: Filter the analyses by its source.
+    :param verdicts: Filter by the analysis's verdict.
+    :param limit: Number of analyses returned by the query.
+    :param offset: Number of analyses to skips the before beginning to return the analyses.
+    :return: All data to send the analyses request.
+    """
+    data = {
+        'start_date': int(start_date.timestamp()),
+        'end_date': int(end_date.timestamp()),
+        'limit': limit,
+        'offset': offset,
+    }
+    if aggregate_view is not None:
+        data["aggregate_view"] = aggregate_view
+    if sources is not None:
+        data["sources"] = sources
+    if verdicts is not None:
+        data["verdicts"] = verdicts
+    return data
 
 
 def get_global_api() -> IntezerApi:
