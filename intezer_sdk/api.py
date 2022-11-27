@@ -674,11 +674,6 @@ class IntezerApi:
 
         return Pagination('url-analyses/history', self, data)
 
-    def _fetch_analyses_history(self, url_path, method, data):
-        response = self.request_with_refresh_expired_access_token(path=url_path, method=method, data=data)
-        raise_for_status(response)
-        return response.json()["total_count"], response.json()["analyses"]
-
 
 def _data_analyses_history(*,
                            start_date: datetime.datetime,

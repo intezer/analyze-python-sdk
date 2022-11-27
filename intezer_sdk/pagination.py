@@ -26,10 +26,8 @@ class Pagination:
     def _fetch_page(self):
         """Request for new page from server."""
         self.data['offset'] = self._current_offset
-        self.total_count, self._current_page = (
-            self.api.request_with_refresh_expired_access_token(
-                path=self._url, method='POST', data=self.data)
-        )
+        self.total_count, self._current_page = self.api._fetch_analyses_history(
+            self._url, self.data)
         self._current_offset += self._page_size
         self.pages.append(self._current_page)
         self._current_page_number = len(self.pages)
@@ -50,7 +48,7 @@ class Pagination:
         except StopIteration:
             self.__iter__()
             next_row = next(self._current_page)
-            self.row_number += 0
+            self.row_number = 0
         return next_row
 
     @property
@@ -93,3 +91,9 @@ class Pagination:
         if self._current_page:
             self._fetch_page()
         return self._current_page
+
+    @staticmethod
+    def _fetch_analyses_history(api, url_path, data):
+        response = api.request_with_refresh_expired_access_token(path=url_path, method='POST', data=data)
+        api.raise_for_status(response)
+        return response.json()["total_count"], response.json()["analyses"]
