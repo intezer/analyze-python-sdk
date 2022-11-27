@@ -606,7 +606,7 @@ class IntezerApi:
         if file_name is not None:
             data["file_name"] = file_name
 
-        return self._request_analyses_with_pagination('analyses/history', data, 'POST')
+        return Pagination('analyses/history', self, data)
 
     def end_point_analyses_history(self, *,
                                    start_date: int,
@@ -632,7 +632,7 @@ class IntezerApi:
         data = _data_analyses_history(
             start_date, end_date, aggregate_view, sources, verdicts, limit, offset
         )
-        return self._request_analyses_with_pagination('endpoint-analyses/history', data, 'POST')
+        return Pagination('endpoint-analyses/history', self, data)
 
     def url_analyses_history(self, *,
                              start_date: int,
@@ -672,31 +672,12 @@ class IntezerApi:
         if sub_verdicts:
             data["sub_verdicts"] = sub_verdicts
 
-        return self._request_analyses_with_pagination('url-analyses/history', data, 'POST')
+        return Pagination('url-analyses/history', self, data)
 
-    def _request_analyses_with_pagination(self, url_path: str, data: Dict, method: str):
-        """
-        Send pagination requests for getting all analyses.
-
-        :param url_path: Path of url to request.
-        :param data: Jsonable data for api request.
-        :return: List of all analyses.
-        """
-        offset = 0
-
+    def _fetch_analyses_history(self, url_path, method, data):
         response = self.request_with_refresh_expired_access_token(path=url_path, method=method, data=data)
         raise_for_status(response)
-        total_count = response.json()["total_count"]
-        results = Pagination()
-        results.total_count = total_count
-
-        while len(response.json()[0]) + offset < total_count:
-            results.add_page(response.json()["analyses"])
-            offset += 100
-            data["offset"] = offset
-            raise_for_status(response)
-            response = self.request_with_refresh_expired_access_token(path=url_path, method=method, data=data)
-        return results
+        return response.json()["total_count"], response.json()["analyses"]
 
 
 def _data_analyses_history(*,

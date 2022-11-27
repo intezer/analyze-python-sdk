@@ -1,30 +1,84 @@
-from typing import List
+from typing import List, Dict
+
+from intezer_sdk.api import IntezerApi
 
 
 class Pagination:
-    """Store list of data into pages."""
-    def __init__(self, *, pages: List[List] = None, page_size: int = 100):
-        self.pages = [] if pages is None else pages
-        self._page_size = page_size
+    def __init__(self, url: str, api: IntezerApi, data: Dict):
+        """
+        Store list of data into pages.
+        :param api: Intezer api request for new page.
+        :param url: Url to request new data from.
+        :param data: Data
+        """
+        self.api = api
+        self.data = data
+        self.pages = []
+        self._current_page = None
+        self._url = url
+        self._page_size = data["limit"]
+        self._current_page_number = 0
+        self._current_offset = 0
         self.total_count = 0
+        self.row_number = 0
+        self._fetch_page()
 
-    def __iter__(self):  # -> Pagination
-        self.page_number = 0
-        return self
+    def _fetch_page(self):
+        """Request for new page from server."""
+        self.data['offset'] = self._current_offset
+        self.total_count, self._current_page = (
+            self.api.request_with_refresh_expired_access_token(
+                path=self._url, method='POST', data=self.data)
+        )
+        self._current_offset += self._page_size
+        self.pages.append(self._current_page)
+        self._current_page_number = len(self.pages)
+        return self._current_page
+
+    def __iter__(self):
+        """Iterate for page."""
+        yield from self._current_page
+        self._fetch_page()
+        if self._current_page:
+            yield from self.__iter__()
 
     def __next__(self) -> List:
-        next_page = next(self.pages)
-        self.page_number += 1
-        return next_page
+        """Move to next row."""
+        try:
+            next_row = next(self._current_page)
+            self.row_number += 1
+        except StopIteration:
+            self.__iter__()
+            next_row = next(self._current_page)
+            self.row_number += 0
+        return next_row
 
     @property
     def prev_page(self) -> List:
-        if self.page_number - 1 >= 0:
-            self.page_number -= 1
-        return self.current_page
+        """Move to the previus page."""
+        if self._current_page_number - 1 >= 0:
+            self._current_page_number -= 1
+            self._current_page = self.pages[self._current_page_number]
+            self.row_number = 0
+        return self._current_page
 
-    def add_page(self, page: List):
-        self.pages.append(page)
+    @property
+    def next_page(self) -> List:
+        """Move to the next page"""
+        if self._current_page_number == len(self.pages) - 1:
+            return self._fetch_page()
+        self._current_page_number += 1
+        self._current_page = self.pages[self._current_page_number]
+        return self._current_page
+
+    @property
+    def __prev__(self) -> List:
+        """Get previus row."""
+        if self.row_number == 0:
+            _ = self.prev_page
+            return self.__next__()
+        self.row_number -= 1
+        return self._current_page[self.row_number]
 
     @property
     def all(self):
@@ -36,4 +90,6 @@ class Pagination:
 
     @property
     def current_page(self):
-        return self.pages[self.page_number]
+        if self._current_page:
+            self._fetch_page()
+        return self._current_page
