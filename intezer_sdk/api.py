@@ -1,7 +1,7 @@
 import datetime
 import os
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Tuple
 from typing import BinaryIO
 from typing import Dict
 from typing import IO
@@ -673,6 +673,17 @@ class IntezerApi:
             data["sub_verdicts"] = sub_verdicts
 
         return Results('url-analyses/history', self, data)
+
+    def _fetch_analyses_history(self, url_path: str, data: Dict) -> Tuple[int, List]:
+        """
+        Request from server filtered analyses history.
+        :param url_path: Url to request new data from.
+        :param data: filtered data.
+        :return: Count of all results exits in filtered request and amount analyses as requested.
+        """
+        response = self.request_with_refresh_expired_access_token(path=url_path, method='POST', data=data)
+        raise_for_status(response)
+        return response.json()["total_count"], response.json()["analyses"]
 
 
 def _data_analyses_history(*,
