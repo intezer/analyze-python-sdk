@@ -18,7 +18,7 @@ from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
-from intezer_sdk.pagination import Pagination
+from intezer_sdk.results import Results
 
 _global_api: Optional['IntezerApi'] = None
 
@@ -606,7 +606,7 @@ class IntezerApi:
         if file_name is not None:
             data["file_name"] = file_name
 
-        return Pagination('analyses/history', self, data)
+        return Results('analyses/history', self, data)
 
     def end_point_analyses_history(self, *,
                                    start_date: int,
@@ -632,7 +632,7 @@ class IntezerApi:
         data = _data_analyses_history(
             start_date, end_date, aggregate_view, sources, verdicts, limit, offset
         )
-        return Pagination('endpoint-analyses/history', self, data)
+        return Results('endpoint-analyses/history', self, data)
 
     def url_analyses_history(self, *,
                              start_date: int,
@@ -672,7 +672,7 @@ class IntezerApi:
         if sub_verdicts:
             data["sub_verdicts"] = sub_verdicts
 
-        return Pagination('url-analyses/history', self, data)
+        return Results('url-analyses/history', self, data)
 
 
 def _data_analyses_history(*,
