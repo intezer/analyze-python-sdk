@@ -40,8 +40,7 @@ class Results:
         """Iterate for page."""
         yield from self._current_page
         self._fetch_page()
-        if self._current_page:
-            yield from iter(self)
+        yield from iter(self)
 
     def previous_page(self) -> List:
         """Move to the previous page."""
@@ -72,8 +71,20 @@ class Results:
         self._current_page_number = 0
         self._current_page = self.pages[0]
 
-        all_pages = list(self)
+        all_pages = list(iter(self))
         all_analysiss = []
         for page in all_pages:
             all_analysiss.extend(page)
         return all_analysiss
+
+    def _fetch_analyses_history(self, url_path: str, data: Dict) -> Tuple[int, List]:
+        """
+        Request from server filtered analyses history.
+        :param url_path: Url to request new data from.
+        :param data: filtered data.
+        :return: Count of all results exits in filtered request and amount analyses as requested.
+        """
+        response = self.api.request_with_refresh_expired_access_token(path=url_path, method='POST', data=data)
+        self.api.raise_for_status(response)
+        json_response = response.json()
+        return json_response["total_count"], json_response["analyses"]
