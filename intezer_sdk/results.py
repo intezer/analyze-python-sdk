@@ -29,7 +29,6 @@ class Results:
         self._fetch_page()
         yield from iter(self)
 
-    @property
     def current_page(self) -> List:
         """Get current page, if not exits, ask a new one from server."""
         return self._current_page or self._fetch_page()
@@ -40,7 +39,7 @@ class Results:
         self._current_page_number = 0
         self._current_page = self.pages[0]
 
-        return self._unite_all_pages_to_one(list(iter(self)))
+        return self._unite_all_pages_to_one(self.pages)
 
     def previous_page(self) -> List:
         """Move to the previous page."""
@@ -77,8 +76,11 @@ class Results:
 
     def _fetch_all_pages(self):
         """Request for all missing pages didn't request yet."""
-        while len(self.pages) * self._page_size < self.total_count:
-            self._fetch_page()
+        while not len(self.pages) or len(self.pages) * self._page_size < self.total_count:
+            try:
+                self._fetch_page()
+            except StopIteration:
+                break
 
     def _fetch_analyses_history(self, url_path: str, data: Dict
                                 ) -> Tuple[int, List]:
