@@ -25,14 +25,17 @@ class AnalysesHistory:
         Query for file analyses history.
         :param start_date: Date to query from.
         :param end_date: Date to query until.
-        :param aggregate_view: Should the result be aggregated by latest hash/url/computer.
+        :param aggregate_view: Should the result be aggregated by latest
+        hash/url/computer.
         :param sources: Filter the analyses by its source.
         :param verdicts: Filter by the analysis's verdict
         :param file_name: Filter by the uploaded file's name
         :param family_names: Filter by the analysis's malicious family name
-        :param hash_data: Filter by the file's hash, in one of the following formats: SHA256, SHA1 or MD5
+        :param hash_data: Filter by the file's hash, in one of the following
+        formats: SHA256, SHA1 or MD5
         :param limit: Number of analyses returned by the query.
-        :param offset: Number of analyses to skips the before beginning to return the analyses.
+        :param offset: Number of analyses to skips the before beginning to
+        return the analyses.
         :return: all file history analyses.
         """
         data = self._data_analyses_history(
@@ -45,7 +48,7 @@ class AnalysesHistory:
         if file_name is not None:
             data["file_name"] = file_name
 
-        return Results('analyses/history', self.api, data)
+        return Results('/analyses/history', self.api, data)
 
     def end_point_analyses_history(self, *,
                                    start_date: int,
@@ -61,17 +64,19 @@ class AnalysesHistory:
 
         :param start_date: Date to query from.
         :param end_date: Date to query until.
-        :param aggregate_view: Should the result be aggregated by latest hash/url/computer.
+        :param aggregate_view: Should the result be aggregated by latest
+        hash/url/computer.
         :param sources: Filter the analyses by its source.
         :param verdicts: Filter by the analysis's verdict
         :param limit: Number of analyses returned by the query.
-        :param offset: Number of analyses to skips the before beginning to return the analyses.
+        :param offset: Number of analyses to skips the before beginning to
+        return the analyses.
         :return: all endpoint history analyses.
         """
         data = self._data_analyses_history(
             start_date, end_date, aggregate_view, sources, verdicts, limit, offset
         )
-        return Results('endpoint-analyses/history', self.api, data)
+        return Results('/endpoint-analyses/history', self.api, data)
 
     def url_analyses_history(self, *,
                              start_date: int,
@@ -93,11 +98,14 @@ class AnalysesHistory:
         :param sources: Filter the analyses by its source.
         :param verdicts: Filter by the analysis's verdict
         :param sub_verdicts: Filter by the analysis's verdict
-        :param did_download_file: Should the result be aggregated by latest hash/url/computer.
+        :param did_download_file: Should the result be aggregated by latest
+        hash/url/computer.
         :param submitted_url: Filter by specific url
-        :param aggregate_view: Should the result be aggregated by latest hash/url/computer.
+        :param aggregate_view: Should the result be aggregated by latest
+        hash/url/computer.
         :param limit: Number of analyses returned by the query.
-        :param offset: Number of analyses to skips the before beginning to return the analyses.
+        :param offset: Number of analyses to skips the before beginning to
+        return the analyses.
         :return: All url history analyses.
         """
         data = self._data_analyses_history(
@@ -111,7 +119,7 @@ class AnalysesHistory:
         if sub_verdicts:
             data["sub_verdicts"] = sub_verdicts
 
-        return Results('url-analyses/history', self.api, data)
+        return Results('/url-analyses/history', self.api, data)
 
     @staticmethod
     def _data_analyses_history(*,
@@ -127,11 +135,13 @@ class AnalysesHistory:
         Set common vals for analyses history api request.
         :param start_date: Date to query from.
         :param end_date: Date to query until.
-        :param aggregate_view: Should the result be aggregated by latest hash/url/computer.
+        :param aggregate_view: Should the result be aggregated by latest
+        hash/url/computer.
         :param sources: Filter the analyses by its source.
         :param verdicts: Filter by the analysis's verdict.
         :param limit: Number of analyses returned by the query.
-        :param offset: Number of analyses to skips the before beginning to return the analyses.
+        :param offset: Number of analyses to skips the before beginning to
+        return the analyses.
         :return: All data to send the analyses request.
         """
         data = {
