@@ -79,6 +79,7 @@ class CodeItemType(AutoName):
 
 class OnPremiseVersion(enum.IntEnum):
     V21_11 = 21.11
+    V22_10 = 22.10
 
 
 ANALYZE_URL = 'https://analyze.intezer.com'

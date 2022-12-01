@@ -69,54 +69,6 @@ class ResultsSpec(BaseTest):
             # Assert
             self.assertEqual(dict, type(next(iter(results))))
 
-    def test_previous_page_from_page_zero_return_page_zero(self):
-        """Test return first page if run previous page from first page."""
-        # Arrange
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + FILE_ANALYSES_REQUEST,
-                     status=200,
-                     json=self.normal_result)
-            # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
-            results._fetch_page()
-            results.previous_page()
-            # Assert
-            self.assertEqual(results._pages[0], results._current_page)
-
-    def test_previous_page_happy_flow(self):
-        """Test happy flow get previous page."""
-        # Arrange
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + FILE_ANALYSES_REQUEST,
-                     status=200,
-                     json=self.normal_result)
-            # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
-            results._fetch_page()
-            results._pages[0][0]['account_id'] = str(random.random())
-            results._fetch_page()
-
-            results.previous_page()
-            # Assert
-            self.assertEqual(results._pages[0], results._current_page)
-
-    def test_next_page_with_no_pages_before_fetch_page(self):
-        """test no pages exits expect to fetch a new page."""
-        # Arrange
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=self.full_url + FILE_ANALYSES_REQUEST,
-                     status=200,
-                     json=self.normal_result)
-            # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
-            result_iter = iter(results)
-            next(result_iter)
-        # Assert
-        self.assertEqual(1, len(results._pages))
-
     def test_next_page_when_end_of_list_pages_fetch_new_page(self):
         """test end of list, need to ask for new page."""
         # Arrange

@@ -40,23 +40,9 @@ class Results:
         self._fetch_all_pages()
         self._current_page_number = 0
         self._current_page = self._pages[0]
+        return sum(self._pages, [])
 
-        return self._unite_all_pages_to_one(self._pages)
-
-    def previous_page(self) -> List:
-        """Move to the previous page."""
-        if self._current_page_number - 1 >= 0:
-            self._current_page_number -= 1
-            self._current_page = self._pages[self._current_page_number]
-        return self._current_page
-
-    def next_page(self) -> List:
-        """Move to the next page"""
-        if self._current_page_number == len(self._pages) - 1:
-            return self._fetch_page()
-        self._current_page_number += 1
-        self._current_page = self._pages[self._current_page_number]
-        return self._current_page
+        # return self._unite_all_pages_to_one(self._pages)
 
     def _fetch_page(self) -> List:
         """Request for new page from server."""
@@ -99,10 +85,3 @@ class Results:
         raise_for_status(response)
         data_response = response.json()
         return data_response['total_count'], data_response['analyses']
-
-    @staticmethod
-    def _unite_all_pages_to_one(all_pages: List[List]) -> List:
-        all_analysises = []
-        for page in all_pages:
-            all_analysises.extend(page)
-        return all_analysises

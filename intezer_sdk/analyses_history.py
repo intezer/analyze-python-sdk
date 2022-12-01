@@ -111,11 +111,9 @@ def url_analyses_history_query(*,
     :param sources: Filter the analyses by its source.
     :param verdicts: Filter by the analysis's verdict
     :param sub_verdicts: Filter by the analysis's verdict
-    :param did_download_file: Should the result be aggregated by latest
-    hash/url/computer.
+    :param did_download_file: Should the result be aggregated by latest url.
     :param submitted_url: Filter by specific url
-    :param aggregate_view: Should the result be aggregated by latest
-    hash/url/computer.
+    :param aggregate_view: Should the result be aggregated by latest url.
     :param limit: Number of analyses returned by the query.
     :param offset: Number of analyses to skips the before beginning to
     return the analyses.

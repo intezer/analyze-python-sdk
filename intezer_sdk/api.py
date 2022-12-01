@@ -487,7 +487,7 @@ class IntezerApi:
         self._session.headers['User-Agent'] = self.user_agent
 
     def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
-        self.assert_on_premise_above_v21_11()
+        self.assert_any_on_premise()
         response = self.request_with_refresh_expired_access_token(method='POST',
                                                                   path='/url/',
                                                                   data=dict(url=url, **additional_parameters))
@@ -566,7 +566,15 @@ class IntezerApi:
 
     def assert_on_premise_above_v21_11(self):
         if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:
-            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on premise')
+            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on-premise')
+
+    def assert_on_premise_above_v22_10(self):
+        if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V22_10:
+            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on-premise')
+
+    def assert_any_on_premise(self):
+        if self.on_premise_version:
+            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on on-premise')
 
 
 def get_global_api() -> IntezerApi:
