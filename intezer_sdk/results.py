@@ -79,7 +79,7 @@ class Results:
     def _fetch_all_pages(self):
         """Request for all missing pages didn't request yet."""
         while not len(self._pages) or (
-                len(self._pages) * self.filters['limits'] < self.total_count):
+                len(self._pages) * self.filters['limit'] < self.total_count):
             try:
                 self._fetch_page()
             except StopIteration:
