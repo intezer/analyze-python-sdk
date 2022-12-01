@@ -135,13 +135,12 @@ def url_analyses_history_query(*,
     return Results('/url-analyses/history', api or get_global_api(), filters)
 
 
-@staticmethod
 def general_data_analyses_history(*,
                                   start_date: datetime.datetime,
                                   end_date: datetime.datetime,
-                                  aggregated_view: bool,
-                                  sources: List[str],
-                                  verdicts: List[str],
+                                  aggregated_view: bool = None,
+                                  sources: List[str] = None,
+                                  verdicts: List[str] = None,
                                   limit: int = DEFAULT_LIMIT,
                                   offset: int = DEFAULT_OFFSET
                                   ) -> Dict[str, Any]:
@@ -153,8 +152,8 @@ def general_data_analyses_history(*,
     }
     if aggregated_view is not None:
         data['aggregate_view'] = aggregated_view
-    if sources is not None:
+    if sources:
         data['sources'] = sources
-    if verdicts is not None:
+    if verdicts:
         data['verdicts'] = verdicts
     return data

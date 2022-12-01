@@ -9,17 +9,6 @@ from intezer_sdk.api import get_global_api
 from intezer_sdk.results import Results
 from tests.unit.base_test import BaseTest
 
-BASE_DATA = general_data_analyses_history(
-    start_date=datetime.datetime.now() - datetime.timedelta(days=3),
-    end_date=datetime.datetime.now()
-)
-
-NO_RESULTS = {'total_count': 0, 'analyses': []}
-NORMAL_RESULT = {
-    'total_count': 2,
-    'analyses': [{'account_id': '123'}, {'account_id': '456'}]
-}
-
 FILE_ANALYSES_REQUEST = '/analyses/history'
 URL_ANALYSES_REQUEST = '/url-analyses/history'
 ENDPOINT_ANALYSES_REQUEST = '/endpoint-analyses/history'
@@ -27,10 +16,16 @@ ENDPOINT_ANALYSES_REQUEST = '/endpoint-analyses/history'
 
 class ResultsSpec(BaseTest):
     def setUp(self):
+        super().setUp()
+        self.base_filter = general_data_analyses_history(
+            start_date=datetime.datetime.now() - datetime.timedelta(days=3),
+            end_date=datetime.datetime.now()
+        )
         self.normal_result = {
-    'total_count': 2,
-    'analyses': [{'account_id': '123'}, {'account_id': '456'}]
-}
+            'total_count': 2,
+            'analyses': [{'account_id': '123'}, {'account_id': '456'}]
+        }
+        self.no_result = {'total_count': 0, 'analyses': []}
 
     def test_fetch_page_raises_stop_iteration_when_no_more_pages_left(self):
         """
@@ -42,9 +37,9 @@ class ResultsSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=NO_RESULTS)
+                     json=self.no_result)
             # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             # Assert
             with self.assertRaises(StopIteration):
                 results._fetch_page()
@@ -56,9 +51,9 @@ class ResultsSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=NORMAL_RESULT)
+                     json=self.normal_result)
             # Act & Assert
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             results._fetch_page()
 
     def test_iterate_over_rows_and_not_pages(self):
@@ -68,9 +63,9 @@ class ResultsSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=NORMAL_RESULT)
+                     json=self.normal_result)
             # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             # Assert
             self.assertEqual(dict, type(next(iter(results))))
 
@@ -81,9 +76,9 @@ class ResultsSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=NORMAL_RESULT)
+                     json=self.normal_result)
             # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             results._fetch_page()
             results.previous_page()
             # Assert
@@ -96,9 +91,9 @@ class ResultsSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=NORMAL_RESULT)
+                     json=self.normal_result)
             # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             results._fetch_page()
             results._pages[0][0]['account_id'] = str(random.random())
             results._fetch_page()
@@ -114,9 +109,9 @@ class ResultsSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=NORMAL_RESULT)
+                     json=self.normal_result)
             # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             result_iter = iter(results)
             next(result_iter)
         # Assert
@@ -129,16 +124,15 @@ class ResultsSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=NORMAL_RESULT)
+                     json=self.normal_result)
 
-            other_response = copy.deepcopy(NORMAL_RESULT)
-            other_response['analyses'][0]['account_id'] = str(random.random())
+            self.normal_result['analyses'][0]['account_id'] = str(random.random())
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=other_response)
+                     json=self.normal_result)
             # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             result_iter = iter(results)
             next(result_iter)
             next(result_iter)
@@ -153,11 +147,11 @@ class ResultsSpec(BaseTest):
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=NORMAL_RESULT)
+                     json=self.normal_result)
 
-            BASE_DATA['limit'] = 2
+            self.base_filter['limit'] = 2
             # Act
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             results.all()
             # Assert
             self.assertEqual(1, len(results._pages))
@@ -166,27 +160,26 @@ class ResultsSpec(BaseTest):
         """Test all pages exists, need to try fetch new page."""
         # Arrange
         with responses.RequestsMock() as mock:
-            other_response = copy.deepcopy(NORMAL_RESULT)
-            other_response['total_count'] = 4
+            self.normal_result['total_count'] = 4
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=other_response)
+                     json=self.normal_result)
 
-            other_response['analyses'][0]['account_id'] = str(random.random())
+            self.normal_result['analyses'][0]['account_id'] = str(random.random())
 
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=200,
-                     json=other_response)
+                     json=self.normal_result)
 
-            BASE_DATA['limit'] = 2
-            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), BASE_DATA)
+            self.base_filter['limit'] = 2
+            results = Results(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             result_iter = iter(results)
             next(result_iter)
             next(result_iter)
 
-            NORMAL_RESULT['analyses'][0]['account_id'] = str(random.random())
+            self.normal_result['analyses'][0]['account_id'] = str(random.random())
 
             # Act
             results.all()
