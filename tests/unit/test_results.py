@@ -1,7 +1,9 @@
 import contextlib
+import copy
 import datetime
 import uuid
 from http import HTTPStatus
+from typing import Dict, List
 
 import responses
 
@@ -24,9 +26,10 @@ class ResultsSpec(BaseTest):
             'analyses': [{'account_id': '123'}, {'account_id': '456'}]
         }
         self.no_result = {'total_count': 0, 'analyses': []}
+        self.expected_result = copy.deepcopy(self.normal_result['analyses'])
 
     @contextlib.contextmanager
-    def response(self, header):
+    def add_mock_response(self, header):
         """
         Wrap with simple mock response.
         :param header: Header for the mock response.
@@ -36,7 +39,12 @@ class ResultsSpec(BaseTest):
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=HTTPStatus.OK,
                      json=header)
+            self.expected_result = copy.deepcopy(self.normal_result['analyses'])
             yield mock
+
+    @staticmethod
+    def deep_check_between_lists(dict1: List, dict2: List) -> bool:
+        return all([x == y for x, y in zip(dict1, dict2)])
 
     def test_fetch_page_raises_stop_iteration_when_no_more_pages_left(self):
         """
@@ -44,7 +52,7 @@ class ResultsSpec(BaseTest):
         the iteration that is going on outer scope.
         """
         # Arrange
-        with self.response(self.no_result):
+        with self.add_mock_response(self.no_result):
             # Act
             results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
 
@@ -53,18 +61,10 @@ class ResultsSpec(BaseTest):
             with self.assertRaises(StopIteration):
                 next(iter(results))
 
-    def test_fetch_page_happy_flow(self):
-        """Check regular use for fetch page"""
-        # Arrange
-        with self.response(self.normal_result):
-            # Act & Assert
-            results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
-            results._fetch_page()
-
     def test_iterate_over_rows_and_not_pages(self):
         """Check iter gives dict and not list of dicts (row and not page)."""
         # Arrange
-        with self.response(self.normal_result):
+        with self.add_mock_response(self.normal_result):
             self.base_filter['limit'] = 2
             # Act
             results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
@@ -76,38 +76,39 @@ class ResultsSpec(BaseTest):
         # Arrange
         self.normal_result['total_count'] = 4
         self.base_filter['limit'] = 2
-        with self.response(self.normal_result) as mock:
+        with self.add_mock_response(self.normal_result) as mock:
             self.normal_result['analyses'][0]['account_id'] = str(uuid.uuid4())
+            self.expected_result.extend(self.normal_result['analyses'].copy())
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=HTTPStatus.OK,
                      json=self.normal_result)
             # Act
             results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
-            result_iter = iter(results)
-            next(result_iter)
-            next(result_iter)
-            next(result_iter)
+            all_analyses = list(results)
             # Assert
-            self.assertEqual(2, len(results))
+            self.assertTrue(self.deep_check_between_lists(
+                self.expected_result, all_analyses
+            ))
 
     def test_all_with_no_pages_before_fetch_new_page(self):
         """Test no pages exists, need to try fetch new page."""
         # Arrange
-        with self.response(self.normal_result):
+        with self.add_mock_response(self.normal_result):
             self.base_filter['limit'] = 2
             # Act
             results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
-            results.all()
+            all_analyses = results.all()
             # Assert
-            self.assertEqual(1, len(results))
+            self.assertTrue(self.deep_check_between_lists(self.expected_result, all_analyses))
 
     def test_all_when_end_of_list_pages_fetch_new_page(self):
         """Test all pages exists, need to try fetch new page."""
         # Arrange
         self.normal_result['total_count'] = 4
-        with self.response(self.normal_result) as mock:
+        with self.add_mock_response(self.normal_result) as mock:
             self.normal_result['analyses'][0]['account_id'] = str(uuid.uuid4())
+            self.expected_result.extend(copy.deepcopy(self.normal_result['analyses']))
             mock.add('POST',
                      url=self.full_url + FILE_ANALYSES_REQUEST,
                      status=HTTPStatus.OK,
@@ -123,8 +124,7 @@ class ResultsSpec(BaseTest):
             next(result_iter)
             next(result_iter)
 
-            self.normal_result['analyses'][0]['account_id'] = str(uuid.uuid4())
             # Act
-            results.all()
+            all_analyses = results.all()
             # Assert
-            self.assertEqual(2, len(results))
+            self.assertTrue(self.deep_check_between_lists(self.expected_result, all_analyses))

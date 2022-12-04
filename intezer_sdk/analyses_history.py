@@ -18,7 +18,7 @@ def query_file_analyses_history(*,
                                 start_date: datetime.datetime,
                                 end_date: datetime.datetime,
                                 api: IntezerApi = None,
-                                aggregate_view: bool = None,
+                                aggregated_view: bool = None,
                                 sources: List[str] = None,
                                 verdicts: List[str] = None,
                                 file_hash: str = None,
@@ -32,7 +32,7 @@ def query_file_analyses_history(*,
     :param start_date: Date to query from.
     :param end_date: Date to query until.
     :param api: Instance of public Intezer API for request server.
-    :param aggregate_view: Should the result be aggregated by latest
+    :param aggregated_view: Should the result be aggregated by latest
     hash/url/computer.
     :param sources: Filter the analyses by its source.
     :param verdicts: Filter by the analysis's verdict
@@ -46,7 +46,7 @@ def query_file_analyses_history(*,
     :return: File query result from server as Results iterator.
     """
     filters = generate_analyses_history_filter(
-        start_date, end_date, aggregate_view, sources, verdicts, limit, offset
+        start_date, end_date, aggregated_view, sources, verdicts, limit, offset
     )
     if file_hash:
         filters['hash'] = file_hash
@@ -54,7 +54,7 @@ def query_file_analyses_history(*,
         filters['family_names'] = family_names
     if file_name:
         filters['file_name'] = file_name
-    return AnalysesResults('/analyses/history', api or get_global_api(), filters)
+    return AnalysesResults(FILE_ANALYSES_REQUEST, api or get_global_api(), filters)
 
 
 def query_endpoint_analyses_history(*,
@@ -69,12 +69,10 @@ def query_endpoint_analyses_history(*,
                                     ) -> AnalysesResults:
     """
     Query for endpoint analyses history.
-
     :param start_date: Date to query from.
     :param end_date: Date to query until.
-    :param api: Instance of public Intezer API for request server.
-    :param aggregate_view: Should the result be aggregated by latest
-    hash/url/computer.
+    :param api: Instance of Intezer API for request server.
+    :param aggregate_view: Should the result be aggregated by latest computer.
     :param sources: Filter the analyses by its source.
     :param verdicts: Filter by the analysis's verdict
     :param limit: Number of analyses returned by the query.
@@ -86,7 +84,7 @@ def query_endpoint_analyses_history(*,
         start_date, end_date, aggregate_view, sources, verdicts, limit, offset
     )
     return AnalysesResults(
-        '/endpoint-analyses/history',
+        ENDPOINT_ANALYSES_REQUEST,
         api or api or get_global_api(),
         filters
     )
@@ -133,7 +131,7 @@ def url_analyses_history_query(*,
     if sub_verdicts:
         filters['sub_verdicts'] = sub_verdicts
 
-    return AnalysesResults('/url-analyses/history', api or get_global_api(), filters)
+    return AnalysesResults(URL_ANALYSES_REQUEST, api or get_global_api(), filters)
 
 
 def generate_analyses_history_filter(*,

@@ -34,7 +34,8 @@ class AnalysesResults:
                 yield from iter(self)
 
     def __len__(self):
-        return len(self._pages)
+        """Amount of results fetched currently."""
+        return sum(len(page) for page in self._pages)
 
     @property
     def total_count(self):
@@ -46,11 +47,11 @@ class AnalysesResults:
 
     def all(self) -> List:
         """Return all exits analysis's from server."""
-        self._fetch_all_pages()
+        results = list(self)
         self._current_page_number = 0
         if self._pages:
             self._current_page = self._pages[0]
-        return sum(self._pages, [])
+        return results
 
     def _fetch_page(self) -> List:
         """Request for new page from server."""
@@ -68,10 +69,6 @@ class AnalysesResults:
         self._current_offset += len(self._current_page)
         self._pages.append(self._current_page)
         self._current_page_number = len(self._pages) - 1
-
-    def _fetch_all_pages(self):
-        """Request for all missing pages didn't request yet."""
-        return list(self)
 
     def _fetch_analyses_history(self, url_path: str, data: Dict
                                 ) -> Tuple[int, List]:
