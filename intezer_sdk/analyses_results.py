@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 from typing import Dict
 from typing import Tuple
 
@@ -6,30 +6,36 @@ from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import raise_for_status
 
 
-class Results:
-    def __init__(self, url_path: str, api: IntezerApi, filters: Dict):
+class AnalysesResults:
+    def __init__(self, request_url_path: str, api: IntezerApi, request_filters: Dict):
         """
-        Store list of data into pages.
-        :param url_path: Url to request new data from.
-        :param api: Instance of public Intezer API for request server.
-        :param filters: filtered data.
+        All analyses results from server with the ability to iterate results.
+        :param request_url_path: Url to request new filter from.
+        :param api: Instance of Intezer API for request server.
+        :param request_filters: Filters requested from server.
         """
         self.api = api
-        self.filters = filters
+        self.request_filters = request_filters
         self._pages = []
-        self._current_page = None
-        self._url_path = url_path
+        self._current_page: List[Any] = None
+        self._request_url_path = request_url_path
         self._current_page_number = 0
-        self.total_count = 0
+        self._total_count = 0
         self._current_offset = 0
 
     def __iter__(self):
-        """Iterate for page."""
+        """Iterate between page."""
         if not self._current_page:
             self._fetch_page()
-        yield from self._current_page
-        self._fetch_page()
-        yield from iter(self)
+        if self._current_page:
+            yield from self._current_page
+            if len(self._pages) * self.request_filters['limit'] < self.total_count:
+                self._fetch_page()
+                yield from iter(self)
+
+    @property
+    def total_count(self):
+        return self._total_count
 
     def current_page(self) -> List:
         """Get current page, if not exits, ask a new one from server."""
@@ -39,21 +45,19 @@ class Results:
         """Return all exits analysis's from server."""
         self._fetch_all_pages()
         self._current_page_number = 0
-        self._current_page = self._pages[0]
+        if self._pages:
+            self._current_page = self._pages[0]
         return sum(self._pages, [])
-
-        # return self._unite_all_pages_to_one(self._pages)
 
     def _fetch_page(self) -> List:
         """Request for new page from server."""
-        self.filters['offset'] = self._current_offset
-        self.total_count, new_page = self._fetch_analyses_history(
-            self._url_path, self.filters)
+        self.request_filters['offset'] = self._current_offset
+        self._total_count, new_page = self._fetch_analyses_history(
+            self._request_url_path, self.request_filters)
 
-        if not new_page:
-            raise StopIteration()
-        self._current_page = new_page
-        self._update_current_page_metadata()
+        if new_page:
+            self._current_page = new_page
+            self._update_current_page_metadata()
         return self._current_page
 
     def _update_current_page_metadata(self):
@@ -64,12 +68,7 @@ class Results:
 
     def _fetch_all_pages(self):
         """Request for all missing pages didn't request yet."""
-        while not len(self._pages) or (
-                len(self._pages) * self.filters['limit'] < self.total_count):
-            try:
-                self._fetch_page()
-            except StopIteration:
-                break
+        return list(self)
 
     def _fetch_analyses_history(self, url_path: str, data: Dict
                                 ) -> Tuple[int, List]:
