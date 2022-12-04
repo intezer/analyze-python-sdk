@@ -3,7 +3,7 @@ import copy
 import datetime
 import uuid
 from http import HTTPStatus
-from typing import Dict, List
+from typing import List
 
 import responses
 
@@ -69,9 +69,9 @@ class ResultsSpec(BaseTest):
             # Act
             results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             # Assert
-            self.assertEqual(dict, type(next(iter(results))))
+            self.assertEqual(self.expected_result[0], next(iter(results)))
 
-    def test_next_page_when_end_of_list_pages_fetch_new_page(self):
+    def test_next_page_when_end_of_list_pages_fetches_new_page(self):
         """test end of list, need to ask for new page."""
         # Arrange
         self.normal_result['total_count'] = 4
@@ -91,7 +91,7 @@ class ResultsSpec(BaseTest):
                 self.expected_result, all_analyses
             ))
 
-    def test_all_with_no_pages_before_fetch_new_page(self):
+    def test_all_with_no_pages_before_fetches_new_page(self):
         """Test no pages exists, need to try fetch new page."""
         # Arrange
         with self.add_mock_response(self.normal_result):
@@ -102,7 +102,7 @@ class ResultsSpec(BaseTest):
             # Assert
             self.assertTrue(self.deep_check_between_lists(self.expected_result, all_analyses))
 
-    def test_all_when_end_of_list_pages_fetch_new_page(self):
+    def test_all_when_end_of_list_pages_fetches_new_page(self):
         """Test all pages exists, need to try fetch new page."""
         # Arrange
         self.normal_result['total_count'] = 4
