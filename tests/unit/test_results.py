@@ -90,7 +90,7 @@ class ResultsSpec(BaseTest):
             next(result_iter)
             next(result_iter)
             # Assert
-            self.assertEqual(2, len(results._pages))
+            self.assertEqual(2, len(results))
 
     def test_all_with_no_pages_before_fetch_new_page(self):
         """Test no pages exists, need to try fetch new page."""
@@ -101,7 +101,7 @@ class ResultsSpec(BaseTest):
             results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             results.all()
             # Assert
-            self.assertEqual(1, len(results._pages))
+            self.assertEqual(1, len(results))
 
     def test_all_when_end_of_list_pages_fetch_new_page(self):
         """Test all pages exists, need to try fetch new page."""
@@ -128,4 +128,4 @@ class ResultsSpec(BaseTest):
             # Act
             results.all()
             # Assert
-            self.assertEqual(2, len(results._pages))
+            self.assertEqual(2, len(results))

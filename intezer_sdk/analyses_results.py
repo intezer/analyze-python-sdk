@@ -33,6 +33,9 @@ class AnalysesResults:
                 self._fetch_page()
                 yield from iter(self)
 
+    def __len__(self):
+        return len(self._pages)
+
     @property
     def total_count(self):
         return self._total_count
