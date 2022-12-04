@@ -1,6 +1,5 @@
 import contextlib
 import datetime
-import random
 import uuid
 from http import HTTPStatus
 
