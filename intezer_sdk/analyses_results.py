@@ -18,7 +18,7 @@ class AnalysesHistoryResult:
         self.api: IntezerApi = api
         self.filters: Dict = filters
         self._pages: List[Any] = []
-        self._current_page: List[Any] = None
+        self._current_page: List[Any] = []
         self._request_url_path: str = request_url_path
         self._current_page_number: int = 0
         self._total_count: int = 0
@@ -30,16 +30,12 @@ class AnalysesHistoryResult:
             self._fetch_page()
         if self._current_page:
             yield from self._current_page
-            if len(self._pages) * self.filters['limit'] < self.total_count:
+            if len(self._pages) * self.filters['limit'] < self._total_count:
                 self._fetch_page()
                 yield from iter(self)
 
     def __len__(self) -> int:
         """Amount of results fetched currently."""
-        return sum(len(page) for page in self._pages)
-
-    @property
-    def total_count(self) -> int:
         return self._total_count
 
     def current_page(self) -> List:

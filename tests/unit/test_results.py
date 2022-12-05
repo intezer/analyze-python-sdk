@@ -7,8 +7,13 @@ from typing import List
 
 import responses
 
+from intezer_sdk.analyses_history import ENDPOINT_ANALYSES_REQUEST
+from intezer_sdk.analyses_history import URL_ANALYSES_REQUEST
 from intezer_sdk.analyses_history import generate_analyses_history_filter
 from intezer_sdk.analyses_history import FILE_ANALYSES_REQUEST
+from intezer_sdk.analyses_history import query_endpoint_analyses_history
+from intezer_sdk.analyses_history import query_file_analyses_history
+from intezer_sdk.analyses_history import query_url_analyses_history
 from intezer_sdk.api import get_global_api
 from intezer_sdk.analyses_results import AnalysesHistoryResult
 from tests.unit.base_test import BaseTest
@@ -17,9 +22,10 @@ from tests.unit.base_test import BaseTest
 class ResultsSpec(BaseTest):
     def setUp(self):
         super().setUp()
+        self.start_date = datetime.datetime.now() - datetime.timedelta(days=3)
+        self.end_date = datetime.datetime.now()
         self.base_filter = generate_analyses_history_filter(
-            start_date=datetime.datetime.now() - datetime.timedelta(days=3),
-            end_date=datetime.datetime.now()
+            start_date=self.start_date, end_date=self.end_date
         )
         self.normal_result = {
             'total_count': 2,
@@ -29,22 +35,22 @@ class ResultsSpec(BaseTest):
         self.expected_result = copy.deepcopy(self.normal_result['analyses'])
 
     @contextlib.contextmanager
-    def add_mock_response(self, header):
+    def add_mock_response(self, header, request_url_path=FILE_ANALYSES_REQUEST):
         """
         Wrap with simple mock response.
         :param header: Header for the mock response.
+        :param request_url_path: Url to request new filter from.
         """
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + FILE_ANALYSES_REQUEST,
+                     url=self.full_url + request_url_path,
                      status=HTTPStatus.OK,
                      json=header)
             self.expected_result = copy.deepcopy(self.normal_result['analyses'])
             yield mock
 
-    @staticmethod
-    def deep_check_between_lists(dict1: List, dict2: List) -> bool:
-        return all([x == y for x, y in zip(dict1, dict2)])
+    def assert_deep_lists_equal(self, lst1: List, lst2: List):
+        [self.assertDictEqual(x, y) for x, y in zip(lst1, lst2)]
 
     def test_fetch_analyses_raises_stop_iteration_when_no_more_analyses_left(self):
         """
@@ -87,9 +93,7 @@ class ResultsSpec(BaseTest):
             results = AnalysesHistoryResult(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             all_analyses = list(results)
             # Assert
-            self.assertTrue(self.deep_check_between_lists(
-                self.expected_result, all_analyses
-            ))
+            self.assert_deep_lists_equal(self.expected_result, all_analyses)
 
     def test_all_with_no_analyses_before(self):
         """Test no analyses exists, need to try fetch new analyses."""
@@ -100,7 +104,7 @@ class ResultsSpec(BaseTest):
             results = AnalysesHistoryResult(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             all_analyses = results.all()
             # Assert
-            self.assertTrue(self.deep_check_between_lists(self.expected_result, all_analyses))
+            self.assert_deep_lists_equal(self.expected_result, all_analyses)
 
     def test_all_when_fetched_analyses_fetches_new_analyses(self):
         """
@@ -129,4 +133,34 @@ class ResultsSpec(BaseTest):
             # Act
             all_analyses = results.all()
             # Assert
-            self.assertTrue(self.deep_check_between_lists(self.expected_result, all_analyses))
+            self.assert_deep_lists_equal(self.expected_result, all_analyses)
+
+    def test_file_analyses_history_happy_flow(self):
+        """Simple usage of file analyses history request using the SDK."""
+        with self.add_mock_response(self.normal_result):
+            results = query_file_analyses_history(
+                start_date=self.start_date,
+                end_date=self.end_date
+            )
+            for result in results:
+                assert result
+
+    def test_endpoint_analyses_history_happy_flow(self):
+        """Simple usage of endpoint analyses history request using the SDK."""
+        with self.add_mock_response(self.normal_result, request_url_path=ENDPOINT_ANALYSES_REQUEST):
+            results = query_endpoint_analyses_history(
+                start_date=self.start_date,
+                end_date=self.end_date
+            )
+            for result in results:
+                assert result
+
+    def test_url_analyses_history_happy_flow(self):
+        """Simple usage of url analyses history request using the SDK."""
+        with self.add_mock_response(self.normal_result, request_url_path=URL_ANALYSES_REQUEST):
+            results = query_url_analyses_history(
+                start_date=self.start_date,
+                end_date=self.end_date
+            )
+            for result in results:
+                assert result

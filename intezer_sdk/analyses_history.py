@@ -31,9 +31,8 @@ def query_file_analyses_history(*,
     Query for file analyses history.
     :param start_date: Date to query from.
     :param end_date: Date to query until.
-    :param api: Instance of public Intezer API for request server.
-    :param aggregated_view: Should the result be aggregated by latest
-    hash/url/computer.
+    :param api: Instance of Intezer API for request server.
+    :param aggregated_view: Should the result be aggregated by latest hash.
     :param sources: Filter the analyses by its source.
     :param verdicts: Filter by the analysis's verdict
     :param file_name: Filter by the uploaded file's name
@@ -45,9 +44,16 @@ def query_file_analyses_history(*,
     return the analyses.
     :return: File query result from server as Results iterator.
     """
+    api = api or get_global_api()
     api.assert_on_premise_above_v22_10()
     filters = generate_analyses_history_filter(
-        start_date, end_date, aggregated_view, sources, verdicts, limit, offset
+        start_date=start_date,
+        end_date=end_date,
+        aggregated_view=aggregated_view,
+        sources=sources,
+        verdicts=verdicts,
+        limit=limit,
+        offset=offset
     )
     if file_hash:
         filters['hash'] = file_hash
@@ -55,12 +61,12 @@ def query_file_analyses_history(*,
         filters['family_names'] = family_names
     if file_name:
         filters['file_name'] = file_name
-    return AnalysesHistoryResult(FILE_ANALYSES_REQUEST, api or get_global_api(), filters)
+    return AnalysesHistoryResult(FILE_ANALYSES_REQUEST, api, filters)
 
 
 def query_endpoint_analyses_history(*,
-                                    start_date: int,
-                                    end_date: int,
+                                    start_date: datetime.datetime,
+                                    end_date: datetime.datetime,
                                     api: IntezerApi = None,
                                     aggregate_view: bool = None,
                                     sources: List[str] = None,
@@ -81,20 +87,27 @@ def query_endpoint_analyses_history(*,
     return the analyses.
     :return: Endpoint query result from server as Results iterator.
     """
+    api = api or get_global_api()
     api.assert_on_premise_above_v22_10()
     filters = generate_analyses_history_filter(
-        start_date, end_date, aggregate_view, sources, verdicts, limit, offset
+        start_date=start_date,
+        end_date=end_date,
+        aggregated_view=aggregate_view,
+        sources=sources,
+        verdicts=verdicts,
+        limit=limit,
+        offset=offset
     )
     return AnalysesHistoryResult(
         ENDPOINT_ANALYSES_REQUEST,
-        api or api or get_global_api(),
+        api,
         filters
     )
 
 
-def url_analyses_history_query(*,
-                               start_date: int,
-                               end_date: int,
+def query_url_analyses_history(*,
+                               start_date: datetime.datetime,
+                               end_date: datetime.datetime,
                                api: IntezerApi = None,
                                sources: List[str] = None,
                                verdicts: List[str] = None,
@@ -110,7 +123,7 @@ def url_analyses_history_query(*,
 
     :param start_date: Date to query from.
     :param end_date: Date to query until.
-    :param api: Instance of public Intezer API for request server.
+    :param api: Instance of Intezer API for request server.
     :param sources: Filter the analyses by its source.
     :param verdicts: Filter by the analysis's verdict
     :param sub_verdicts: Filter by the analysis's verdict
@@ -122,9 +135,16 @@ def url_analyses_history_query(*,
     return the analyses.
     :return: URL query result from server as Results iterator.
     """
+    api = api or get_global_api()
     api.assert_on_premise_above_v22_10()
     filters = generate_analyses_history_filter(
-        start_date, end_date, aggregate_view, sources, verdicts, limit, offset
+        start_date=start_date,
+        end_date=end_date,
+        aggregated_view=aggregate_view,
+        sources=sources,
+        verdicts=verdicts,
+        limit=limit,
+        offset=offset
     )
 
     if did_download_file:
@@ -134,7 +154,7 @@ def url_analyses_history_query(*,
     if sub_verdicts:
         filters['sub_verdicts'] = sub_verdicts
 
-    return AnalysesHistoryResult(URL_ANALYSES_REQUEST, api or get_global_api(), filters)
+    return AnalysesHistoryResult(URL_ANALYSES_REQUEST, api, filters)
 
 
 def generate_analyses_history_filter(*,
