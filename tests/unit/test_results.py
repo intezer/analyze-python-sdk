@@ -10,7 +10,7 @@ import responses
 from intezer_sdk.analyses_history import generate_analyses_history_filter
 from intezer_sdk.analyses_history import FILE_ANALYSES_REQUEST
 from intezer_sdk.api import get_global_api
-from intezer_sdk.analyses_results import AnalysesResults
+from intezer_sdk.analyses_results import AnalysesHistoryResult
 from tests.unit.base_test import BaseTest
 
 
@@ -46,7 +46,7 @@ class ResultsSpec(BaseTest):
     def deep_check_between_lists(dict1: List, dict2: List) -> bool:
         return all([x == y for x, y in zip(dict1, dict2)])
 
-    def test_fetch_page_raises_stop_iteration_when_no_more_pages_left(self):
+    def test_fetch_analyses_raises_stop_iteration_when_no_more_analyses_left(self):
         """
         When got no results expect to raise StopIteration exception for stopping
         the iteration that is going on outer scope.
@@ -54,25 +54,25 @@ class ResultsSpec(BaseTest):
         # Arrange
         with self.add_mock_response(self.no_result):
             # Act
-            results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
+            results = AnalysesHistoryResult(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
 
             # Assert
             self.assertListEqual([], results.all())
             with self.assertRaises(StopIteration):
                 next(iter(results))
 
-    def test_iterate_over_rows_and_not_pages(self):
+    def test_iterate_return_one_analyses(self):
         """Check iter gives dict and not list of dicts (row and not page)."""
         # Arrange
         with self.add_mock_response(self.normal_result):
             self.base_filter['limit'] = 2
             # Act
-            results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
+            results = AnalysesHistoryResult(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             # Assert
             self.assertEqual(self.expected_result[0], next(iter(results)))
 
-    def test_next_page_when_end_of_list_pages_fetches_new_page(self):
-        """test end of list, need to ask for new page."""
+    def test_next_analyses_when_fetched_analyses_before(self):
+        """test end of list, need to ask for new analyses."""
         # Arrange
         self.normal_result['total_count'] = 4
         self.base_filter['limit'] = 2
@@ -84,25 +84,25 @@ class ResultsSpec(BaseTest):
                      status=HTTPStatus.OK,
                      json=self.normal_result)
             # Act
-            results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
+            results = AnalysesHistoryResult(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             all_analyses = list(results)
             # Assert
             self.assertTrue(self.deep_check_between_lists(
                 self.expected_result, all_analyses
             ))
 
-    def test_all_with_no_pages_before_fetches_new_page(self):
+    def test_all_with_no_analyses_before(self):
         """Test no pages exists, need to try fetch new page."""
         # Arrange
         with self.add_mock_response(self.normal_result):
             self.base_filter['limit'] = 2
             # Act
-            results = AnalysesResults(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
+            results = AnalysesHistoryResult(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
             all_analyses = results.all()
             # Assert
             self.assertTrue(self.deep_check_between_lists(self.expected_result, all_analyses))
 
-    def test_all_when_end_of_list_pages_fetches_new_page(self):
+    def test_all_when_fetched_analyses_fetches_new_analyses(self):
         """Test all pages exists, need to try fetch new page."""
         # Arrange
         self.normal_result['total_count'] = 4
@@ -115,7 +115,7 @@ class ResultsSpec(BaseTest):
                      json=self.normal_result)
 
             self.base_filter['limit'] = 2
-            results = AnalysesResults(
+            results = AnalysesHistoryResult(
                 FILE_ANALYSES_REQUEST,
                 get_global_api(),
                 self.base_filter

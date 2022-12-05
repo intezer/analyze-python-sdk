@@ -5,7 +5,7 @@ from typing import Any
 
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.analyses_results import AnalysesResults
+from intezer_sdk.analyses_results import AnalysesHistoryResult
 
 DEFAULT_LIMIT = 100
 DEFAULT_OFFSET = 0
@@ -26,7 +26,7 @@ def query_file_analyses_history(*,
                                 file_name: str = None,
                                 limit: int = DEFAULT_LIMIT,
                                 offset: int = DEFAULT_OFFSET
-                                ) -> AnalysesResults:
+                                ) -> AnalysesHistoryResult:
     """
     Query for file analyses history.
     :param start_date: Date to query from.
@@ -45,6 +45,7 @@ def query_file_analyses_history(*,
     return the analyses.
     :return: File query result from server as Results iterator.
     """
+    api.assert_on_premise_above_v22_10()
     filters = generate_analyses_history_filter(
         start_date, end_date, aggregated_view, sources, verdicts, limit, offset
     )
@@ -54,7 +55,7 @@ def query_file_analyses_history(*,
         filters['family_names'] = family_names
     if file_name:
         filters['file_name'] = file_name
-    return AnalysesResults(FILE_ANALYSES_REQUEST, api or get_global_api(), filters)
+    return AnalysesHistoryResult(FILE_ANALYSES_REQUEST, api or get_global_api(), filters)
 
 
 def query_endpoint_analyses_history(*,
@@ -66,7 +67,7 @@ def query_endpoint_analyses_history(*,
                                     verdicts: List[str] = None,
                                     limit: int = DEFAULT_LIMIT,
                                     offset: int = DEFAULT_OFFSET
-                                    ) -> AnalysesResults:
+                                    ) -> AnalysesHistoryResult:
     """
     Query for endpoint analyses history.
     :param start_date: Date to query from.
@@ -80,10 +81,11 @@ def query_endpoint_analyses_history(*,
     return the analyses.
     :return: Endpoint query result from server as Results iterator.
     """
+    api.assert_on_premise_above_v22_10()
     filters = generate_analyses_history_filter(
         start_date, end_date, aggregate_view, sources, verdicts, limit, offset
     )
-    return AnalysesResults(
+    return AnalysesHistoryResult(
         ENDPOINT_ANALYSES_REQUEST,
         api or api or get_global_api(),
         filters
@@ -102,7 +104,7 @@ def url_analyses_history_query(*,
                                aggregate_view: bool = False,
                                limit: int = DEFAULT_LIMIT,
                                offset: int = DEFAULT_OFFSET
-                               ) -> AnalysesResults:
+                               ) -> AnalysesHistoryResult:
     """
     Query for url analyses history.
 
@@ -120,6 +122,7 @@ def url_analyses_history_query(*,
     return the analyses.
     :return: URL query result from server as Results iterator.
     """
+    api.assert_on_premise_above_v22_10()
     filters = generate_analyses_history_filter(
         start_date, end_date, aggregate_view, sources, verdicts, limit, offset
     )
@@ -131,7 +134,7 @@ def url_analyses_history_query(*,
     if sub_verdicts:
         filters['sub_verdicts'] = sub_verdicts
 
-    return AnalysesResults(URL_ANALYSES_REQUEST, api or get_global_api(), filters)
+    return AnalysesHistoryResult(URL_ANALYSES_REQUEST, api or get_global_api(), filters)
 
 
 def generate_analyses_history_filter(*,
@@ -147,7 +150,7 @@ def generate_analyses_history_filter(*,
         'start_date': int(start_date.timestamp()),
         'end_date': int(end_date.timestamp()),
         'limit': limit,
-        'offset': offset,
+        'offset': offset
     }
     if aggregated_view is not None:
         base_filter['aggregate_view'] = aggregated_view

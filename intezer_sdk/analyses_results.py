@@ -1,4 +1,5 @@
-from typing import List, Any
+from typing import List
+from typing import Any
 from typing import Dict
 from typing import Tuple
 
@@ -6,22 +7,22 @@ from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import raise_for_status
 
 
-class AnalysesResults:
-    def __init__(self, request_url_path: str, api: IntezerApi, request_filters: Dict):
+class AnalysesHistoryResult:
+    def __init__(self, request_url_path: str, api: IntezerApi, filters: Dict):
         """
-        All analyses results from server with the ability to iterate results.
+        Fetch all analyses history results from server.
         :param request_url_path: Url to request new filter from.
         :param api: Instance of Intezer API for request server.
-        :param request_filters: Filters requested from server.
+        :param filters: Filters requested from server.
         """
-        self.api = api
-        self.request_filters = request_filters
-        self._pages = []
+        self.api: IntezerApi = api
+        self.filters: Dict = filters
+        self._pages: List[Any] = []
         self._current_page: List[Any] = None
-        self._request_url_path = request_url_path
-        self._current_page_number = 0
-        self._total_count = 0
-        self._current_offset = 0
+        self._request_url_path: str = request_url_path
+        self._current_page_number: int = 0
+        self._total_count: int = 0
+        self._current_offset: int = 0
 
     def __iter__(self):
         """Iterate between page."""
@@ -29,16 +30,16 @@ class AnalysesResults:
             self._fetch_page()
         if self._current_page:
             yield from self._current_page
-            if len(self._pages) * self.request_filters['limit'] < self.total_count:
+            if len(self._pages) * self.filters['limit'] < self.total_count:
                 self._fetch_page()
                 yield from iter(self)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Amount of results fetched currently."""
         return sum(len(page) for page in self._pages)
 
     @property
-    def total_count(self):
+    def total_count(self) -> int:
         return self._total_count
 
     def current_page(self) -> List:
@@ -46,7 +47,7 @@ class AnalysesResults:
         return self._current_page or self._fetch_page()
 
     def all(self) -> List:
-        """Return all exits analysis's from server."""
+        """List all remaining and exists analysis's from server."""
         results = list(self)
         self._current_page_number = 0
         if self._pages:
@@ -55,9 +56,9 @@ class AnalysesResults:
 
     def _fetch_page(self) -> List:
         """Request for new page from server."""
-        self.request_filters['offset'] = self._current_offset
+        self.filters['offset'] = self._current_offset
         self._total_count, new_page = self._fetch_analyses_history(
-            self._request_url_path, self.request_filters)
+            self._request_url_path, self.filters)
 
         if new_page:
             self._current_page = new_page
