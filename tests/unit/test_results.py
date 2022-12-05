@@ -62,7 +62,7 @@ class ResultsSpec(BaseTest):
                 next(iter(results))
 
     def test_iterate_return_one_analyses(self):
-        """Check iter gives dict and not list of dicts (row and not page)."""
+        """Check iter yield new analyse."""
         # Arrange
         with self.add_mock_response(self.normal_result):
             self.base_filter['limit'] = 2
@@ -72,7 +72,7 @@ class ResultsSpec(BaseTest):
             self.assertEqual(self.expected_result[0], next(iter(results)))
 
     def test_next_analyses_when_fetched_analyses_before(self):
-        """test end of list, need to ask for new analyses."""
+        """Test end of analyses exists, need to fetch new analyses."""
         # Arrange
         self.normal_result['total_count'] = 4
         self.base_filter['limit'] = 2
@@ -92,7 +92,7 @@ class ResultsSpec(BaseTest):
             ))
 
     def test_all_with_no_analyses_before(self):
-        """Test no pages exists, need to try fetch new page."""
+        """Test no analyses exists, need to try fetch new analyses."""
         # Arrange
         with self.add_mock_response(self.normal_result):
             self.base_filter['limit'] = 2
@@ -103,7 +103,9 @@ class ResultsSpec(BaseTest):
             self.assertTrue(self.deep_check_between_lists(self.expected_result, all_analyses))
 
     def test_all_when_fetched_analyses_fetches_new_analyses(self):
-        """Test all pages exists, need to try fetch new page."""
+        """
+        Test all there are analyses exists, need to try fetch new analyses.
+        """
         # Arrange
         self.normal_result['total_count'] = 4
         with self.add_mock_response(self.normal_result) as mock:
