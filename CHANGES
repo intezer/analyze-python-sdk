@@ -1,6 +1,9 @@
-unreleased
+1.14
 -------
-- Add enums for the basic consts: SoftwareType, FileAnalysisVerdict, URLAnalysisVerdict, EndpointAnalysisVerdict
+- Add enums for the basic consts: SoftwareType, FileAnalysisVerdict, URLAnalysisVerdict, EndpointAnalysisVerdict.
+- Support getting analyses history (url\file\endpoint) from server.
+- New On-premise version support.
+- Python 3.11 Support.
 
 1.13
 -------

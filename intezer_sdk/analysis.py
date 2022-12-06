@@ -228,7 +228,7 @@ Analysis = FileAnalysis
 class UrlAnalysis(BaseAnalysis):
     def __init__(self, url: Optional[str] = None, api: IntezerApi = None):
         super().__init__(api)
-        self._api.assert_on_premise_above_v21_11()
+        self._api.assert_any_on_premise()
         self.url = url
         self._file_analysis: Optional[FileAnalysis] = None
 
