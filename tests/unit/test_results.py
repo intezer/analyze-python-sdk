@@ -52,6 +52,12 @@ class ResultsSpec(BaseTest):
     def assert_deep_lists_equal(self, lst1: List, lst2: List):
         [self.assertDictEqual(x, y) for x, y in zip(lst1, lst2)]
 
+    def test_current_page_never_none(self):
+        """Current page will always hold a page even thought didn't ask to fetch analyse yet."""
+        with self.add_mock_response(self.normal_result):
+            results = AnalysesHistoryResult(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
+            self.assertIsNotNone(results.current_page())
+
     def test_fetch_analyses_raises_stop_iteration_when_no_more_analyses_left(self):
         """
         When got no results expect to raise StopIteration exception for stopping
@@ -140,7 +146,13 @@ class ResultsSpec(BaseTest):
         with self.add_mock_response(self.normal_result):
             results = query_file_analyses_history(
                 start_date=self.start_date,
-                end_date=self.end_date
+                end_date=self.end_date,
+                aggregated_view=False,
+                sources=["xsoar"],
+                verdicts=['malicious'],
+                file_hash='8d1131e418bdca5fb1abbb270c7cab46f169babcf7417cbf8557d2f3fe8e6b86',
+                family_names=['bla'],
+                file_name='hotmet.arm7',
             )
             for result in results:
                 assert result
@@ -150,7 +162,10 @@ class ResultsSpec(BaseTest):
         with self.add_mock_response(self.normal_result, request_url_path=ENDPOINT_ANALYSES_REQUEST):
             results = query_endpoint_analyses_history(
                 start_date=self.start_date,
-                end_date=self.end_date
+                end_date=self.end_date,
+                aggregated_view=False,
+                sources=["xsoar"],
+                verdicts=['malicious'],
             )
             for result in results:
                 assert result
@@ -160,7 +175,13 @@ class ResultsSpec(BaseTest):
         with self.add_mock_response(self.normal_result, request_url_path=URL_ANALYSES_REQUEST):
             results = query_url_analyses_history(
                 start_date=self.start_date,
-                end_date=self.end_date
+                end_date=self.end_date,
+                aggregated_view=False,
+                sources=["xsoar"],
+                verdicts=['malicious'],
+                sub_verdicts=['phishing'],
+                did_download_file=True,
+                submitted_url='https://example_trusted.com'
             )
             for result in results:
                 assert result

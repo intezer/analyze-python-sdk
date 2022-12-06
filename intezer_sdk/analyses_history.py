@@ -68,7 +68,7 @@ def query_endpoint_analyses_history(*,
                                     start_date: datetime.datetime,
                                     end_date: datetime.datetime,
                                     api: IntezerApi = None,
-                                    aggregate_view: bool = None,
+                                    aggregated_view: bool = None,
                                     sources: List[str] = None,
                                     verdicts: List[str] = None,
                                     limit: int = DEFAULT_LIMIT,
@@ -79,7 +79,7 @@ def query_endpoint_analyses_history(*,
     :param start_date: Date to query from.
     :param end_date: Date to query until.
     :param api: Instance of Intezer API for request server.
-    :param aggregate_view: Should the result be aggregated by latest computer.
+    :param aggregated_view: Should the result be aggregated by latest computer.
     :param sources: Filter the analyses by its source.
     :param verdicts: Filter by the analysis's verdict
     :param limit: Number of analyses returned by the query.
@@ -92,7 +92,7 @@ def query_endpoint_analyses_history(*,
     filters = generate_analyses_history_filter(
         start_date=start_date,
         end_date=end_date,
-        aggregated_view=aggregate_view,
+        aggregated_view=aggregated_view,
         sources=sources,
         verdicts=verdicts,
         limit=limit,
@@ -114,7 +114,7 @@ def query_url_analyses_history(*,
                                sub_verdicts: List[str] = None,
                                did_download_file: bool = None,
                                submitted_url: str = None,
-                               aggregate_view: bool = False,
+                               aggregated_view: bool = False,
                                limit: int = DEFAULT_LIMIT,
                                offset: int = DEFAULT_OFFSET
                                ) -> AnalysesHistoryResult:
@@ -129,7 +129,7 @@ def query_url_analyses_history(*,
     :param sub_verdicts: Filter by the analysis's verdict
     :param did_download_file: Should the result be aggregated by latest url.
     :param submitted_url: Filter by specific url
-    :param aggregate_view: Should the result be aggregated by latest url.
+    :param aggregated_view: Should the result be aggregated by latest url.
     :param limit: Number of analyses returned by the query.
     :param offset: Number of analyses to skips the before beginning to
     return the analyses.
@@ -140,7 +140,7 @@ def query_url_analyses_history(*,
     filters = generate_analyses_history_filter(
         start_date=start_date,
         end_date=end_date,
-        aggregated_view=aggregate_view,
+        aggregated_view=aggregated_view,
         sources=sources,
         verdicts=verdicts,
         limit=limit,
