@@ -98,11 +98,7 @@ def query_endpoint_analyses_history(*,
         limit=limit,
         offset=offset
     )
-    return AnalysesHistoryResult(
-        ENDPOINT_ANALYSES_REQUEST,
-        api,
-        filters
-    )
+    return AnalysesHistoryResult(ENDPOINT_ANALYSES_REQUEST, api, filters)
 
 
 def query_url_analyses_history(*,

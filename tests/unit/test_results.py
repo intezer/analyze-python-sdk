@@ -56,7 +56,7 @@ class ResultsSpec(BaseTest):
         """Current page will always hold a page even thought didn't ask to fetch analyse yet."""
         with self.add_mock_response(self.normal_result):
             results = AnalysesHistoryResult(FILE_ANALYSES_REQUEST, get_global_api(), self.base_filter)
-            self.assertIsNotNone(results.current_page())
+            self.assertIsNotNone(results.current_page)
 
     def test_fetch_analyses_raises_stop_iteration_when_no_more_analyses_left(self):
         """

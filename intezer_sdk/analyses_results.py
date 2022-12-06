@@ -20,7 +20,6 @@ class AnalysesHistoryResult:
         self._pages: List[Any] = []
         self._current_page: List[Any] = []
         self._request_url_path: str = request_url_path
-        self._current_page_number: int = 0
         self._total_count: int = 0
         self._current_offset: int = 0
 
@@ -38,6 +37,7 @@ class AnalysesHistoryResult:
         """Amount of results fetched currently."""
         return self._total_count
 
+    @property
     def current_page(self) -> List:
         """Get current page, if not exits, ask a new one from server."""
         return self._current_page or self._fetch_page()
@@ -45,7 +45,6 @@ class AnalysesHistoryResult:
     def all(self) -> List:
         """List all remaining and exists analysis's from server."""
         results = list(self)
-        self._current_page_number = 0
         if self._pages:
             self._current_page = self._pages[0]
         return results
@@ -65,7 +64,6 @@ class AnalysesHistoryResult:
         """Update all metadata about new current page."""
         self._current_offset += len(self._current_page)
         self._pages.append(self._current_page)
-        self._current_page_number = len(self._pages) - 1
 
     def _fetch_analyses_history(self, url_path: str, data: Dict
                                 ) -> Tuple[int, List]:
