@@ -195,6 +195,52 @@ analysis = FileAnalysis(file_hash=<file_sha256>)
 analysis.send(wait=True, wait_timeout=datetime.timedelta(minutes=1))
 ```
 
+#### Analyses History
+ - File
+
+```python
+history_results = query_file_analyses_history(
+    start_date = datetime.datetime.now() - datetime.timedelta(days=3),
+    end_date: datetime.datetime.now(),
+    api = api,
+    aggregated_view: False,
+    sources=["xsoar"],
+    verdicts=['malicious'],
+    file_hash='8d1131e418bdca5fb1abbb270c7cab46f169babcf7417cbf8557d2f3fe8e6b86',
+    family_names=['bla'],
+    file_name='hotmet.arm7'
+)
+for analyse in history_results:
+    print(analyse)
+```
+ - URL
+```python
+history_results = query_endpoint_analyses_history(
+    start_date = datetime.datetime.now() - datetime.timedelta(days=3),
+    end_date=datetime.datetime.now(),
+    aggregated_view=False,
+    sources=["xsoar"],
+    verdicts=['malicious'],
+)
+for analyse in history_results:
+    print(analyse)
+```
+ - End Point
+```python
+history_results = query_url_analyses_history(
+    start_date = datetime.datetime.now() - datetime.timedelta(days=3),
+    end_date=datetime.datetime.now(),
+    aggregated_view=False,
+    sources=["xsoar"],
+    verdicts=['malicious'],
+    sub_verdicts=['phishing'],
+    did_download_file=True,
+    submitted_url='https://example_trusted.com'
+)
+for analyse in history_results:
+    print(analyse)
+```
+
 ## Code examples
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
