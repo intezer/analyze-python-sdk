@@ -195,6 +195,52 @@ analysis = FileAnalysis(file_hash=<file_sha256>)
 analysis.send(wait=True, wait_timeout=datetime.timedelta(minutes=1))
 ```
 
+#### Analyses History
+ - File
+
+```python
+history_results = query_file_analyses_history(
+    start_date = <datetime>,
+    end_date= <datetime>,
+    api = <IntezerApi>
+    aggregated_view: <bool>,
+    sources=<source>
+    verdicts=<verdicts>,
+    file_hash=<file_hash>,
+    family_names=<family_names>,
+    file_name=<file_name>
+)
+for analyse in history_results:
+    print(analyse)
+```
+ - URL
+```python
+history_results = query_endpoint_analyses_history(
+    start_date = <datetime>,
+    end_date=<datetime>,
+    aggregated_view=<bool>,
+    sources=<sources>,
+    verdicts=<verdicts>,
+)
+for analyse in history_results:
+    print(analyse)
+```
+ - End Point
+```python
+history_results = query_url_analyses_history(
+    start_date = <datetime>,
+    end_date=<datetime>,
+    aggregated_view=<bool>,
+    sources=<sources>,
+    verdicts=<verdicts>,
+    sub_verdicts=<verdicts>,
+    did_download_file=<bool>,
+    submitted_url=<submitted_url>
+)
+for analyse in history_results:
+    print(analyse)
+```
+
 ## Code examples
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 
