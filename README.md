@@ -215,7 +215,7 @@ for analyse in history_results:
 ```
  - URL
 ```python
-history_results = query_endpoint_analyses_history(
+history_results = query_url_analyses_history(
     start_date = <datetime>,
     end_date=<datetime>,
     aggregated_view=<bool>,
@@ -227,7 +227,7 @@ for analyse in history_results:
 ```
  - End Point
 ```python
-history_results = query_url_analyses_history(
+history_results = query_endpoint_analyses_history(
     start_date = <datetime>,
     end_date=<datetime>,
     aggregated_view=<bool>,
