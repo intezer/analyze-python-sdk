@@ -449,6 +449,31 @@ class FileAnalysisSpec(BaseTest):
             self.assertTrue('Content-Disposition: form-data; name="sandbox_command_line_arguments"\r\n\r\n-c hello'
                             in request_body)
 
+    def test_send_analysis_by_hash_with_sandbox_command_line_arguments(self):
+        # Arrange
+        sha256 = 'a' * 64
+
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/analyze-by-hash',
+                     status=201,
+                     json={'result_url': 'a/sd/asd'})
+            mock.add('GET',
+                     url=self.full_url + '/analyses/asd',
+                     status=200,
+                     json={'result': 'report', 'status': 'succeeded'})
+            analysis = FileAnalysis(file_hash=sha256,
+                                    sandbox_command_line_arguments='-c hello')
+
+            # Act
+            analysis.send(wait=True)
+
+            # Assert
+            self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
+            self.assertEqual(analysis.result(), 'report')
+            request_body_json = json.loads(mock.calls[0].request.body)
+            self.assertTrue('-c hello', request_body_json['sandbox_command_line_arguments'])
+
     def test_send_analysis_by_file_with_zip_password_set_filename_to_generic_one(self):
         # Arrange
         with responses.RequestsMock() as mock:
