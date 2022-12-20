@@ -132,9 +132,9 @@ class IntezerApi:
                         disable_static_unpacking: Optional[bool],
                         sandbox_command_line_arguments: str = None,
                         **additional_parameters) -> str:
-        data = self._param_initialize(disable_dynamic_unpacking,
-                                      disable_static_unpacking,
-                                      sandbox_command_line_arguments,
+        data = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
+                                      disable_static_unpacking=disable_static_unpacking,
+                                      sandbox_command_line_arguments=sandbox_command_line_arguments,
                                       **additional_parameters)
 
         data['hash'] = file_hash
@@ -151,11 +151,11 @@ class IntezerApi:
                                 zip_password: str = None,
                                 sandbox_command_line_arguments: str = None,
                                 **additional_parameters) -> str:
-        data = self._param_initialize(disable_dynamic_unpacking,
-                                      disable_static_unpacking,
-                                      code_item_type,
-                                      zip_password,
-                                      sandbox_command_line_arguments,
+        data = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
+                                      disable_static_unpacking=disable_static_unpacking,
+                                      code_item_type=code_item_type,
+                                      zip_password=zip_password,
+                                      sandbox_command_line_arguments=sandbox_command_line_arguments,
                                       **additional_parameters)
 
         data['download_url'] = download_url
@@ -186,11 +186,11 @@ class IntezerApi:
                         zip_password: str = None,
                         sandbox_command_line_arguments: str = None,
                         **additional_parameters) -> Optional[str]:
-        options = self._param_initialize(disable_dynamic_unpacking,
-                                         disable_static_unpacking,
-                                         code_item_type,
-                                         zip_password,
-                                         sandbox_command_line_arguments,
+        options = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
+                                         disable_static_unpacking=disable_static_unpacking,
+                                         code_item_type=code_item_type,
+                                         zip_password=zip_password,
+                                         sandbox_command_line_arguments=sandbox_command_line_arguments,
                                          **additional_parameters)
 
         if file_stream:
