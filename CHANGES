@@ -1,3 +1,7 @@
+1.14.1
+-------
+- Fix: analyze url route
+
 1.14
 -------
 - Add enums for the basic consts: SoftwareType, FileAnalysisVerdict, URLAnalysisVerdict, EndpointAnalysisVerdict.

@@ -68,7 +68,7 @@ class UrlAnalysisSpec(BaseTest):
         analysis_id = str(uuid.uuid4())
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/url/',
+                     url=self.full_url + '/url',
                      status=201,
                      json={'result_url': '/url/{}'.format(analysis_id)})
             analysis = UrlAnalysis(url='https://intezer.com')
@@ -84,7 +84,7 @@ class UrlAnalysisSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/url/',
+                     url=self.full_url + '/url',
                      status=400,
                      json={'error': 'Some error description'})
             analysis = UrlAnalysis(url='httpdddds://intezer.com')
@@ -107,7 +107,7 @@ class UrlAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/url/',
+                     url=self.full_url + '/url',
                      status=201,
                      json={'result_url': '/url/{}'.format(analysis_id)})
             result = {'analysis_id': analysis_id}
@@ -130,7 +130,7 @@ class UrlAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/url/',
+                     url=self.full_url + '/url',
                      status=201,
                      json={'result_url': '/url/{}'.format(analysis_id)})
             result = {'analysis_id': analysis_id}
@@ -159,7 +159,7 @@ class UrlAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/url/',
+                     url=self.full_url + '/url',
                      status=201,
                      json={'result_url': '/url/{}'.format(url_analysis_id)})
             mock.add('GET',
@@ -187,7 +187,7 @@ class UrlAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/url/',
+                     url=self.full_url + '/url',
                      status=201,
                      json={'result_url': '/url/{}'.format(analysis_id)})
             mock.add('GET',

@@ -489,7 +489,7 @@ class IntezerApi:
     def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
         self.assert_any_on_premise()
         response = self.request_with_refresh_expired_access_token(method='POST',
-                                                                  path='/url/',
+                                                                  path='/url',
                                                                   data=dict(url=url, **additional_parameters))
         self._assert_analysis_response_status_code(response)
 
