@@ -1,3 +1,12 @@
+1.14.3
+-------
+- Add check status for operation
+
+1.14.2
+-------
+- Fix analyze-by-hash with command line args
+
+
 1.14.1
 -------
 - Fix: analyze url route
