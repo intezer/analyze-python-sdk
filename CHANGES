@@ -1,3 +1,8 @@
+Unreleased
+-------
+- Add analysis time to analysis object
+
+
 1.14.3
 -------
 - Add check status for operation

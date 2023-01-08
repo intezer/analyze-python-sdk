@@ -986,7 +986,9 @@ class FileAnalysisSpec(BaseTest):
     def test_get_analysis_by_id_analysis_object_when_latest_analysis_found(self):
         # Arrange
         analysis_id = 'analysis_id'
-        analysis_report = {'analysis_id': analysis_id, 'sha256': 'hash'}
+        analysis_report = {'analysis_id': analysis_id,
+                           'sha256': 'hash',
+                           'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
 
         with responses.RequestsMock() as mock:
             mock.add('GET',

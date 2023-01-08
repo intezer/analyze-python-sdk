@@ -19,6 +19,7 @@ class Analysis(metaclass=abc.ABCMeta):
     def __init__(self, api: IntezerApi = None):
         self.status = None
         self.analysis_id = None
+        self.analysis_time: Optional[datetime.datetime] = None
         self._api: IntezerApi = api or get_global_api()
         self._report: Optional[Dict[str, Any]] = None
 
@@ -94,6 +95,8 @@ class Analysis(metaclass=abc.ABCMeta):
 
         self.analysis_id = report['analysis_id']
         self._report = report
+        if 'analysis_time' in report:
+            self.analysis_time = datetime.datetime.strptime(report['analysis_time'], '%a, %d %b %Y %X GMT')
         self.status = consts.AnalysisStatusCode.FINISHED
 
     def _assert_analysis_finished(self):
@@ -144,4 +147,3 @@ class BaseAnalysis(Analysis):
                 self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
             else:
                 self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
-
