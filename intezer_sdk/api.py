@@ -1,3 +1,4 @@
+import abc
 import os
 from http import HTTPStatus
 from typing import Any
@@ -60,25 +61,18 @@ def raise_for_status(response: requests.Response,
         raise requests.HTTPError(http_error_msg, response=response)
 
 
-class IntezerApi:
-    def __init__(self,
-                 api_version: str = None,
-                 api_key: str = None,
-                 base_url: str = None,
-                 verify_ssl: bool = True,
-                 on_premise_version: OnPremiseVersion = None,
-                 user_agent: str = None):
-        self.full_url = base_url + api_version
-        self.api_key = api_key
-        self._access_token = None
-        self._session = None
-        self._verify_ssl = verify_ssl
-        self.on_premise_version = on_premise_version
+class BaseApi(metaclass=abc.ABCMeta):
+    def __init__(self, user_agent: str, api_key: str, base_url: str, verify_ssl: bool = True):
         if user_agent:
-            user_agent = f'{consts.USER_AGENT}/{user_agent}'
+            self.user_agent = f'{consts.USER_AGENT}/{user_agent}'
         else:
-            user_agent = consts.USER_AGENT
-        self.user_agent = user_agent
+            self.user_agent = consts.USER_AGENT
+        self._session = None
+        self.verify_ssl = verify_ssl
+        self.api_key = api_key
+        self.base_url = base_url
+        self.full_url = None
+        self._access_token = None
 
     def _request(self,
                  method: str,
@@ -125,6 +119,99 @@ class IntezerApi:
             response = self._request(method, path, data, headers, files, stream)
 
         return response
+
+    def _set_access_token(self, api_key: str):
+        response = requests.post(self.full_url + '/get-access-token',
+                                 json={'api_key': api_key},
+                                 verify=self.verify_ssl)
+
+        if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
+            raise errors.InvalidApiKeyError(response)
+        if response.status_code != HTTPStatus.OK:
+            raise_for_status(response)
+
+        self._access_token = response.json()['result']
+
+    def set_session(self):
+        self._session = requests.session()
+        self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
+        self._session.verify = self.verify_ssl
+        self._set_access_token(self.api_key)
+        self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
+        self._session.headers['User-Agent'] = self.user_agent
+
+    @staticmethod
+    def _assert_analysis_response_status_code(response: Response):
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        elif response.status_code == HTTPStatus.CONFLICT:
+            running_analysis_id = response.json().get('result', {}).get('analysis_id')
+            raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
+        elif response.status_code == HTTPStatus.FORBIDDEN:
+            raise errors.InsufficientQuotaError(response)
+        elif response.status_code == HTTPStatus.BAD_REQUEST:
+            data = response.json()
+            error = data.get('error', '')
+            raise errors.ServerError('Server returned bad request error: {}'.format(error), response)
+        elif response.status_code != HTTPStatus.CREATED:
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
+
+    @staticmethod
+    def _assert_index_response_status_code(response: Response):
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        elif response.status_code != HTTPStatus.CREATED:
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
+
+    @staticmethod
+    def _get_analysis_id_from_response(response: Response):
+        return response.json()['result_url'].split('/')[2]
+
+    @staticmethod
+    def _get_index_id_from_response(response: Response):
+        return response.json()['result_url'].split('/')[3]
+
+    @staticmethod
+    def _assert_result_response(ignore_not_found: bool, response: Response):
+        statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
+        raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
+
+    @staticmethod
+    def _param_initialize(disable_dynamic_unpacking: bool,
+                          disable_static_unpacking: bool,
+                          code_item_type: str = None,
+                          zip_password: str = None,
+                          sandbox_command_line_arguments: str = None,
+                          **additional_parameters):
+        data = {}
+
+        if disable_dynamic_unpacking is not None:
+            data['disable_dynamic_execution'] = disable_dynamic_unpacking
+        if disable_static_unpacking is not None:
+            data['disable_static_extraction'] = disable_static_unpacking
+        if code_item_type:
+            data['code_item_type'] = code_item_type
+        if zip_password:
+            data['zip_password'] = zip_password
+        if sandbox_command_line_arguments:
+            data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
+
+        data.update(additional_parameters)
+
+        return data
+
+
+class IntezerApi(BaseApi):
+    def __init__(self,
+                 api_version: str = None,
+                 api_key: str = None,
+                 base_url: str = None,
+                 verify_ssl: bool = True,
+                 on_premise_version: OnPremiseVersion = None,
+                 user_agent: str = None):
+        super().__init__(user_agent, api_key, base_url, verify_ssl)
+        self.full_url = base_url + api_version
+        self.on_premise_version = on_premise_version
 
     def analyze_by_hash(self,
                         file_hash: str,
@@ -253,6 +340,11 @@ class IntezerApi:
         self._assert_result_response(False, response)
 
         return response.json()['sub_analyses']
+
+    def create_endpoint_analysis(self, scanner_info: dict) -> dict[str, str]:
+        response = self.request_with_refresh_expired_access_token(path='/scans', data=scanner_info, method='POST')
+        response.raise_for_status()
+        return response.json()['result']
 
     def get_iocs(self, analyses_id: str) -> Optional[dict]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
@@ -466,26 +558,6 @@ class IntezerApi:
 
         return response
 
-    def _set_access_token(self):
-        response = requests.post(self.full_url + '/get-access-token',
-                                 json={'api_key': self.api_key},
-                                 verify=self._verify_ssl)
-
-        if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
-            raise errors.InvalidApiKeyError(response)
-        if response.status_code != HTTPStatus.OK:
-            raise_for_status(response)
-
-        self._access_token = response.json()['result']
-
-    def set_session(self):
-        self._session = requests.session()
-        self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
-        self._session.verify = self._verify_ssl
-        self._set_access_token()
-        self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
-        self._session.headers['User-Agent'] = self.user_agent
-
     def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
         self.assert_any_on_premise()
         response = self.request_with_refresh_expired_access_token(method='POST',
@@ -503,66 +575,6 @@ class IntezerApi:
         raise_for_status(response)
 
         return response.json()
-
-    @staticmethod
-    def _assert_result_response(ignore_not_found: bool, response: Response):
-        statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
-        raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
-
-    @staticmethod
-    def _param_initialize(disable_dynamic_unpacking: bool,
-                          disable_static_unpacking: bool,
-                          code_item_type: str = None,
-                          zip_password: str = None,
-                          sandbox_command_line_arguments: str = None,
-                          **additional_parameters):
-        data = {}
-
-        if disable_dynamic_unpacking is not None:
-            data['disable_dynamic_execution'] = disable_dynamic_unpacking
-        if disable_static_unpacking is not None:
-            data['disable_static_extraction'] = disable_static_unpacking
-        if code_item_type:
-            data['code_item_type'] = code_item_type
-        if zip_password:
-            data['zip_password'] = zip_password
-        if sandbox_command_line_arguments:
-            data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
-
-        data.update(additional_parameters)
-
-        return data
-
-    @staticmethod
-    def _assert_analysis_response_status_code(response: Response):
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError(response)
-        elif response.status_code == HTTPStatus.CONFLICT:
-            running_analysis_id = response.json().get('result', {}).get('analysis_id')
-            raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
-        elif response.status_code == HTTPStatus.FORBIDDEN:
-            raise errors.InsufficientQuotaError(response)
-        elif response.status_code == HTTPStatus.BAD_REQUEST:
-            data = response.json()
-            error = data.get('error', '')
-            raise errors.ServerError('Server returned bad request error: {}'.format(error), response)
-        elif response.status_code != HTTPStatus.CREATED:
-            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
-
-    @staticmethod
-    def _assert_index_response_status_code(response: Response):
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError(response)
-        elif response.status_code != HTTPStatus.CREATED:
-            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
-
-    @staticmethod
-    def _get_analysis_id_from_response(response: Response):
-        return response.json()['result_url'].split('/')[2]
-
-    @staticmethod
-    def _get_index_id_from_response(response: Response):
-        return response.json()['result_url'].split('/')[3]
 
     def assert_on_premise_above_v21_11(self):
         if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:
@@ -598,3 +610,89 @@ def set_global_api(api_key: str = None,
                              base_url or consts.BASE_URL,
                              verify_ssl,
                              on_premise_version)
+
+
+class EndpointScanApi(BaseApi):
+    def __init__(self, api_key: str,
+                 base_url: str,
+                 scan_id: str,
+                 verify_ssl: bool = True,
+                 user_agent: str = None):
+        super().__init__(user_agent, api_key, base_url, verify_ssl)
+        if not scan_id:
+            raise ValueError('scan_id must be provided')
+        self.scan_id = scan_id
+        self.full_url = base_url + f'/scans/{scan_id}/'
+
+    def send_host_info(self, host_info: dict):
+        response = self.request_with_refresh_expired_access_token(path='/host-info',
+                                                                  data=host_info,
+                                                                  method='POST')
+        response.raise_for_status()
+
+    def send_processes_info(self, processes_info: dict):
+        response = self.request_with_refresh_expired_access_token(path='/processes-info',
+                                                                  data=processes_info,
+                                                                  method='POST')
+        response.raise_for_status()
+
+    def send_loaded_modules_info(self, pid, loaded_modules_info: dict):
+        response = self.request_with_refresh_expired_access_token(path=f'/processes/{pid}/loaded-modules-info',
+                                                                  data=loaded_modules_info,
+                                                                  method='POST')
+        response.raise_for_status()
+
+    def send_injected_modules_info(self, injected_module_list: dict):
+        response = self.request_with_refresh_expired_access_token(path='/injected-modules-info',
+                                                                  data=injected_module_list,
+                                                                  method='POST')
+        response.raise_for_status()
+
+    def send_scheduled_tasks_info(self, scheduled_tasks_info: dict):
+        response = self.request_with_refresh_expired_access_token(path='/scheduled-tasks-info',
+                                                                  data=scheduled_tasks_info,
+                                                                  method='POST')
+        response.raise_for_status()
+
+    def send_file_module_differences(self, file_module_differences: dict):
+        response = self.request_with_refresh_expired_access_token(path='/file-module-differences',
+                                                                  data=file_module_differences,
+                                                                  method='POST')
+        response.raise_for_status()
+
+    def send_files_info(self, files_info: dict) -> List[str]:
+        """
+        :param files_info: endpoint scan files info
+        :return: list of file hashes to upload
+        """
+        response = self.request_with_refresh_expired_access_token(path='/files-info',
+                                                                  data=files_info,
+                                                                  method='POST')
+        response.raise_for_status()
+        return response.json()['result']
+
+    def send_memory_module_dump_info(self, memory_modules_info: dict) -> List[str]:
+        """
+        :param memory_modules_info: endpoint scan memory modules info
+        :return: list of file hashes to upload
+        """
+        response = self.request_with_refresh_expired_access_token(path='/memory_modules_info',
+                                                                  data=memory_modules_info,
+                                                                  method='POST')
+        response.raise_for_status()
+        return response.json()['result']
+
+    def upload_collected_binary(self, file_path: str, collected_from: str):
+        with open(file_path, 'rb') as file_to_upload:
+            file = {'file': (os.path.basename(file_path), file_to_upload)}
+            response = self.request_with_refresh_expired_access_token(path=f'/{collected_from}/collected-binaries',
+                                                                      files=file,
+                                                                      method='POST')
+        response.raise_for_status()
+
+    def close_scan_store(self, scan_summary: dict):
+        response = self.request_with_refresh_expired_access_token(path='/end',
+                                                                  data=scan_summary,
+                                                                  method='POST')
+        response.raise_for_status()
+
