@@ -466,9 +466,9 @@ class IntezerApi:
 
         return response
 
-    def _set_access_token(self, api_key: str):
+    def _set_access_token(self):
         response = requests.post(self.full_url + '/get-access-token',
-                                 json={'api_key': api_key},
+                                 json={'api_key': self.api_key},
                                  verify=self._verify_ssl)
 
         if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
@@ -482,7 +482,7 @@ class IntezerApi:
         self._session = requests.session()
         self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
         self._session.verify = self._verify_ssl
-        self._set_access_token(self.api_key)
+        self._set_access_token()
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = self.user_agent
 
