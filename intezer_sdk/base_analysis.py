@@ -16,7 +16,14 @@ from intezer_sdk.api import get_global_api
 
 
 class Analysis(metaclass=abc.ABCMeta):
+    """
+    Analysis is a base class representing an analysis of a file, URL or endpoint.
+    It requires an API connection to Intezer.
+    """
     def __init__(self, api: IntezerApi = None):
+        """
+        :param api: The API connection to Intezer.
+        """
         self.status = None
         self.analysis_id = None
         self.analysis_time: Optional[datetime.datetime] = None
@@ -37,10 +44,10 @@ class Analysis(metaclass=abc.ABCMeta):
                             sleep_before_first_check=False,
                             timeout: Optional[datetime.timedelta] = None):
         """
-        Blocks until the analysis is completed
-        :param interval: The interval to wait between checks
-        :param sleep_before_first_check: Whether to sleep before the first status check
-        :param timeout: Maximum duration to wait for analysis completion
+        Blocks until the analysis is completed.
+        :param interval: The interval to wait between checks in seconds.
+        :param sleep_before_first_check: Whether to sleep before the first status check.
+        :param timeout: Maximum duration to wait for analysis completion in seconds.
         """
         start_time = datetime.datetime.utcnow()
         if not interval:
@@ -58,11 +65,19 @@ class Analysis(metaclass=abc.ABCMeta):
                 status_code = self.check_status()
 
     def _is_analysis_running(self) -> bool:
+        """
+        Check if the analysis is running.
+        :return: True if the analysis is running, False otherwise.
+        """
         return self.status in (consts.AnalysisStatusCode.CREATED,
                                consts.AnalysisStatusCode.IN_PROGRESS,
                                consts.AnalysisStatusCode.QUEUED)
 
     def check_status(self) -> consts.AnalysisStatusCode:
+        """
+        Check the status of the analysis.
+        :return: The status of the analysis.
+        """
         if not self._is_analysis_running():
             raise errors.IntezerError('Analysis is not running')
 

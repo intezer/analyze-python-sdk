@@ -7,12 +7,28 @@ from intezer_sdk.sub_analysis import SubAnalysis
 
 
 class EndpointAnalysis(Analysis):
+    """
+    EndpointAnalysis is a class for analyzing endpoints. It is a subclass of the Analysis class and requires an API connection to Intezer.
+    """
     def __init__(self, api: IntezerApi = None):
+        """
+        Initializes an EndpointAnalysis object.
+
+        :param api: The API connection to Intezer.
+        """
         super().__init__(api)
         self._sub_analyses: List[SubAnalysis] = []
 
     @classmethod
     def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None):
+        """
+        Returns an EndpointAnalysis instance with the given analysis ID.
+        Returns None when analysis doesn't exist.
+
+        :param analysis_id: The ID of the analysis to retrieve.
+        :param api: The API connection to Intezer.
+        :return: An EndpointAnalysis instance with the given analysis ID.
+        """
         api = api or get_global_api()
         response = api.get_endpoint_analysis_response(analysis_id, True)
         return cls._create_analysis_from_response(response, api, analysis_id)

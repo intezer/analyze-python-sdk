@@ -23,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 class FileAnalysis(BaseAnalysis):
+    """
+    FileAnalysis is a class for analyzing files. It is a subclass of the BaseAnalysis class and requires an API connection to Intezer.
+    """
+
     def __init__(self,
                  file_path: str = None,
                  file_hash: str = None,
@@ -35,6 +39,21 @@ class FileAnalysis(BaseAnalysis):
                  zip_password: str = None,
                  download_url: str = None,
                  sandbox_command_line_arguments: str = None):
+        """
+        FileAnalysis is a class for analyzing files. It is a subclass of the BaseAnalysis class and requires an API connection to Intezer.
+
+        :param file_path: The file path of the file to be analyzed.
+        :param file_hash: The hash of the file to be analyzed.
+        :param file_stream: A binary stream of the file to be analyzed.
+        :param disable_dynamic_unpacking: A flag to disable dynamic unpacking during analysis.
+        :param disable_static_unpacking: A flag to disable static unpacking during analysis.
+        :param api: The API connection to Intezer.
+        :param file_name: The name of the file.
+        :param code_item_type: The type of the file, either "file" or "memory module".
+        :param zip_password: The password for a password-protected zip file.
+        :param download_url: A URL from which to download the file to be analyzed.
+        :param sandbox_command_line_arguments: The command line arguments for sandbox analysis.
+        """
         super().__init__(api)
         if [file_path, file_hash, file_stream, download_url].count(None) < 3:
             raise ValueError('Choose between file hash, file stream, file path, or download from url analysis')
@@ -75,6 +94,13 @@ class FileAnalysis(BaseAnalysis):
 
     @classmethod
     def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> Optional['FileAnalysis']:
+        """
+        Returns a FileAnalysis instance with the given analysis ID.
+        Returns None when analysis doesn't exist.
+       :param analysis_id: The ID of the analysis to retrieve.
+       :param api: The API connection to Intezer.
+       :return: A FileAnalysis instance with the given analysis ID.
+        """
         api = api or get_global_api()
         response = api.get_file_analysis_response(analysis_id, True)
         return cls._create_analysis_from_response(response, api, analysis_id)
@@ -85,6 +111,15 @@ class FileAnalysis(BaseAnalysis):
                                   api: IntezerApi = None,
                                   private_only: bool = False,
                                   **additional_parameters) -> Optional['FileAnalysis']:
+        """
+        Returns the latest FileAnalysis instance for the given file hash, with the option to filter by private analyses only.
+        Returns None when analysis doesn't exist.
+        :param file_hash: The hash of the file to retrieve analysis for.
+        :param api: The API connection to Intezer.
+        :param private_only: A flag to filter results by private analyses only.
+        :param additional_parameters: Additional parameters to pass to the API.
+        :return: The latest FileAnalysis instance for the given file hash.
+        """
         api = api or get_global_api()
         analysis_report = api.get_latest_analysis(file_hash, private_only, **additional_parameters)
 
