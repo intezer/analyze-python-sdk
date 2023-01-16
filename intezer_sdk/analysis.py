@@ -49,7 +49,7 @@ class FileAnalysis(BaseAnalysis):
         :param disable_static_unpacking: A flag to disable static unpacking during analysis.
         :param api: The API connection to Intezer.
         :param file_name: The name of the file.
-        :param code_item_type: The type of the file, either "file" or "memory module".
+        :param code_item_type: The type of the file, either "file" or "memory_module".
         :param zip_password: The password for a password-protected zip file.
         :param download_url: A URL from which to download the file to be analyzed.
         :param sandbox_command_line_arguments: The command line arguments for sandbox analysis.
