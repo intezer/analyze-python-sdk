@@ -83,7 +83,8 @@ class OnPremiseVersion(enum.IntEnum):
 
 
 ANALYZE_URL = 'https://analyze.intezer.com'
-BASE_URL = '{}/api/'.format(ANALYZE_URL)
+BASE_API_URL = '{}/api/'.format(ANALYZE_URL)
 API_VERSION = 'v2-0'
+ACCESS_TOKEN_URL = '{}{}/get-access-token'.format(BASE_API_URL, API_VERSION)
 USER_AGENT = 'intezer-python-sdk-{}'.format(__version__)
 CHECK_STATUS_INTERVAL = 1

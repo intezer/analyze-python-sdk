@@ -1,5 +1,6 @@
 import abc
 import os
+import zlib
 from http import HTTPStatus
 from typing import Any
 from typing import BinaryIO
@@ -62,7 +63,12 @@ def raise_for_status(response: requests.Response,
 
 
 class BaseApi(metaclass=abc.ABCMeta):
-    def __init__(self, user_agent: str, api_key: str, base_url: str, verify_ssl: bool = True):
+    def __init__(self,
+                 user_agent: str,
+                 api_key: str,
+                 base_url: str,
+                 verify_ssl: bool = True,
+                 access_token_url: str = consts.ACCESS_TOKEN_URL):
         if user_agent:
             self.user_agent = f'{consts.USER_AGENT}/{user_agent}'
         else:
@@ -71,6 +77,7 @@ class BaseApi(metaclass=abc.ABCMeta):
         self.verify_ssl = verify_ssl
         self.api_key = api_key
         self.base_url = base_url
+        self._access_token_url = access_token_url
         self.full_url = None
         self._access_token = None
 
@@ -80,14 +87,23 @@ class BaseApi(metaclass=abc.ABCMeta):
                  data: dict = None,
                  headers: dict = None,
                  files: dict = None,
-                 stream: bool = None) -> Response:
+                 stream: bool = None,
+                 body: Any = None,
+                 use_base_url: bool = False) -> Response:
         if not self._session:
             self.set_session()
 
-        if files:
+        if use_base_url:
+            url = self.base_url + path
+        else:
+            url = self.full_url + path
+
+        if body and headers:
+            response = self._session.request(method, url, data=body, headers=headers)
+        elif files:
             response = self._session.request(
                 method,
-                self.full_url + path,
+                url,
                 files=files,
                 data=data or {},
                 headers=headers or {},
@@ -96,7 +112,7 @@ class BaseApi(metaclass=abc.ABCMeta):
         else:
             response = self._session.request(
                 method,
-                self.full_url + path,
+                url,
                 json=data or {},
                 headers=headers,
                 stream=stream
@@ -110,18 +126,20 @@ class BaseApi(metaclass=abc.ABCMeta):
                                                   data: dict = None,
                                                   headers: dict = None,
                                                   files: dict = None,
-                                                  stream: bool = None) -> Response:
-        response = self._request(method, path, data, headers, files)
+                                                  stream: bool = None,
+                                                  body: Any = None,
+                                                  use_base_url: bool = False) -> Response:
+        response = self._request(method, path, data, headers, files, stream, body, use_base_url)
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             self._access_token = None
             self.set_session()
-            response = self._request(method, path, data, headers, files, stream)
+            response = self._request(method, path, data, headers, files, stream, body, use_base_url)
 
         return response
 
     def _set_access_token(self, api_key: str):
-        response = requests.post(self.full_url + '/get-access-token',
+        response = requests.post(self._access_token_url,
                                  json={'api_key': api_key},
                                  verify=self.verify_ssl)
 
@@ -342,7 +360,9 @@ class IntezerApi(BaseApi):
         return response.json()['sub_analyses']
 
     def create_endpoint_analysis(self, scanner_info: dict) -> dict[str, str]:
-        response = self.request_with_refresh_expired_access_token(path='/scans', data=scanner_info, method='POST')
+        response = self.request_with_refresh_expired_access_token(path='/scans',
+                                                                  data=scanner_info, method='POST',
+                                                                  use_base_url=True)
         response.raise_for_status()
         return response.json()['result']
 
@@ -607,7 +627,7 @@ def set_global_api(api_key: str = None,
     api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
     _global_api = IntezerApi(api_version or consts.API_VERSION,
                              api_key,
-                             base_url or consts.BASE_URL,
+                             base_url or consts.BASE_API_URL,
                              verify_ssl,
                              on_premise_version)
 
@@ -622,7 +642,7 @@ class EndpointScanApi(BaseApi):
         if not scan_id:
             raise ValueError('scan_id must be provided')
         self.scan_id = scan_id
-        self.full_url = base_url + f'/scans/{scan_id}/'
+        self.full_url = base_url + f'scans/scans/{scan_id}'
 
     def send_host_info(self, host_info: dict):
         response = self.request_with_refresh_expired_access_token(path='/host-info',
@@ -676,7 +696,7 @@ class EndpointScanApi(BaseApi):
         :param memory_modules_info: endpoint scan memory modules info
         :return: list of file hashes to upload
         """
-        response = self.request_with_refresh_expired_access_token(path='/memory_modules_info',
+        response = self.request_with_refresh_expired_access_token(path='/memory-module-dumps-info',
                                                                   data=memory_modules_info,
                                                                   method='POST')
         response.raise_for_status()
@@ -684,10 +704,15 @@ class EndpointScanApi(BaseApi):
 
     def upload_collected_binary(self, file_path: str, collected_from: str):
         with open(file_path, 'rb') as file_to_upload:
-            file = {'file': (os.path.basename(file_path), file_to_upload)}
+            file_data = file_to_upload.read()
+            compressed_data = zlib.compress(file_data, zlib.Z_BEST_COMPRESSION)
             response = self.request_with_refresh_expired_access_token(path=f'/{collected_from}/collected-binaries',
-                                                                      files=file,
+                                                                      body=compressed_data,
+                                                                      headers={'Content-Type':
+                                                                               'application/octet-stream',
+                                                                               'Content-Encoding': 'gzip'},
                                                                       method='POST')
+
         response.raise_for_status()
 
     def close_scan_store(self, scan_summary: dict):
@@ -695,4 +720,3 @@ class EndpointScanApi(BaseApi):
                                                                   data=scan_summary,
                                                                   method='POST')
         response.raise_for_status()
-
