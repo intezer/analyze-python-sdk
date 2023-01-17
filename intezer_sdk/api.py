@@ -62,7 +62,7 @@ def raise_for_status(response: requests.Response,
         raise requests.HTTPError(http_error_msg, response=response)
 
 
-class BaseApi(metaclass=abc.ABCMeta):
+class BaseApi():
     def __init__(self,
                  user_agent: str,
                  api_key: str,
@@ -77,8 +77,8 @@ class BaseApi(metaclass=abc.ABCMeta):
         self.verify_ssl = verify_ssl
         self.api_key = api_key
         self.base_url = base_url
-        self._access_token_url = access_token_url
         self.full_url = None
+        self._access_token_url = access_token_url
         self._access_token = None
 
     def _request(self,
@@ -359,7 +359,7 @@ class IntezerApi(BaseApi):
 
         return response.json()['sub_analyses']
 
-    def create_endpoint_analysis(self, scanner_info: dict) -> dict[str, str]:
+    def create_endpoint_scan(self, scanner_info: dict) -> dict[str, str]:
         response = self.request_with_refresh_expired_access_token(path='/scans',
                                                                   data=scanner_info, method='POST',
                                                                   use_base_url=True)
@@ -633,7 +633,8 @@ def set_global_api(api_key: str = None,
 
 
 class EndpointScanApi(BaseApi):
-    def __init__(self, api_key: str,
+    def __init__(self,
+                 api_key: str,
                  base_url: str,
                  scan_id: str,
                  verify_ssl: bool = True,

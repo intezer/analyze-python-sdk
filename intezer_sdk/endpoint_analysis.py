@@ -1,7 +1,5 @@
-import enum
 import glob
 import json
-import logging
 import os
 import pathlib
 from typing import List
@@ -11,16 +9,12 @@ from intezer_sdk.analysis import logger
 from intezer_sdk.api import EndpointScanApi
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.base_analysis import BaseAnalysis
+from intezer_sdk.base_analysis import Analysis
+from intezer_sdk.consts import EndpointAnalysisEndReason
 from intezer_sdk.sub_analysis import SubAnalysis
 
 
-class EndpointAnalysis(BaseAnalysis):
-    class EndpointAnalysisEndReason(enum.Enum):
-        DONE = 'done'
-        INTERRUPTED = 'interrupted'
-        FAILED = 'failed'
-
+class EndpointAnalysis(Analysis):
     def __init__(self,
                  api: IntezerApi = None,
                  scan_api: EndpointScanApi = None,
@@ -86,35 +80,112 @@ class EndpointAnalysis(BaseAnalysis):
             if not os.path.exists(self._memory_modules_dir):
                 raise ValueError('Memory modules directory does not exist')
 
-            self.create_analysis()
-            self.initialize_endpoint_api()
-            self.send_host_info()
-            self.send_scheduled_tasks_info()
-            self.send_processes_info()
-            self.send_loaded_modules_info()
-            self.send_files_info_and_upload_required()
-            self.send_module_differences()
-            self.send_injected_modules_info()
-            self.send_memory_module_dump_info_and_upload_required()
+            self._create_scan()
+
+            if not self.scan_id:
+                raise ValueError('Failed to create scan')
+
+            self.status = consts.AnalysisStatusCode.IN_PROGRESS
+            self._initialize_endpoint_api()
+
+            self._send_host_info()
+            self._send_scheduled_tasks_info()
+            self._send_processes_info()
+            self._send_loaded_modules_info()
+            self._send_files_info_and_upload_required()
+            self._send_module_differences()
+            self._send_injected_modules_info()
+            self._send_memory_module_dump_info_and_upload_required()
 
         except KeyboardInterrupt:
             if self.status == consts.AnalysisStatusCode.IN_PROGRESS:
-                self._scan_api.close_scan_store(scan_summary={'reason':
-                                                                  self.EndpointAnalysisEndReason.INTERRUPTED.value})
+                self._scan_api.close_scan_store(scan_summary={'reason': EndpointAnalysisEndReason.INTERRUPTED.value})
             self.status = consts.AnalysisStatusCode.FAILED
         except Exception:
             if self.status == consts.AnalysisStatusCode.IN_PROGRESS:
-                self._scan_api.close_scan_store(scan_summary={'reason':
-                                                                  self.EndpointAnalysisEndReason.FAILED.value})
+                self._scan_api.close_scan_store(scan_summary={'reason': EndpointAnalysisEndReason.FAILED.value})
             self.status = consts.AnalysisStatusCode.FAILED
             raise
         finally:
             if self.status == consts.AnalysisStatusCode.IN_PROGRESS:
-                self._scan_api.close_scan_store(scan_summary={'reason': self.EndpointAnalysisEndReason.DONE.value})
+                self._scan_api.close_scan_store(scan_summary={'reason': EndpointAnalysisEndReason.DONE.value})
                 self.status = consts.AnalysisStatusCode.FINISHED
         return self.analysis_id
 
-    def send_memory_module_dump_info_and_upload_required(self):
+    def _create_scan(self):
+        with open(os.path.join(self._metadata_dir, 'scanner_info.json')) as f:
+            scanner_info = json.load(f)
+        result = self._api.create_endpoint_scan(scanner_info)
+        self.scan_id = result['scan_id']
+        self.analysis_id = result['analysis_id']
+
+    def _initialize_endpoint_api(self):
+        if not self._scan_api:
+            base_url = self._api.base_url
+            if base_url.endswith('api/'):
+                base_url = base_url[:-4]
+
+            self._scan_api = EndpointScanApi(api_key=self._api.api_key,
+                                             base_url=base_url,
+                                             scan_id=self.scan_id,
+                                             verify_ssl=self._api.verify_ssl,
+                                             user_agent=self._api.user_agent)
+
+    def _send_host_info(self):
+        logger.info('Sending host info')
+        with open(os.path.join(self._metadata_dir, 'host_info.json')) as f:
+            host_info = json.load(f)
+        self._scan_api.send_host_info(host_info)
+
+    def _send_processes_info(self):
+        logger.info('Sending processes info')
+        with open(os.path.join(self._metadata_dir, 'processes_info.json')) as f:
+            processes_info = json.load(f)
+        self._scan_api.send_processes_info(processes_info)
+
+    def _send_scheduled_tasks_info(self):
+        logger.info('Sending scheduled tasks info')
+        with open(os.path.join(self._metadata_dir, 'scheduled_tasks_info.json')) as f:
+            scheduled_tasks_info = json.load(f)
+        self._scan_api.send_scheduled_tasks_info(scheduled_tasks_info)
+
+    def _send_loaded_modules_info(self):
+        logger.info('Sending loaded modules info')
+        for loaded_module_info_file in glob.glob(os.path.join(self._metadata_dir, '*_loaded_modules_info.json')):
+            with open(loaded_module_info_file, 'r') as f:
+                loaded_modules_info = json.load(f)
+
+            pid = os.path.basename(loaded_module_info_file).split('_')[0]
+            self._scan_api.send_loaded_modules_info(pid, loaded_modules_info)
+
+    def _send_files_info_and_upload_required(self):
+        logger.info('Sending files info and uploading required files')
+        for files_info_file in glob.glob(os.path.join(self._metadata_dir, 'files_info_*.json')):
+            with open(files_info_file, 'r') as f:
+                files_info = json.load(f)
+
+            files_to_upload = self._scan_api.send_files_info(files_info)
+
+            for file_to_upload in files_to_upload:
+                file_path = os.path.join(self._files_dir, file_to_upload + '.sample')
+                if os.path.exists(file_path):
+                    self._scan_api.upload_collected_binary(file_path, 'file-system')
+                else:
+                    logger.warning('File %s does not exist', file_path)
+
+    def _send_module_differences(self):
+        logger.info('Sending file module differences info')
+        with open(os.path.join(self._metadata_dir, 'file_module_differences.json')) as f:
+            file_module_differences = json.load(f)
+        self._scan_api.send_file_module_differences(file_module_differences)
+
+    def _send_injected_modules_info(self):
+        logger.info('Sending injected modules info')
+        with open(os.path.join(self._metadata_dir, 'injected_modules_info.json')) as f:
+            injected_modules_info = json.load(f)
+        self._scan_api.send_injected_modules_info(injected_modules_info)
+
+    def _send_memory_module_dump_info_and_upload_required(self):
         logger.info('Sending memory module dump info')
         for memory_module_dump_info_file in glob.glob(os.path.join(self._metadata_dir,
                                                                    'memory_module_dump_info_*.json')):
@@ -132,77 +203,3 @@ class EndpointAnalysis(BaseAnalysis):
                     self._scan_api.upload_collected_binary(fileless_path, 'fileless')
                 else:
                     logger.warning('File %s does not exist', file_to_upload + '.sample')
-
-    def send_injected_modules_info(self):
-        logger.info('Sending injected modules info')
-        with open(os.path.join(self._metadata_dir, 'injected_modules_info.json')) as f:
-            injected_modules_info = json.load(f)
-        self._scan_api.send_injected_modules_info(injected_modules_info)
-
-    def send_module_differences(self):
-        logger.info('Sending file module differences info')
-        with open(os.path.join(self._metadata_dir, 'file_module_differences.json')) as f:
-            file_module_differences = json.load(f)
-        self._scan_api.send_file_module_differences(file_module_differences)
-
-    def send_files_info_and_upload_required(self):
-        logger.info('Sending files info and uploading required files')
-        for files_info_file in glob.glob(os.path.join(self._metadata_dir, 'files_info_*.json')):
-            with open(files_info_file, 'r') as f:
-                files_info = json.load(f)
-
-            files_to_upload = self._scan_api.send_files_info(files_info)
-
-            for file_to_upload in files_to_upload:
-                file_path = os.path.join(self._files_dir, file_to_upload + '.sample')
-                if os.path.exists(file_path):
-                    self._scan_api.upload_collected_binary(file_path, 'file-system')
-                else:
-                    logger.warning('File %s does not exist', file_path)
-
-    def send_loaded_modules_info(self):
-        logger.info('Sending loaded modules info')
-        for loaded_module_info_file in glob.glob(os.path.join(self._metadata_dir, '*_loaded_modules_info.json')):
-            with open(loaded_module_info_file, 'r') as f:
-                loaded_modules_info = json.load(f)
-
-            pid = os.path.basename(loaded_module_info_file).split('_')[0]
-            self._scan_api.send_loaded_modules_info(pid, loaded_modules_info)
-
-    def send_processes_info(self):
-        logger.info('Sending processes info')
-        with open(os.path.join(self._metadata_dir, 'processes_info.json')) as f:
-            processes_info = json.load(f)
-        self._scan_api.send_processes_info(processes_info)
-
-    def send_scheduled_tasks_info(self):
-        logger.info('Sending scheduled tasks info')
-        with open(os.path.join(self._metadata_dir, 'scheduled_tasks_info.json')) as f:
-            scheduled_tasks_info = json.load(f)
-        self._scan_api.send_scheduled_tasks_info(scheduled_tasks_info)
-
-    def send_host_info(self):
-        logger.info('Sending host info')
-        with open(os.path.join(self._metadata_dir, 'host_info.json')) as f:
-            host_info = json.load(f)
-        self._scan_api.send_host_info(host_info)
-
-    def initialize_endpoint_api(self):
-        if not self._scan_api:
-            base_url = self._api.base_url
-            if base_url.endswith('api/'):
-                base_url = base_url[:-4]
-
-            self._scan_api = EndpointScanApi(api_key=self._api.api_key,
-                                             base_url=base_url,
-                                             scan_id=self.scan_id,
-                                             verify_ssl=self._api.verify_ssl,
-                                             user_agent=self._api.user_agent)
-
-    def create_analysis(self):
-        with open(os.path.join(self._metadata_dir, 'scanner_info.json')) as f:
-            scanner_info = json.load(f)
-        result = self._api.create_endpoint_analysis(scanner_info)
-        self.scan_id = result['scan_id']
-        self.analysis_id = result['analysis_id']
-        self.status = consts.AnalysisStatusCode.IN_PROGRESS

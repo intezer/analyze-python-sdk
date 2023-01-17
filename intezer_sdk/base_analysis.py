@@ -125,8 +125,6 @@ class Analysis(metaclass=abc.ABCMeta):
 
         return analysis
 
-
-class BaseAnalysis(Analysis):
     @abc.abstractmethod
     def _send_analyze_to_api(self, **additional_parameters) -> str:
         raise NotImplementedError()
@@ -147,3 +145,4 @@ class BaseAnalysis(Analysis):
                 self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
             else:
                 self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
+

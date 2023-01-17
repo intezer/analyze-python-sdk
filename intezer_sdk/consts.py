@@ -17,6 +17,12 @@ class AnalysisStatusCode(enum.Enum):
     FINISHED = 'finished'
 
 
+class EndpointAnalysisEndReason(enum.Enum):
+    DONE = 'done'
+    INTERRUPTED = 'interrupted'
+    FAILED = 'failed'
+
+
 class SoftwareType(AutoName):
     ADMINISTRATION_TOOL = enum.auto()
     APPLICATION = enum.auto()
