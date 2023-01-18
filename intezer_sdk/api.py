@@ -17,6 +17,7 @@ from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
+from intezer_sdk.errors import IntezerError
 
 _global_api: Optional['IntezerApi'] = None
 
@@ -74,6 +75,8 @@ class IntezerProxy:
         else:
             self.user_agent = consts.USER_AGENT
         self.full_url = base_url + api_version
+        if base_url.endswith('/'):
+            base_url = base_url[:-1]
         self.base_url = base_url
         self.on_premise_version = on_premise_version
         self.verify_ssl = verify_ssl
@@ -366,6 +369,9 @@ class IntezerApi(IntezerProxy):
         response = self.request_with_refresh_expired_access_token(path='/scans',
                                                                   data=scanner_info, method='POST',
                                                                   base_url=self.base_url)
+        if (response.status_code != HTTPStatus.CREATED and
+            response.json().get('result', {}) == 'Scanner version is not supported'):
+            raise IntezerError('Scanner version is not supported')
         response.raise_for_status()
         return response.json()['result']
 

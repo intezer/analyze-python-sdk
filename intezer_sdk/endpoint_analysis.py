@@ -2,6 +2,7 @@ import glob
 import json
 import os
 import pathlib
+from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
 from intezer_sdk import consts
@@ -185,13 +186,13 @@ class EndpointAnalysis(BaseAnalysis):
                 files_info = json.load(f)
 
             files_to_upload = self._scan_api.send_files_info(files_info)
-
-            for file_to_upload in files_to_upload:
-                file_path = os.path.join(self._files_dir, file_to_upload + '.sample')
-                if os.path.exists(file_path):
-                    self._scan_api.upload_collected_binary(file_path, 'file-system')
-                else:
-                    logger.warning('File %s does not exist', file_path)
+            with ThreadPoolExecutor() as executor:
+                for file_to_upload in files_to_upload:
+                    file_path = os.path.join(self._files_dir, file_to_upload + '.sample')
+                    if os.path.exists(file_path):
+                        executor.submit(self._scan_api.upload_collected_binary, file_path, 'file-system')
+                    else:
+                        logger.warning('File %s does not exist', file_path)
 
     def _send_module_differences(self):
         logger.info('Sending file module differences info')
@@ -214,12 +215,13 @@ class EndpointAnalysis(BaseAnalysis):
 
             files_to_upload = self._scan_api.send_memory_module_dump_info(memory_module_dump_info)
 
-            for file_to_upload in files_to_upload:
-                memory_module_path = os.path.join(self._memory_modules_dir, file_to_upload + '.sample')
-                fileless_path = os.path.join(self._fileless_dir, file_to_upload + '.sample')
-                if os.path.exists(memory_module_path):
-                    self._scan_api.upload_collected_binary(memory_module_path, 'memory')
-                elif os.path.exists(fileless_path):
-                    self._scan_api.upload_collected_binary(fileless_path, 'fileless')
-                else:
-                    logger.warning('File %s does not exist', file_to_upload + '.sample')
+            with ThreadPoolExecutor() as executor:
+                for file_to_upload in files_to_upload:
+                    memory_module_path = os.path.join(self._memory_modules_dir, file_to_upload + '.sample')
+                    fileless_path = os.path.join(self._fileless_dir, file_to_upload + '.sample')
+                    if os.path.exists(memory_module_path):
+                        executor.submit(self._scan_api.upload_collected_binary, memory_module_path, 'memory')
+                    elif os.path.exists(fileless_path):
+                        executor.submit(self._scan_api.upload_collected_binary, memory_module_path, 'fileless')
+                    else:
+                        logger.warning('File %s does not exist', file_to_upload + '.sample')
