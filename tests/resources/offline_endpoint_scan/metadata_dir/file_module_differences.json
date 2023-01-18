@@ -1,0 +1,19 @@
+{
+  "file_module_differences": [
+    {
+      "file_path": "c:\\program files (x86)\\dell\\updateservice\\serviceshell.exe",
+      "modules": [
+        {
+          "base_address": 2429676486656,
+          "comparison_result": [
+            {
+              "details": "file_header",
+              "type": "nt_header_mismatch"
+            }
+          ],
+          "pid": 30056
+        }
+      ]
+    }
+  ]
+}

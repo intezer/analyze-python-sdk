@@ -5,8 +5,8 @@ import pathlib
 from typing import List
 
 from intezer_sdk import consts
+from intezer_sdk._endpoint_analysis_api import EndpointScanApi
 from intezer_sdk.analysis import logger
-from intezer_sdk.api import EndpointScanApi
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import Analysis
@@ -109,7 +109,7 @@ class EndpointAnalysis(Analysis):
         finally:
             if self.status == consts.AnalysisStatusCode.IN_PROGRESS:
                 self._scan_api.close_scan_store(scan_summary={'reason': EndpointAnalysisEndReason.DONE.value})
-                self.status = consts.AnalysisStatusCode.FINISHED
+                self.status = consts.AnalysisStatusCode.CREATED
         return self.analysis_id
 
     def _create_scan(self):
@@ -121,15 +121,7 @@ class EndpointAnalysis(Analysis):
 
     def _initialize_endpoint_api(self):
         if not self._scan_api:
-            base_url = self._api.base_url
-            if base_url.endswith('api/'):
-                base_url = base_url[:-4]
-
-            self._scan_api = EndpointScanApi(api_key=self._api.api_key,
-                                             base_url=base_url,
-                                             scan_id=self.scan_id,
-                                             verify_ssl=self._api.verify_ssl,
-                                             user_agent=self._api.user_agent)
+            self._scan_api = EndpointScanApi(self.scan_id, self._api)
 
     def _send_host_info(self):
         logger.info('Sending host info')
@@ -144,6 +136,8 @@ class EndpointAnalysis(Analysis):
         self._scan_api.send_processes_info(processes_info)
 
     def _send_scheduled_tasks_info(self):
+        if not os.path.exists(os.path.join(self._metadata_dir, 'scheduled_tasks_info.json')):
+            return
         logger.info('Sending scheduled tasks info')
         with open(os.path.join(self._metadata_dir, 'scheduled_tasks_info.json')) as f:
             scheduled_tasks_info = json.load(f)

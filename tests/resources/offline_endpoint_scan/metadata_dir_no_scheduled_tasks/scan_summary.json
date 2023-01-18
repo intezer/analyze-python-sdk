@@ -1,0 +1,13 @@
+{
+  "end_time": 1673881877,
+  "reason": "done",
+  "runtime_metrics": {
+    "host_cpu_idle_time": 4544558906250,
+    "host_cpu_kernel_time": 4627800468750,
+    "host_cpu_user_time": 246702812500,
+    "host_memory_load": 93,
+    "scanner_cpu_kernel_time": 35156250,
+    "scanner_cpu_user_time": 20000000,
+    "scanner_memory_peak_working_set_in_bytes": 333762560
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "scheduled_tasks_info": [
+    {
+      "author": "Adobe Systems Incorporated",
+      "description": "This task keeps your Adobe Reader and Acrobat applications up to date with the latest enhancements and security fixes",
+      "exec_actions": [
+        {
+          "exec_path": "C:\\Program Files (x86)\\Common Files\\Adobe\\ARM\\1.0\\AdobeARM.exe"
+        }
+      ],
+      "is_hidden": false,
+      "last_run_date": 44942.748090277775,
+      "next_run_date": 44943.416666666664,
+      "state": "ready",
+      "task_name": "\\\\Adobe Acrobat Update Task"
+    },
+    {
+      "author": "ExplorerShellUnelevated",
+      "exec_actions": [
+        {
+          "exec_args": "/NoUACCheck",
+          "exec_path": "C:\\Windows\\explorer.exe"
+        }
+      ],
+      "executing_id": "user1",
+      "is_hidden": false,
+      "last_run_date": 44937.48337962963,
+      "next_run_date": 0,
+      "state": "ready",
+      "task_name": "\\\\CreateExplorerShellUnelevatedTask"
+    },
+    {
+      "author": "Dell, Inc.",
+      "description": "Dell SupportAssistAgent Auto Update Task Scheduler",
+      "exec_actions": [
+        {
+          "exec_args": "AutoUpdate",
+          "exec_path": "C:\\Program Files\\Dell\\SupportAssistAgent\\bin\\FrameworkAgents\\SupportAssistInstaller.exe",
+          "exec_working_dir": "C:\\Program Files\\Dell\\SupportAssistAgent\\bin"
+        }
+      ],
+      "is_hidden": false,
+      "last_run_date": 44942.598460648151,
+      "next_run_date": 44949.598460648151,
+      "registration_date": "2022-12-03T15:21:47.3383198+02:00",
+      "state": "ready",
+      "task_name": "\\\\Dell SupportAssistAgent AutoUpdate"
+    }
+  ]
+}

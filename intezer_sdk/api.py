@@ -1,6 +1,4 @@
-import abc
 import os
-import zlib
 from http import HTTPStatus
 from typing import Any
 from typing import BinaryIO
@@ -62,24 +60,26 @@ def raise_for_status(response: requests.Response,
         raise requests.HTTPError(http_error_msg, response=response)
 
 
-class BaseApi():
+class IntezerProxy:
     def __init__(self,
-                 user_agent: str,
-                 api_key: str,
-                 base_url: str,
+                 *,
+                 api_version: str = None,
+                 api_key: str = None,
+                 base_url: str = None,
                  verify_ssl: bool = True,
-                 access_token_url: str = consts.ACCESS_TOKEN_URL):
+                 on_premise_version: OnPremiseVersion = None,
+                 user_agent: str = None):
         if user_agent:
             self.user_agent = f'{consts.USER_AGENT}/{user_agent}'
         else:
             self.user_agent = consts.USER_AGENT
-        self._session = None
+        self.full_url = base_url + api_version
+        self.base_url = base_url
+        self.on_premise_version = on_premise_version
         self.verify_ssl = verify_ssl
         self.api_key = api_key
-        self.base_url = base_url
-        self.full_url = None
-        self._access_token_url = access_token_url
         self._access_token = None
+        self._session = None
 
     def _request(self,
                  method: str,
@@ -89,12 +89,12 @@ class BaseApi():
                  files: dict = None,
                  stream: bool = None,
                  body: Any = None,
-                 use_base_url: bool = False) -> Response:
+                 base_url: str = None) -> Response:
         if not self._session:
             self.set_session()
 
-        if use_base_url:
-            url = self.base_url + path
+        if base_url:
+            url = base_url + path
         else:
             url = self.full_url + path
 
@@ -128,18 +128,18 @@ class BaseApi():
                                                   files: dict = None,
                                                   stream: bool = None,
                                                   body: Any = None,
-                                                  use_base_url: bool = False) -> Response:
-        response = self._request(method, path, data, headers, files, stream, body, use_base_url)
+                                                  base_url: str = None) -> Response:
+        response = self._request(method, path, data, headers, files, stream, body, base_url=base_url)
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             self._access_token = None
             self.set_session()
-            response = self._request(method, path, data, headers, files, stream, body, use_base_url)
+            response = self._request(method, path, data, headers, files, stream, body, base_url)
 
         return response
 
     def _set_access_token(self, api_key: str):
-        response = requests.post(self._access_token_url,
+        response = requests.post(f'{self.full_url}/get-access-token',
                                  json={'api_key': api_key},
                                  verify=self.verify_ssl)
 
@@ -219,7 +219,7 @@ class BaseApi():
         return data
 
 
-class IntezerApi(BaseApi):
+class IntezerApi(IntezerProxy):
     def __init__(self,
                  api_version: str = None,
                  api_key: str = None,
@@ -227,9 +227,12 @@ class IntezerApi(BaseApi):
                  verify_ssl: bool = True,
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None):
-        super().__init__(user_agent, api_key, base_url, verify_ssl)
-        self.full_url = base_url + api_version
-        self.on_premise_version = on_premise_version
+        super().__init__(api_key=api_key,
+                         base_url=base_url,
+                         verify_ssl=verify_ssl,
+                         user_agent=user_agent,
+                         api_version=api_version,
+                         on_premise_version=on_premise_version)
 
     def analyze_by_hash(self,
                         file_hash: str,
@@ -359,10 +362,10 @@ class IntezerApi(BaseApi):
 
         return response.json()['sub_analyses']
 
-    def create_endpoint_scan(self, scanner_info: dict) -> dict[str, str]:
+    def  create_endpoint_scan(self, scanner_info: dict) -> dict[str, str]:
         response = self.request_with_refresh_expired_access_token(path='/scans',
                                                                   data=scanner_info, method='POST',
-                                                                  use_base_url=True)
+                                                                  base_url=self.base_url)
         response.raise_for_status()
         return response.json()['result']
 
@@ -631,93 +634,3 @@ def set_global_api(api_key: str = None,
                              verify_ssl,
                              on_premise_version)
 
-
-class EndpointScanApi(BaseApi):
-    def __init__(self,
-                 api_key: str,
-                 base_url: str,
-                 scan_id: str,
-                 verify_ssl: bool = True,
-                 user_agent: str = None):
-        super().__init__(user_agent, api_key, base_url, verify_ssl)
-        if not scan_id:
-            raise ValueError('scan_id must be provided')
-        self.scan_id = scan_id
-        self.full_url = base_url + f'scans/scans/{scan_id}'
-
-    def send_host_info(self, host_info: dict):
-        response = self.request_with_refresh_expired_access_token(path='/host-info',
-                                                                  data=host_info,
-                                                                  method='POST')
-        response.raise_for_status()
-
-    def send_processes_info(self, processes_info: dict):
-        response = self.request_with_refresh_expired_access_token(path='/processes-info',
-                                                                  data=processes_info,
-                                                                  method='POST')
-        response.raise_for_status()
-
-    def send_loaded_modules_info(self, pid, loaded_modules_info: dict):
-        response = self.request_with_refresh_expired_access_token(path=f'/processes/{pid}/loaded-modules-info',
-                                                                  data=loaded_modules_info,
-                                                                  method='POST')
-        response.raise_for_status()
-
-    def send_injected_modules_info(self, injected_module_list: dict):
-        response = self.request_with_refresh_expired_access_token(path='/injected-modules-info',
-                                                                  data=injected_module_list,
-                                                                  method='POST')
-        response.raise_for_status()
-
-    def send_scheduled_tasks_info(self, scheduled_tasks_info: dict):
-        response = self.request_with_refresh_expired_access_token(path='/scheduled-tasks-info',
-                                                                  data=scheduled_tasks_info,
-                                                                  method='POST')
-        response.raise_for_status()
-
-    def send_file_module_differences(self, file_module_differences: dict):
-        response = self.request_with_refresh_expired_access_token(path='/file-module-differences',
-                                                                  data=file_module_differences,
-                                                                  method='POST')
-        response.raise_for_status()
-
-    def send_files_info(self, files_info: dict) -> List[str]:
-        """
-        :param files_info: endpoint scan files info
-        :return: list of file hashes to upload
-        """
-        response = self.request_with_refresh_expired_access_token(path='/files-info',
-                                                                  data=files_info,
-                                                                  method='POST')
-        response.raise_for_status()
-        return response.json()['result']
-
-    def send_memory_module_dump_info(self, memory_modules_info: dict) -> List[str]:
-        """
-        :param memory_modules_info: endpoint scan memory modules info
-        :return: list of file hashes to upload
-        """
-        response = self.request_with_refresh_expired_access_token(path='/memory-module-dumps-info',
-                                                                  data=memory_modules_info,
-                                                                  method='POST')
-        response.raise_for_status()
-        return response.json()['result']
-
-    def upload_collected_binary(self, file_path: str, collected_from: str):
-        with open(file_path, 'rb') as file_to_upload:
-            file_data = file_to_upload.read()
-            compressed_data = zlib.compress(file_data, zlib.Z_BEST_COMPRESSION)
-            response = self.request_with_refresh_expired_access_token(path=f'/{collected_from}/collected-binaries',
-                                                                      body=compressed_data,
-                                                                      headers={'Content-Type':
-                                                                               'application/octet-stream',
-                                                                               'Content-Encoding': 'gzip'},
-                                                                      method='POST')
-
-        response.raise_for_status()
-
-    def close_scan_store(self, scan_summary: dict):
-        response = self.request_with_refresh_expired_access_token(path='/end',
-                                                                  data=scan_summary,
-                                                                  method='POST')
-        response.raise_for_status()

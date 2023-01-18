@@ -1,0 +1,11 @@
+{
+  "memory_module_dumps_info": [
+        {
+      "base_address": 2429676486656,
+      "dump_id": "4fd12f8d22cd4b5dd2c8a92b2f0ca909c7d4bd52b3f94556a4584ed4440a50de",
+      "dump_method": "virtual",
+      "pid": 30056,
+      "sha256": "525d917ead5af7076f6c650825ba34a1dd87cb6c27d5858941a5e8a64aaaf185"
+    }
+  ]
+}

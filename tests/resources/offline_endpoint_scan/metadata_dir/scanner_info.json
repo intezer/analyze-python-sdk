@@ -1,0 +1,24 @@
+{
+  "options": {
+    "analyze": true
+  },
+  "runtime_metrics": {
+    "host_cpu_idle_time": 4540322031250,
+    "host_cpu_kernel_time": 4623412656250,
+    "host_cpu_user_time": 246523281250,
+    "host_memory_load": 92
+  },
+  "scanner_info": {
+    "desktop": "Default",
+    "image_type": "64",
+    "integrity_level": "high",
+    "pid": 30676,
+    "process_path": "C:\\Users\\user1\\Resources\\Scanner64.exe",
+    "scanner_version": "1.0.1.14",
+    "session_id": 1,
+    "username": "User1-IL-WIN\\user1",
+    "window_station": "WinSta0",
+    "workdir": "C:\\Users\\user1\\Resources"
+  },
+  "start_time": 1673881843
+}
