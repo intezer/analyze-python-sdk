@@ -13,8 +13,8 @@ class EndpointScanApi:
             raise ValueError('scan_id must be provided')
         self.scan_id = scan_id
         base_url = base_api.base_url
-        if base_url.endswith('api/'):
-            base_url = base_url[:-4]
+        if base_url.endswith('api'):
+            base_url = base_url[:-3]
         self.full_url = f'{base_url}scans/scans/{scan_id}'
 
     def request_with_refresh_expired_access_token(self, *args, **kwargs):
@@ -85,8 +85,7 @@ class EndpointScanApi:
             response = self.request_with_refresh_expired_access_token(
                 path=f'/{collected_from}/collected-binaries',
                 body=compressed_data,
-                headers={'Content-Type': 'application/octet-stream',
-                         'Content-Encoding': 'gzip'},
+                headers={'Content-Type': 'application/octet-stream', 'Content-Encoding': 'gzip'},
                 method='POST')
 
         response.raise_for_status()
