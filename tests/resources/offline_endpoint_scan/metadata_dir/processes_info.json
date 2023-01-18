@@ -1,0 +1,16 @@
+{
+  "processes_info": [
+    {
+      "command_line": "\"C:\\Program Files (x86)\\Dell\\UpdateService\\ServiceShell.exe\"",
+      "image_type": "64",
+      "integrity_level": "system",
+      "pid": 30056,
+      "ppid": 1320,
+      "process_path": "C:\\Program Files (x86)\\Dell\\UpdateService\\ServiceShell.exe",
+      "session_id": 0,
+      "start_time": 1673851568,
+      "start_time_100_nano": 133183323681139795,
+      "username": "NT AUTHORITY\\SYSTEM"
+    }
+  ]
+}

@@ -16,17 +16,16 @@ from intezer_sdk import operation
 from intezer_sdk._util import deprecated
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.base_analysis import BaseAnalysis
+from intezer_sdk.base_analysis import Analysis
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
 
 
-class FileAnalysis(BaseAnalysis):
+class FileAnalysis(Analysis):
     """
     FileAnalysis is a class for analyzing files. It is a subclass of the BaseAnalysis class and requires an API connection to Intezer.
     """
-
     def __init__(self,
                  file_path: str = None,
                  file_hash: str = None,
@@ -257,10 +256,7 @@ def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[Fil
     return get_file_analysis_by_id(analysis_id, api)
 
 
-Analysis = FileAnalysis
-
-
-class UrlAnalysis(BaseAnalysis):
+class UrlAnalysis(Analysis):
     def __init__(self, url: Optional[str] = None, api: IntezerApi = None):
         super().__init__(api)
         self._api.assert_any_on_premise()
