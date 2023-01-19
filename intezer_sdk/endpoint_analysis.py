@@ -14,6 +14,7 @@ from intezer_sdk.base_analysis import Analysis
 from intezer_sdk.consts import EndpointAnalysisEndReason
 from intezer_sdk.sub_analysis import SubAnalysis
 
+SCAN_TYPE_OFFLINE_ENDPOINT_SCAN = 'offline_endpoint_scan'
 
 class EndpointAnalysisEndReason(enum.Enum):
     DONE = 'done'
@@ -142,6 +143,7 @@ class EndpointAnalysis(BaseAnalysis):
     def _create_scan(self):
         with open(os.path.join(self._metadata_dir, 'scanner_info.json')) as f:
             scanner_info = json.load(f)
+        scanner_info['scan_type'] = SCAN_TYPE_OFFLINE_ENDPOINT_SCAN
         result = self._api.create_endpoint_scan(scanner_info)
         self.scan_id = result['scan_id']
         self.analysis_id = result['analysis_id']
