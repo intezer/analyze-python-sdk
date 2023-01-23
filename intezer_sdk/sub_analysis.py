@@ -11,6 +11,9 @@ from intezer_sdk import operation
 
 
 class SubAnalysis:
+    """
+    SubAnalysis is a class representing a sub-analysis object in an Intezer API.
+    """
     def __init__(self,
                  analysis_id: str,
                  composed_analysis_id: str,
@@ -37,6 +40,17 @@ class SubAnalysis:
                          composed_analysis_id: str,
                          lazy_load=True,
                          api: IntezerApi = None) -> Optional['SubAnalysis']:
+        """
+        class method that creates a new instance of the class by fetching the details of the sub-analysis from the Intezer API.
+        If lazy_load is set to True, the details of the sub-analysis are not fetched immediately.
+        If lazy_load is set to False, the details of the sub-analysis are fetched immediately.
+        Returns None when analysis doesn't exist.
+        :param analysis_id: The ID of the analysis to retrieve.
+        :param composed_analysis_id: The ID of the parent analysis to retrieve.
+        :param lazy_load: bool indicating if the details of the sub-analysis should be fetched immediately or not
+        :param api: The API connection to Intezer.
+        :return: A SubAnalysis instance with the given analysis ID.
+        """
         sub_analysis = cls(analysis_id, composed_analysis_id, '', '', None, api)
         if not lazy_load:
             try:

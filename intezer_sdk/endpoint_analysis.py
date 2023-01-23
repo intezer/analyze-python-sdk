@@ -37,6 +37,11 @@ class EndpointAnalysis(Analysis):
         return self._api.get_endpoint_analysis_response(self.analysis_id, False)
 
     def get_sub_analyses(self, verdicts: List[str] = None) -> List[SubAnalysis]:
+        """
+        Get the sub_analyses of the current analysis.
+        :param verdicts: A list of the verdicts to filter by.
+        :return: A list of SubAnalysis objects.
+        """
         self._assert_analysis_finished()
         if not self._sub_analyses:
             self._init_sub_analyses()
