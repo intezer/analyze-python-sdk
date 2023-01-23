@@ -12,7 +12,7 @@ from intezer_sdk import operation
 
 class SubAnalysis:
     """
-    The class SubAnalysis appears to be a representation of a sub-analysis object in an Intezer API.
+    SubAnalysis is a class representing a sub-analysis object in an Intezer API.
     """
     def __init__(self,
                  analysis_id: str,
