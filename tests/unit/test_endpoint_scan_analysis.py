@@ -118,11 +118,9 @@ class TestEndpointAnalysis(BaseTest):
                 analysis.send()
             except Exception as e:
                 # Assert
-                self.assertEqual(str(e),
-                                 (
-                                     '[Errno 2] No such file or directory: '
-                                     ''"'/home/itamar/work/analyze-python-sdk/tests/resources/"
-                                     "offline_endpoint_scan/metadata_dir_missing_files/processes_info.json'"))
+                error = str(e)
+                self.assertTrue(error.startswith("[Errno 2] No such file or directory:") and
+                                error.endswith("metadata_dir_missing_files/processes_info.json'"))
 
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FAILED)
 

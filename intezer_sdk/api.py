@@ -365,7 +365,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['sub_analyses']
 
-    def  create_endpoint_scan(self, scanner_info: dict) -> dict[str, str]:
+    def  create_endpoint_scan(self, scanner_info: dict) -> Dict[str, str]:
         response = self.request_with_refresh_expired_access_token(path='/scans',
                                                                   data=scanner_info, method='POST',
                                                                   base_url=self.base_url)
