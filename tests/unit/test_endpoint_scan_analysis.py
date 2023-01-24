@@ -35,7 +35,7 @@ class TestEndpointAnalysis(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=consts.BASE_API_URL + '/scans',
+                     url=consts.BASE_API_URL + 'scans',
                      status=201,
                      json={'result': {'scan_id': '1234', 'analysis_id': '5678'}})
             mock.add('POST',
@@ -101,7 +101,7 @@ class TestEndpointAnalysis(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=consts.BASE_API_URL + '/scans',
+                     url=consts.BASE_API_URL + 'scans',
                      status=201,
                      json={'result': {'scan_id': '1234', 'analysis_id': '5678'}})
             mock.add('POST',
@@ -138,7 +138,7 @@ class TestEndpointAnalysis(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=consts.BASE_API_URL + '/scans',
+                     url=consts.BASE_API_URL + 'scans',
                      status=201,
                      json={'result': {'scan_id': '1234', 'analysis_id': '5678'}})
             mock.add('POST',

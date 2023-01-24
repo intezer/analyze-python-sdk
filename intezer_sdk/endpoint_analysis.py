@@ -16,12 +16,7 @@ from intezer_sdk.sub_analysis import SubAnalysis
 
 SCAN_TYPE_OFFLINE_ENDPOINT_SCAN = 'offline_endpoint_scan'
 
-class EndpointAnalysisEndReason(enum.Enum):
-    DONE = 'done'
-    INTERRUPTED = 'interrupted'
-    FAILED = 'failed'
-
-class EndpointAnalysis(BaseAnalysis):
+class EndpointAnalysis(Analysis):
     """
     EndpointAnalysis is a class for analyzing endpoints. It is a subclass of the Analysis class and requires an API connection to Intezer.
     """
