@@ -1,6 +1,5 @@
 import os
 from http import HTTPStatus
-from io import BytesIO
 from typing import Any
 from typing import BinaryIO
 from typing import Dict
@@ -18,7 +17,6 @@ from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
-from intezer_sdk.errors import IntezerError
 
 _global_api: Optional['IntezerApi'] = None
 
@@ -160,66 +158,6 @@ class IntezerProxy:
         self._set_access_token(self.api_key)
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = self.user_agent
-
-    @staticmethod
-    def _assert_analysis_response_status_code(response: Response):
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError(response)
-        elif response.status_code == HTTPStatus.CONFLICT:
-            running_analysis_id = response.json().get('result', {}).get('analysis_id')
-            raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
-        elif response.status_code == HTTPStatus.FORBIDDEN:
-            raise errors.InsufficientQuotaError(response)
-        elif response.status_code == HTTPStatus.BAD_REQUEST:
-            data = response.json()
-            error = data.get('error', '')
-            raise errors.ServerError('Server returned bad request error: {}'.format(error), response)
-        elif response.status_code != HTTPStatus.CREATED:
-            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
-
-    @staticmethod
-    def _assert_index_response_status_code(response: Response):
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError(response)
-        elif response.status_code != HTTPStatus.CREATED:
-            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
-
-    @staticmethod
-    def _get_analysis_id_from_response(response: Response):
-        return response.json()['result_url'].split('/')[2]
-
-    @staticmethod
-    def _get_index_id_from_response(response: Response):
-        return response.json()['result_url'].split('/')[3]
-
-    @staticmethod
-    def _assert_result_response(ignore_not_found: bool, response: Response):
-        statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
-        raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
-
-    @staticmethod
-    def _param_initialize(disable_dynamic_unpacking: bool,
-                          disable_static_unpacking: bool,
-                          code_item_type: str = None,
-                          zip_password: str = None,
-                          sandbox_command_line_arguments: str = None,
-                          **additional_parameters):
-        data = {}
-
-        if disable_dynamic_unpacking is not None:
-            data['disable_dynamic_execution'] = disable_dynamic_unpacking
-        if disable_static_unpacking is not None:
-            data['disable_static_extraction'] = disable_static_unpacking
-        if code_item_type:
-            data['code_item_type'] = code_item_type
-        if zip_password:
-            data['zip_password'] = zip_password
-        if sandbox_command_line_arguments:
-            data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
-
-        data.update(additional_parameters)
-
-        return data
 
 
 class IntezerApi(IntezerProxy):
@@ -605,6 +543,66 @@ class IntezerApi(IntezerProxy):
         raise_for_status(response)
 
         return response.json()
+
+    @staticmethod
+    def _assert_result_response(ignore_not_found: bool, response: Response):
+        statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
+        raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
+
+    @staticmethod
+    def _param_initialize(disable_dynamic_unpacking: bool,
+                          disable_static_unpacking: bool,
+                          code_item_type: str = None,
+                          zip_password: str = None,
+                          sandbox_command_line_arguments: str = None,
+                          **additional_parameters):
+        data = {}
+
+        if disable_dynamic_unpacking is not None:
+            data['disable_dynamic_execution'] = disable_dynamic_unpacking
+        if disable_static_unpacking is not None:
+            data['disable_static_extraction'] = disable_static_unpacking
+        if code_item_type:
+            data['code_item_type'] = code_item_type
+        if zip_password:
+            data['zip_password'] = zip_password
+        if sandbox_command_line_arguments:
+            data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
+
+        data.update(additional_parameters)
+
+        return data
+
+    @staticmethod
+    def _assert_analysis_response_status_code(response: Response):
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        elif response.status_code == HTTPStatus.CONFLICT:
+            running_analysis_id = response.json().get('result', {}).get('analysis_id')
+            raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
+        elif response.status_code == HTTPStatus.FORBIDDEN:
+            raise errors.InsufficientQuotaError(response)
+        elif response.status_code == HTTPStatus.BAD_REQUEST:
+            data = response.json()
+            error = data.get('error', '')
+            raise errors.ServerError('Server returned bad request error: {}'.format(error), response)
+        elif response.status_code != HTTPStatus.CREATED:
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
+
+    @staticmethod
+    def _assert_index_response_status_code(response: Response):
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        elif response.status_code != HTTPStatus.CREATED:
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
+
+    @staticmethod
+    def _get_analysis_id_from_response(response: Response):
+        return response.json()['result_url'].split('/')[2]
+
+    @staticmethod
+    def _get_index_id_from_response(response: Response):
+        return response.json()['result_url'].split('/')[3]
 
     def assert_on_premise_above_v21_11(self):
         if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:
