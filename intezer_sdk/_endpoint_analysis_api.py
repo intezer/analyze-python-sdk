@@ -13,12 +13,14 @@ class EndpointScanApi:
             raise ValueError('scan_id must be provided')
         self.scan_id = scan_id
         base_url = base_api.base_url
-        if base_url.endswith('api'):
-            base_url = base_url[:-3]
-        self.full_url = f'{base_url}scans/scans/{scan_id}'
+        if base_url.endswith('api/'):
+            base_url = base_url[:-4]
+        if base_url.endswith('/'):
+            base_url = base_url[:-1]
+        self.base_url = f'{base_url}/scans/scans/{scan_id}'
 
     def request_with_refresh_expired_access_token(self, *args, **kwargs):
-        return self.base_api.request_with_refresh_expired_access_token(base_url=self.full_url, *args, **kwargs)
+        return self.base_api.request_with_refresh_expired_access_token(base_url=self.base_url, *args, **kwargs)
 
     def send_host_info(self, host_info: dict):
         response = self.request_with_refresh_expired_access_token(path='/host-info',
@@ -90,7 +92,7 @@ class EndpointScanApi:
 
         response.raise_for_status()
 
-    def close_scan_store(self, scan_summary: dict):
+    def close_scan(self, scan_summary: dict):
         response = self.request_with_refresh_expired_access_token(path='/end',
                                                                   data=scan_summary,
                                                                   method='POST')

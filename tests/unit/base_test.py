@@ -9,7 +9,7 @@ from intezer_sdk.api import set_global_api
 
 class BaseTest(unittest.TestCase):
     def setUp(self):
-        self.full_url = consts.BASE_API_URL + consts.API_VERSION
+        self.full_url = consts.BASE_URL + consts.API_VERSION
         consts.CHECK_STATUS_INTERVAL = 0
         self.patch_prop = 'builtins.open'
 

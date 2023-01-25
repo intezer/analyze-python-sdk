@@ -1,4 +1,5 @@
 import os.path
+from http import HTTPStatus
 
 import responses
 
@@ -18,10 +19,10 @@ class TestEndpointAnalysis(BaseTest):
         fileless_dir = 'path/to/fileless'
         memory_modules_dir = 'path/to/memory_modules'
         analysis = EndpointAnalysis(metadata_dir=metadata_dir)
-        self.assertEqual(os.path.normpath(analysis._metadata_dir), metadata_dir)
-        self.assertEqual(os.path.normpath(analysis._files_dir), files_dir)
-        self.assertEqual(os.path.normpath(analysis._fileless_dir), fileless_dir)
-        self.assertEqual(os.path.normpath(analysis._memory_modules_dir), memory_modules_dir)
+        self.assertEqual(metadata_dir, os.path.normpath(analysis._metadata_dir))
+        self.assertEqual(files_dir, os.path.normpath(analysis._files_dir))
+        self.assertEqual(fileless_dir, os.path.normpath(analysis._fileless_dir))
+        self.assertEqual(memory_modules_dir, os.path.normpath(analysis._memory_modules_dir))
 
     def test_send_analyze_to_api(self):
         # Arrange
@@ -35,52 +36,52 @@ class TestEndpointAnalysis(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=consts.BASE_API_URL + 'scans',
-                     status=201,
+                     url=consts.BASE_URL + 'scans',
+                     status=HTTPStatus.CREATED,
                      json={'result': {'scan_id': '1234', 'analysis_id': '5678'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/host-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/scheduled-tasks-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/processes-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/injected-modules-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/file-module-differences',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/processes/30056/loaded-modules-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/files-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': ['53409f8b481e533d3ac74a0e64257ea16952d2c6956c8d78c1779a8223ca431e']})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/file-system/collected-binaries',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/memory-module-dumps-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': ['525d917ead5af7076f6c650825ba34a1dd87cb6c27d5858941a5e8a64aaaf185']})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/memory/collected-binaries',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/end',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
 
             # Act
@@ -101,16 +102,16 @@ class TestEndpointAnalysis(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=consts.BASE_API_URL + 'scans',
-                     status=201,
+                     url=consts.BASE_URL + 'scans',
+                     status=HTTPStatus.CREATED,
                      json={'result': {'scan_id': '1234', 'analysis_id': '5678'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/host-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/end',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'failed'}})
 
             # Act
@@ -136,48 +137,48 @@ class TestEndpointAnalysis(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=consts.BASE_API_URL + 'scans',
-                     status=201,
+                     url=consts.BASE_URL + 'scans',
+                     status=HTTPStatus.CREATED,
                      json={'result': {'scan_id': '1234', 'analysis_id': '5678'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/host-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/processes-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/injected-modules-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/file-module-differences',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/processes/30056/loaded-modules-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/files-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': ['53409f8b481e533d3ac74a0e64257ea16952d2c6956c8d78c1779a8223ca431e']})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/file-system/collected-binaries',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/memory-module-dumps-info',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': ['525d917ead5af7076f6c650825ba34a1dd87cb6c27d5858941a5e8a64aaaf185']})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/memory/collected-binaries',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             mock.add('POST',
                      url=consts.ANALYZE_URL + '/scans/scans/1234/end',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
 
             # Act

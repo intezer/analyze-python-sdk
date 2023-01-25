@@ -36,25 +36,25 @@ def raise_for_status(response: requests.Response,
     if statuses_to_ignore and response.status_code in statuses_to_ignore:
         return
     elif allowed_statuses and response.status_code not in allowed_statuses:
-        http_error_msg = '%s Custom Error: %s for url: %s' % (response.status_code, reason, response.url)
+        http_error_msg = f'{response.status_code} Custom Error: {reason} for url: {response.url}'
     elif 400 <= response.status_code < 500:
         if response.status_code != 400:
-            http_error_msg = '%s Client Error: %s for url: %s' % (response.status_code, reason, response.url)
+            http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
         else:
             # noinspection PyBroadException
             try:
                 error = response.json()
-                http_error_msg = '\n'.join(['{}:{}.'.format(key, value) for key, value in error['message'].items()])
+                http_error_msg = '\n'.join([f'{key}:{value}.' for key, value in error['message'].items()])
             except Exception:
-                http_error_msg = '%s Client Error: %s for url: %s' % (response.status_code, reason, response.url)
+                http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
     elif 500 <= response.status_code < 600:
-        http_error_msg = '%s Server Error: %s for url: %s' % (response.status_code, reason, response.url)
+        http_error_msg = f'{response.status_code} Server Error: {reason} for url: {response.url}'
 
     if http_error_msg:
         # noinspection PyBroadException
         try:
             data = response.json()
-            http_error_msg = '%s, server returns %s, details: %s' % (http_error_msg, data['error'], data.get('details'))
+            http_error_msg = f'{http_error_msg}, server returns {data["error"]}, details: {data.get("details")}'
         except Exception:
             pass
 
@@ -70,19 +70,18 @@ class IntezerProxy:
                  verify_ssl: bool = True,
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None):
-        if user_agent:
-            self.user_agent = f'{consts.USER_AGENT}/{user_agent}'
-        else:
-            self.user_agent = consts.USER_AGENT
         self.full_url = base_url + api_version
-        if base_url.endswith('/'):
-            base_url = base_url[:-1]
         self.base_url = base_url
-        self.on_premise_version = on_premise_version
-        self.verify_ssl = verify_ssl
         self.api_key = api_key
         self._access_token = None
         self._session = None
+        self.verify_ssl = verify_ssl
+        self.on_premise_version = on_premise_version
+        if user_agent:
+            user_agent = f'{consts.USER_AGENT}/{user_agent}'
+        else:
+            user_agent = consts.USER_AGENT
+        self.user_agent = user_agent
 
     def _request(self,
                  method: str,
@@ -160,66 +159,6 @@ class IntezerProxy:
         self._set_access_token(self.api_key)
         self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
         self._session.headers['User-Agent'] = self.user_agent
-
-    @staticmethod
-    def _assert_analysis_response_status_code(response: Response):
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError(response)
-        elif response.status_code == HTTPStatus.CONFLICT:
-            running_analysis_id = response.json().get('result', {}).get('analysis_id')
-            raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
-        elif response.status_code == HTTPStatus.FORBIDDEN:
-            raise errors.InsufficientQuotaError(response)
-        elif response.status_code == HTTPStatus.BAD_REQUEST:
-            data = response.json()
-            error = data.get('error', '')
-            raise errors.ServerError('Server returned bad request error: {}'.format(error), response)
-        elif response.status_code != HTTPStatus.CREATED:
-            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
-
-    @staticmethod
-    def _assert_index_response_status_code(response: Response):
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError(response)
-        elif response.status_code != HTTPStatus.CREATED:
-            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
-
-    @staticmethod
-    def _get_analysis_id_from_response(response: Response):
-        return response.json()['result_url'].split('/')[2]
-
-    @staticmethod
-    def _get_index_id_from_response(response: Response):
-        return response.json()['result_url'].split('/')[3]
-
-    @staticmethod
-    def _assert_result_response(ignore_not_found: bool, response: Response):
-        statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
-        raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
-
-    @staticmethod
-    def _param_initialize(disable_dynamic_unpacking: bool,
-                          disable_static_unpacking: bool,
-                          code_item_type: str = None,
-                          zip_password: str = None,
-                          sandbox_command_line_arguments: str = None,
-                          **additional_parameters):
-        data = {}
-
-        if disable_dynamic_unpacking is not None:
-            data['disable_dynamic_execution'] = disable_dynamic_unpacking
-        if disable_static_unpacking is not None:
-            data['disable_static_extraction'] = disable_static_unpacking
-        if code_item_type:
-            data['code_item_type'] = code_item_type
-        if zip_password:
-            data['zip_password'] = zip_password
-        if sandbox_command_line_arguments:
-            data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
-
-        data.update(additional_parameters)
-
-        return data
 
 
 class IntezerApi(IntezerProxy):
@@ -366,13 +305,14 @@ class IntezerApi(IntezerProxy):
         return response.json()['sub_analyses']
 
     def  create_endpoint_scan(self, scanner_info: dict) -> Dict[str, str]:
-        response = self.request_with_refresh_expired_access_token(path='/scans',
-                                                                  data=scanner_info, method='POST',
+        if not self.on_premise_version or self.on_premise_version > OnPremiseVersion.V22_10:
+            scanner_info['scan_type'] = consts.SCAN_TYPE_OFFLINE_ENDPOINT_SCAN
+        response = self.request_with_refresh_expired_access_token(path='scans',
+                                                                  data=scanner_info,
+                                                                  method='POST',
                                                                   base_url=self.base_url)
-        if (response.status_code != HTTPStatus.CREATED and
-            response.json().get('result', {}) == 'Scanner version is not supported'):
-            raise IntezerError('Scanner version is not supported')
-        response.raise_for_status()
+
+        raise_for_status(response)
         return response.json()['result']
 
     def get_iocs(self, analyses_id: str) -> Optional[dict]:
@@ -617,6 +557,66 @@ class IntezerApi(IntezerProxy):
         if self.on_premise_version:
             raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on on-premise')
 
+    @staticmethod
+    def _assert_analysis_response_status_code(response: Response):
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        elif response.status_code == HTTPStatus.CONFLICT:
+            running_analysis_id = response.json().get('result', {}).get('analysis_id')
+            raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
+        elif response.status_code == HTTPStatus.FORBIDDEN:
+            raise errors.InsufficientQuotaError(response)
+        elif response.status_code == HTTPStatus.BAD_REQUEST:
+            data = response.json()
+            error = data.get('error', '')
+            raise errors.ServerError('Server returned bad request error: {}'.format(error), response)
+        elif response.status_code != HTTPStatus.CREATED:
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
+
+    @staticmethod
+    def _assert_index_response_status_code(response: Response):
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        elif response.status_code != HTTPStatus.CREATED:
+            raise errors.ServerError('Error in response status code:{}'.format(response.status_code), response)
+
+    @staticmethod
+    def _get_analysis_id_from_response(response: Response):
+        return response.json()['result_url'].split('/')[2]
+
+    @staticmethod
+    def _get_index_id_from_response(response: Response):
+        return response.json()['result_url'].split('/')[3]
+
+    @staticmethod
+    def _assert_result_response(ignore_not_found: bool, response: Response):
+        statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
+        raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
+
+    @staticmethod
+    def _param_initialize(disable_dynamic_unpacking: bool,
+                          disable_static_unpacking: bool,
+                          code_item_type: str = None,
+                          zip_password: str = None,
+                          sandbox_command_line_arguments: str = None,
+                          **additional_parameters):
+        data = {}
+
+        if disable_dynamic_unpacking is not None:
+            data['disable_dynamic_execution'] = disable_dynamic_unpacking
+        if disable_static_unpacking is not None:
+            data['disable_static_extraction'] = disable_static_unpacking
+        if code_item_type:
+            data['code_item_type'] = code_item_type
+        if zip_password:
+            data['zip_password'] = zip_password
+        if sandbox_command_line_arguments:
+            data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
+
+        data.update(additional_parameters)
+
+        return data
+
 
 def get_global_api() -> IntezerApi:
     global _global_api
@@ -636,7 +636,7 @@ def set_global_api(api_key: str = None,
     api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
     _global_api = IntezerApi(api_version or consts.API_VERSION,
                              api_key,
-                             base_url or consts.BASE_API_URL,
+                             base_url or consts.BASE_URL,
                              verify_ssl,
                              on_premise_version)
 
