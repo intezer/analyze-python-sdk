@@ -106,9 +106,6 @@ class EndpointAnalysis(Analysis):
 
             self._scan_id, self.analysis_id = self._create_scan()
 
-            if not self._scan_id:
-                raise ValueError('Failed to create scan')
-
             self.status = consts.AnalysisStatusCode.IN_PROGRESS
             self._initialize_endpoint_api()
 
@@ -150,13 +147,13 @@ class EndpointAnalysis(Analysis):
             self._scan_api = EndpointScanApi(self._scan_id, self._api)
 
     def _send_host_info(self):
-        logger.info(f'{self.analysis_id}: Sending host info')
+        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading host info')
         with open(os.path.join(self._metadata_dir, 'host_info.json')) as f:
             host_info = json.load(f)
         self._scan_api.send_host_info(host_info)
 
     def _send_processes_info(self):
-        logger.info(f'{self.analysis_id}: Sending processes info')
+        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading processes info')
         with open(os.path.join(self._metadata_dir, 'processes_info.json')) as f:
             processes_info = json.load(f)
         self._scan_api.send_processes_info(processes_info)
@@ -165,27 +162,27 @@ class EndpointAnalysis(Analysis):
         scheduled_tasks_info_path = os.path.join(self._metadata_dir, 'scheduled_tasks_info.json')
         if not os.path.isfile(scheduled_tasks_info_path):
             return
-        logger.info(f'{self.analysis_id}: Sending scheduled tasks info')
+        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading scheduled tasks info')
         with open(scheduled_tasks_info_path) as f:
             scheduled_tasks_info = json.load(f)
         self._scan_api.send_scheduled_tasks_info(scheduled_tasks_info)
 
     def _send_loaded_modules_info(self):
-        logger.info(f'{self.analysis_id}: Sending loaded modules info')
+        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading loaded modules info')
         for loaded_module_info_file in glob.glob(os.path.join(self._metadata_dir, '*_loaded_modules_info.json')):
-            with open(loaded_module_info_file, 'r') as f:
+            with open(loaded_module_info_file) as f:
                 loaded_modules_info = json.load(f)
 
             pid = os.path.basename(loaded_module_info_file).split('_', maxsplit=1)[0]
             self._scan_api.send_loaded_modules_info(pid, loaded_modules_info)
 
     def _send_files_info_and_upload_required(self):
-        logger.info(f'{self.analysis_id}: Sending files info and uploading required files')
+        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading files info and uploading required files')
         with ThreadPoolExecutor() as executor:
             for files_info_file in glob.glob(os.path.join(self._metadata_dir, 'files_info_*.json')):
 
-                logger.debug(f'{self.analysis_id}: Sending {files_info_file}')
-                with open(files_info_file, 'r') as f:
+                logger.debug(f'Endpoint Analysis: {self.analysis_id}, uploading {files_info_file}')
+                with open(files_info_file) as f:
                     files_info = json.load(f)
                 files_to_upload = self._scan_api.send_files_info(files_info)
 
@@ -195,29 +192,29 @@ class EndpointAnalysis(Analysis):
                     if os.path.isfile(file_path):
                         futures.append(executor.submit(self._scan_api.upload_collected_binary, file_path, 'file-system'))
                     else:
-                        logger.warning('File %s does not exist', file_path)
+                        logger.warning(f'Endpoint Analysis: {self.analysis_id}, file {file_path} does not exist')
                 for future in as_completed(futures):
                     future.result()
 
     def _send_module_differences(self):
-        logger.info(f'{self.analysis_id}: Sending file module differences info')
+        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading file module differences info')
         with open(os.path.join(self._metadata_dir, 'file_module_differences.json')) as f:
             file_module_differences = json.load(f)
         self._scan_api.send_file_module_differences(file_module_differences)
 
     def _send_injected_modules_info(self):
-        logger.info(f'{self.analysis_id}: Sending injected modules info')
+        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading injected modules info')
         with open(os.path.join(self._metadata_dir, 'injected_modules_info.json')) as f:
             injected_modules_info = json.load(f)
         self._scan_api.send_injected_modules_info(injected_modules_info)
 
     def _send_memory_module_dump_info_and_upload_required(self):
-        logger.info(f'{self.analysis_id}: Sending memory module dump info')
+        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading memory module dump info')
         with ThreadPoolExecutor() as executor:
             for memory_module_dump_info_file in glob.glob(os.path.join(self._metadata_dir,
                                                                        'memory_module_dump_info_*.json')):
 
-                logger.debug(f'{self.analysis_id}: Sending {memory_module_dump_info_file}')
+                logger.debug(f'Endpoint Analysis: {self.analysis_id}, uploading {memory_module_dump_info_file}')
                 with open(memory_module_dump_info_file) as f:
                     memory_module_dump_info = json.load(f)
                 files_to_upload = self._scan_api.send_memory_module_dump_info(memory_module_dump_info)
@@ -231,6 +228,6 @@ class EndpointAnalysis(Analysis):
                     elif os.path.isfile(fileless_path):
                         futures.append(executor.submit(self._scan_api.upload_collected_binary, memory_module_path, 'fileless'))
                     else:
-                        logger.warning('File %s does not exist', f'{file_to_upload}.sample')
+                        logger.warning(f'Endpoint Analysis: {self.analysis_id}, file {file_to_upload}.sample does not exist')
                 for future in as_completed(futures):
                     future.result()
