@@ -226,7 +226,7 @@ class EndpointAnalysis(Analysis):
                     if os.path.isfile(memory_module_path):
                         futures.append(executor.submit(self._scan_api.upload_collected_binary, memory_module_path, 'memory'))
                     elif os.path.isfile(fileless_path):
-                        futures.append(executor.submit(self._scan_api.upload_collected_binary, memory_module_path, 'fileless'))
+                        futures.append(executor.submit(self._scan_api.upload_collected_binary, fileless_path, 'fileless'))
                     else:
                         logger.warning(f'Endpoint Analysis: {self.analysis_id}, file {file_to_upload}.sample does not exist')
                 for future in as_completed(futures):

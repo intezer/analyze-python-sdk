@@ -89,7 +89,6 @@ class IntezerProxy:
                  headers: dict = None,
                  files: dict = None,
                  stream: bool = None,
-                 body: Any = None,
                  base_url: str = None) -> Response:
         if not self._session:
             self.set_session()
@@ -99,14 +98,21 @@ class IntezerProxy:
         else:
             url = self.full_url + path
 
-        if body and headers:
-            response = self._session.request(method, url, data=body, headers=headers)
-        elif files:
+        if files:
             response = self._session.request(
                 method,
                 url,
                 files=files,
                 data=data or {},
+                headers=headers or {},
+                stream=stream
+            )
+        elif isinstance(data, bytes):
+            response = self._session.request(
+                method,
+                url,
+                files=files,
+                data=data,
                 headers=headers or {},
                 stream=stream
             )
@@ -128,14 +134,13 @@ class IntezerProxy:
                                                   headers: dict = None,
                                                   files: dict = None,
                                                   stream: bool = None,
-                                                  body: Any = None,
                                                   base_url: str = None) -> Response:
-        response = self._request(method, path, data, headers, files, stream, body, base_url=base_url)
+        response = self._request(method, path, data, headers, files, stream, base_url=base_url)
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             self._access_token = None
             self.set_session()
-            response = self._request(method, path, data, headers, files, stream, body, base_url)
+            response = self._request(method, path, data, headers, files, stream, base_url)
 
         return response
 

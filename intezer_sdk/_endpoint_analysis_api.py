@@ -1,4 +1,4 @@
-import zlib
+import gzip
 from typing import List
 from urllib.parse import urlparse
 
@@ -82,10 +82,10 @@ class EndpointScanApi:
     def upload_collected_binary(self, file_path: str, collected_from: str):
         with open(file_path, 'rb') as file_to_upload:
             file_data = file_to_upload.read()
-            compressed_data = zlib.compress(file_data, zlib.Z_BEST_COMPRESSION)
+            compressed_data = gzip.compress(file_data, compresslevel=9)
             response = self.request_with_refresh_expired_access_token(
                 path=f'/{collected_from}/collected-binaries',
-                body=compressed_data,
+                data=compressed_data,
                 headers={'Content-Type': 'application/octet-stream', 'Content-Encoding': 'gzip'},
                 method='POST')
 
