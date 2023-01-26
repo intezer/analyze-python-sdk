@@ -14,10 +14,10 @@ class TestEndpointAnalysis(BaseTest):
         super().setUp()
 
     def test_paths_initialization(self):
-        offline_scan_directory = 'path/to/offline_scan_directory'
-        files_dir = 'path/to/files'
-        fileless_dir = 'path/to/fileless'
-        memory_modules_dir = 'path/to/memory_modules'
+        offline_scan_directory = os.path.join('path','to','offline_scan_directory')
+        files_dir = os.path.join('path','to','files')
+        fileless_dir = os.path.join('path','to','fileless')
+        memory_modules_dir = os.path.join('path','to','memory_modules')
         analysis = EndpointAnalysis(offline_scan_directory=offline_scan_directory)
         self.assertEqual(offline_scan_directory, os.path.normpath(analysis._offline_scan_directory))
         self.assertEqual(files_dir, os.path.normpath(analysis._files_dir))
