@@ -93,10 +93,7 @@ class IntezerProxy:
         if not self._session:
             self.set_session()
 
-        if base_url:
-            url = base_url + path
-        else:
-            url = self.full_url + path
+        url = f'{base_url}{path}' if base_url else f'{self.full_url}{path}'
 
         if files:
             response = self._session.request(
@@ -159,9 +156,10 @@ class IntezerProxy:
     def set_session(self):
         self._session = requests.session()
         self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
+        self._session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
         self._session.verify = self.verify_ssl
         self._set_access_token(self.api_key)
-        self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
+        self._session.headers['Authorization'] = f'Bearer {self._access_token}'
         self._session.headers['User-Agent'] = self.user_agent
 
 

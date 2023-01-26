@@ -91,7 +91,7 @@ class EndpointScanApi:
 
         raise_for_status(response)
 
-    def close_scan(self, scan_summary: dict):
+    def end_scan(self, scan_summary: dict):
         response = self.request_with_refresh_expired_access_token(path='/end',
                                                                   data=scan_summary,
                                                                   method='POST')

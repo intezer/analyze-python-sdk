@@ -3,8 +3,7 @@ import json
 import logging
 import os
 import pathlib
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import as_completed
+import concurrent.futures
 from typing import List
 
 from intezer_sdk import consts
@@ -24,7 +23,7 @@ class EndpointAnalysis(Analysis):
     def __init__(self,
                  api: IntezerApi = None,
                  scan_api: EndpointScanApi = None,
-                 metadata_dir: str = None,
+                 offline_scan_directory: str = None,
                  files_dir: str = None,
                  fileless_dir: str = None,
                  memory_modules_dir: str = None):
@@ -35,11 +34,11 @@ class EndpointAnalysis(Analysis):
         """
         super().__init__(api)
         self._scan_api = scan_api
-        if metadata_dir:
-            files_dir = files_dir or os.path.join(metadata_dir, '..', 'files')
-            fileless_dir = fileless_dir or os.path.join(metadata_dir, '..', 'fileless')
-            memory_modules_dir = memory_modules_dir or os.path.join(metadata_dir, '..', 'memory_modules')
-            self._metadata_dir = pathlib.Path(metadata_dir)
+        if offline_scan_directory:
+            files_dir = files_dir or os.path.join(offline_scan_directory, '..', 'files')
+            fileless_dir = fileless_dir or os.path.join(offline_scan_directory, '..', 'fileless')
+            memory_modules_dir = memory_modules_dir or os.path.join(offline_scan_directory, '..', 'memory_modules')
+            self._offline_scan_directory = pathlib.Path(offline_scan_directory)
             self._files_dir = pathlib.Path(files_dir)
             self._fileless_dir = pathlib.Path(fileless_dir)
             self._memory_modules_dir = pathlib.Path(memory_modules_dir)
@@ -93,9 +92,9 @@ class EndpointAnalysis(Analysis):
 
     def _send_analyze_to_api(self, **additional_parameters) -> str:
         try:
-            if not self._metadata_dir:
+            if not self._offline_scan_directory:
                 raise ValueError('Scan directory is not set')
-            if not os.path.isdir(self._metadata_dir):
+            if not os.path.isdir(self._offline_scan_directory):
                 raise ValueError('Scan directory does not exist')
             if not os.path.isdir(self._files_dir):
                 raise ValueError('Files directory does not exist')
@@ -120,22 +119,24 @@ class EndpointAnalysis(Analysis):
 
         except KeyboardInterrupt:
             if self.status == consts.AnalysisStatusCode.IN_PROGRESS:
-                self._scan_api.close_scan(scan_summary={'reason': EndpointAnalysisEndReason.INTERRUPTED.value})
+                logger.info(f'Endpoint analysis: {self.analysis_id}, upload was interrupted by user. Ending scan.')
+                self._scan_api.end_scan(scan_summary={'reason': EndpointAnalysisEndReason.INTERRUPTED.value})
             self.status = consts.AnalysisStatusCode.FAILED
             raise
         except Exception:
             if self.status == consts.AnalysisStatusCode.IN_PROGRESS:
-                self._scan_api.close_scan(scan_summary={'reason': EndpointAnalysisEndReason.FAILED.value})
+                logger.info(f'Endpoint analysis: {self.analysis_id}, encountered an error. Ending scan.')
+                self._scan_api.end_scan(scan_summary={'reason': EndpointAnalysisEndReason.FAILED.value})
             self.status = consts.AnalysisStatusCode.FAILED
             raise
 
-        self._scan_api.close_scan(scan_summary={'reason': EndpointAnalysisEndReason.DONE.value})
+        self._scan_api.end_scan(scan_summary={'reason': EndpointAnalysisEndReason.DONE.value})
         self.status = consts.AnalysisStatusCode.CREATED
 
         return self.analysis_id
 
     def _create_scan(self):
-        with open(os.path.join(self._metadata_dir, 'scanner_info.json')) as f:
+        with open(os.path.join(self._offline_scan_directory, 'scanner_info.json')) as f:
             scanner_info = json.load(f)
         result = self._api.create_endpoint_scan(scanner_info)
         scan_id = result['scan_id']
@@ -147,29 +148,29 @@ class EndpointAnalysis(Analysis):
             self._scan_api = EndpointScanApi(self._scan_id, self._api)
 
     def _send_host_info(self):
-        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading host info')
-        with open(os.path.join(self._metadata_dir, 'host_info.json')) as f:
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading host info')
+        with open(os.path.join(self._offline_scan_directory, 'host_info.json')) as f:
             host_info = json.load(f)
         self._scan_api.send_host_info(host_info)
 
     def _send_processes_info(self):
-        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading processes info')
-        with open(os.path.join(self._metadata_dir, 'processes_info.json')) as f:
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading processes info')
+        with open(os.path.join(self._offline_scan_directory, 'processes_info.json')) as f:
             processes_info = json.load(f)
         self._scan_api.send_processes_info(processes_info)
 
     def _send_scheduled_tasks_info(self):
-        scheduled_tasks_info_path = os.path.join(self._metadata_dir, 'scheduled_tasks_info.json')
+        scheduled_tasks_info_path = os.path.join(self._offline_scan_directory, 'scheduled_tasks_info.json')
         if not os.path.isfile(scheduled_tasks_info_path):
             return
-        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading scheduled tasks info')
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading scheduled tasks info')
         with open(scheduled_tasks_info_path) as f:
             scheduled_tasks_info = json.load(f)
         self._scan_api.send_scheduled_tasks_info(scheduled_tasks_info)
 
     def _send_loaded_modules_info(self):
-        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading loaded modules info')
-        for loaded_module_info_file in glob.glob(os.path.join(self._metadata_dir, '*_loaded_modules_info.json')):
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading loaded modules info')
+        for loaded_module_info_file in glob.glob(os.path.join(self._offline_scan_directory, '*_loaded_modules_info.json')):
             with open(loaded_module_info_file) as f:
                 loaded_modules_info = json.load(f)
 
@@ -177,11 +178,11 @@ class EndpointAnalysis(Analysis):
             self._scan_api.send_loaded_modules_info(pid, loaded_modules_info)
 
     def _send_files_info_and_upload_required(self):
-        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading files info and uploading required files')
-        with ThreadPoolExecutor() as executor:
-            for files_info_file in glob.glob(os.path.join(self._metadata_dir, 'files_info_*.json')):
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading files info and uploading required files')
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for files_info_file in glob.glob(os.path.join(self._offline_scan_directory, 'files_info_*.json')):
 
-                logger.debug(f'Endpoint Analysis: {self.analysis_id}, uploading {files_info_file}')
+                logger.debug(f'Endpoint analysis: {self.analysis_id}, uploading {files_info_file}')
                 with open(files_info_file) as f:
                     files_info = json.load(f)
                 files_to_upload = self._scan_api.send_files_info(files_info)
@@ -192,29 +193,29 @@ class EndpointAnalysis(Analysis):
                     if os.path.isfile(file_path):
                         futures.append(executor.submit(self._scan_api.upload_collected_binary, file_path, 'file-system'))
                     else:
-                        logger.warning(f'Endpoint Analysis: {self.analysis_id}, file {file_path} does not exist')
-                for future in as_completed(futures):
+                        logger.warning(f'Endpoint analysis: {self.analysis_id}, file {file_path} does not exist')
+                for future in concurrent.futures.as_completed(futures):
                     future.result()
 
     def _send_module_differences(self):
-        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading file module differences info')
-        with open(os.path.join(self._metadata_dir, 'file_module_differences.json')) as f:
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading file module differences info')
+        with open(os.path.join(self._offline_scan_directory, 'file_module_differences.json')) as f:
             file_module_differences = json.load(f)
         self._scan_api.send_file_module_differences(file_module_differences)
 
     def _send_injected_modules_info(self):
-        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading injected modules info')
-        with open(os.path.join(self._metadata_dir, 'injected_modules_info.json')) as f:
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading injected modules info')
+        with open(os.path.join(self._offline_scan_directory, 'injected_modules_info.json')) as f:
             injected_modules_info = json.load(f)
         self._scan_api.send_injected_modules_info(injected_modules_info)
 
     def _send_memory_module_dump_info_and_upload_required(self):
-        logger.info(f'Endpoint Analysis: {self.analysis_id}, uploading memory module dump info')
-        with ThreadPoolExecutor() as executor:
-            for memory_module_dump_info_file in glob.glob(os.path.join(self._metadata_dir,
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading memory module dump info')
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for memory_module_dump_info_file in glob.glob(os.path.join(self._offline_scan_directory,
                                                                        'memory_module_dump_info_*.json')):
 
-                logger.debug(f'Endpoint Analysis: {self.analysis_id}, uploading {memory_module_dump_info_file}')
+                logger.debug(f'Endpoint analysis: {self.analysis_id}, uploading {memory_module_dump_info_file}')
                 with open(memory_module_dump_info_file) as f:
                     memory_module_dump_info = json.load(f)
                 files_to_upload = self._scan_api.send_memory_module_dump_info(memory_module_dump_info)
@@ -228,6 +229,6 @@ class EndpointAnalysis(Analysis):
                     elif os.path.isfile(fileless_path):
                         futures.append(executor.submit(self._scan_api.upload_collected_binary, fileless_path, 'fileless'))
                     else:
-                        logger.warning(f'Endpoint Analysis: {self.analysis_id}, file {file_to_upload}.sample does not exist')
-                for future in as_completed(futures):
+                        logger.warning(f'Endpoint analysis: {self.analysis_id}, file {file_to_upload}.sample does not exist')
+                for future in concurrent.futures.as_completed(futures):
                     future.result()
