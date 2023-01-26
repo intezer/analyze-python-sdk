@@ -23,21 +23,21 @@ class EndpointAnalysis(Analysis):
     def __init__(self,
                  api: IntezerApi = None,
                  scan_api: EndpointScanApi = None,
-                 offline_scan_directory: str = None,
-                 files_dir: str = None,
-                 fileless_dir: str = None,
-                 memory_modules_dir: str = None):
+                 offline_scan_directory: str = None):
         """
         Initializes an EndpointAnalysis object.
+        Supports offline scan mode, run Scanner.exe with the '-o' flag to generate the offline scan directory.
 
         :param api: The API connection to Intezer.
+        :param scan_api: The API connection to Intezer for endpoint scans.
+        :param offline_scan_directory: The directory of the offline scan. (example: C:\scans\scan_%computername%_%time%)
         """
         super().__init__(api)
         self._scan_api = scan_api
         if offline_scan_directory:
-            files_dir = files_dir or os.path.join(offline_scan_directory, '..', 'files')
-            fileless_dir = fileless_dir or os.path.join(offline_scan_directory, '..', 'fileless')
-            memory_modules_dir = memory_modules_dir or os.path.join(offline_scan_directory, '..', 'memory_modules')
+            files_dir = os.path.join(offline_scan_directory, '..', 'files')
+            fileless_dir = os.path.join(offline_scan_directory, '..', 'fileless')
+            memory_modules_dir = os.path.join(offline_scan_directory, '..', 'memory_modules')
             self._offline_scan_directory = pathlib.Path(offline_scan_directory)
             self._files_dir = pathlib.Path(files_dir)
             self._fileless_dir = pathlib.Path(fileless_dir)

@@ -1,10 +1,12 @@
 import os.path
+import uuid
 from http import HTTPStatus
 
 import responses
 
 from intezer_sdk import consts
 from intezer_sdk.endpoint_analysis import EndpointAnalysis
+from intezer_sdk.errors import IntezerError
 from tests.unit.base_test import BaseTest
 
 
@@ -14,11 +16,16 @@ class TestEndpointAnalysis(BaseTest):
         super().setUp()
 
     def test_paths_initialization(self):
-        offline_scan_directory = os.path.join('path','to','offline_scan_directory')
-        files_dir = os.path.join('path','to','files')
-        fileless_dir = os.path.join('path','to','fileless')
-        memory_modules_dir = os.path.join('path','to','memory_modules')
+        # Arrange
+        offline_scan_directory = os.path.join('path', 'to', 'offline_scan_directory')
+        files_dir = os.path.join('path', 'to', 'files')
+        fileless_dir = os.path.join('path', 'to', 'fileless')
+        memory_modules_dir = os.path.join('path', 'to', 'memory_modules')
+
+        # Act
         analysis = EndpointAnalysis(offline_scan_directory=offline_scan_directory)
+
+        # Assert
         self.assertEqual(offline_scan_directory, os.path.normpath(analysis._offline_scan_directory))
         self.assertEqual(files_dir, os.path.normpath(analysis._files_dir))
         self.assertEqual(fileless_dir, os.path.normpath(analysis._fileless_dir))
@@ -26,17 +33,18 @@ class TestEndpointAnalysis(BaseTest):
 
     def test_send_analyze_to_api(self):
         # Arrange
+        scan_id = str(uuid.uuid4())
+        analysis_id = str(uuid.uuid4())
         offline_scan_directory = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                     '..',
-                                                     'resources',
-                                                     'offline_endpoint_scan',
-                                                     'offline_scan_directory'))
+                                                               '..',
+                                                               'resources',
+                                                               'offline_endpoint_scan',
+                                                               'offline_scan_directory'))
         analysis = EndpointAnalysis(offline_scan_directory=offline_scan_directory)
 
         # Arrange
         with responses.RequestsMock() as mock:
-            scan_id = '1234'
-            analysis_id = '5678'
+
             self.add_mock_requests_without_scheduled_tasks(mock, scan_id, analysis_id)
             mock.add('POST',
                      url=f'{consts.ANALYZE_URL}/scans/scans/{scan_id}/scheduled-tasks-info',
@@ -48,19 +56,30 @@ class TestEndpointAnalysis(BaseTest):
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
 
+        # Act 2
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{consts.BASE_URL}{consts.API_VERSION}/endpoint-analyses/{analysis_id}',
+                     status=HTTPStatus.ACCEPTED,
+                     json={'result': {'status': 'in_progress'}})
+            analysis.check_status()
+
+        # Assert 2
+        self.assertEqual(analysis.status, consts.AnalysisStatusCode.IN_PROGRESS)
+
     def test_send_analyze_to_api_missing_files(self):
         # Arrange
+        scan_id = str(uuid.uuid4())
+        analysis_id = str(uuid.uuid4())
         offline_scan_directory = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                     '..',
-                                                     'resources',
-                                                     'offline_endpoint_scan',
-                                                     'offline_scan_directory_missing_files'))
+                                                               '..',
+                                                               'resources',
+                                                               'offline_endpoint_scan',
+                                                               'offline_scan_directory_missing_files'))
         analysis = EndpointAnalysis(offline_scan_directory=offline_scan_directory)
 
-        # Arrange
         with responses.RequestsMock() as mock:
-            scan_id = '1234'
-            analysis_id = '5678'
+
             mock.add('POST',
                      url=consts.BASE_URL + 'scans',
                      status=HTTPStatus.CREATED,
@@ -75,29 +94,26 @@ class TestEndpointAnalysis(BaseTest):
                      json={'result': {'status': 'failed'}})
 
             # Act
-            try:
+            with self.assertRaises(FileNotFoundError):
                 analysis.send()
-            except Exception as e:
-                # Assert
-                error = str(e)
-                self.assertTrue(error.startswith("[Errno 2] No such file or directory:") and
-                                error.endswith("offline_scan_directory_missing_files/processes_info.json'"))
 
+        # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FAILED)
 
     def test_send_analyze_to_api_no_scheduled_tasks_info(self):
         # Arrange
+        scan_id = str(uuid.uuid4())
+        analysis_id = str(uuid.uuid4())
         offline_scan_directory = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                     '..',
-                                                     'resources',
-                                                     'offline_endpoint_scan',
-                                                     'offline_scan_directory_no_scheduled_tasks'))
+                                                               '..',
+                                                               'resources',
+                                                               'offline_endpoint_scan',
+                                                               'offline_scan_directory_no_scheduled_tasks'))
         analysis = EndpointAnalysis(offline_scan_directory=offline_scan_directory)
 
         # Arrange
         with responses.RequestsMock() as mock:
-            scan_id = '1234'
-            analysis_id = '5678'
+
             self.add_mock_requests_without_scheduled_tasks(mock, scan_id, analysis_id)
 
             # Act
@@ -107,7 +123,7 @@ class TestEndpointAnalysis(BaseTest):
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
 
     @staticmethod
-    def add_mock_requests_without_scheduled_tasks(mock, scan_id, analysis_id):
+    def add_mock_requests_without_scheduled_tasks(mock: responses.RequestsMock, scan_id: str, analysis_id: str):
         mock.add('POST',
                  url=consts.BASE_URL + 'scans',
                  status=HTTPStatus.CREATED,
