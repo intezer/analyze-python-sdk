@@ -1,0 +1,10 @@
+{
+  "host_info": {
+    "computer_name": "USER1-IL-WIN",
+    "cpu_count": 16,
+    "fqdn": "User1-IL-WIN",
+    "os_version": "windows_11",
+    "system_type": "64",
+    "total_physical_memory_in_bytes": 34065952768
+  }
+}

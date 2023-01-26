@@ -35,33 +35,34 @@ def raise_for_status(response: requests.Response,
     if statuses_to_ignore and response.status_code in statuses_to_ignore:
         return
     elif allowed_statuses and response.status_code not in allowed_statuses:
-        http_error_msg = '%s Custom Error: %s for url: %s' % (response.status_code, reason, response.url)
+        http_error_msg = f'{response.status_code} Custom Error: {reason} for url: {response.url}'
     elif 400 <= response.status_code < 500:
         if response.status_code != 400:
-            http_error_msg = '%s Client Error: %s for url: %s' % (response.status_code, reason, response.url)
+            http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
         else:
             # noinspection PyBroadException
             try:
                 error = response.json()
-                http_error_msg = '\n'.join(['{}:{}.'.format(key, value) for key, value in error['message'].items()])
+                http_error_msg = '\n'.join([f'{key}:{value}.' for key, value in error['message'].items()])
             except Exception:
-                http_error_msg = '%s Client Error: %s for url: %s' % (response.status_code, reason, response.url)
+                http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
     elif 500 <= response.status_code < 600:
-        http_error_msg = '%s Server Error: %s for url: %s' % (response.status_code, reason, response.url)
+        http_error_msg = f'{response.status_code} Server Error: {reason} for url: {response.url}'
 
     if http_error_msg:
         # noinspection PyBroadException
         try:
             data = response.json()
-            http_error_msg = '%s, server returns %s, details: %s' % (http_error_msg, data['error'], data.get('details'))
+            http_error_msg = f'{http_error_msg}, server returns {data["error"]}, details: {data.get("details")}'
         except Exception:
             pass
 
         raise requests.HTTPError(http_error_msg, response=response)
 
 
-class IntezerApi:
+class IntezerProxy:
     def __init__(self,
+                 *,
                  api_version: str = None,
                  api_key: str = None,
                  base_url: str = None,
@@ -69,10 +70,11 @@ class IntezerApi:
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None):
         self.full_url = base_url + api_version
+        self.base_url = base_url
         self.api_key = api_key
         self._access_token = None
         self._session = None
-        self._verify_ssl = verify_ssl
+        self.verify_ssl = verify_ssl
         self.on_premise_version = on_premise_version
         if user_agent:
             user_agent = f'{consts.USER_AGENT}/{user_agent}'
@@ -86,23 +88,35 @@ class IntezerApi:
                  data: dict = None,
                  headers: dict = None,
                  files: dict = None,
-                 stream: bool = None) -> Response:
+                 stream: bool = None,
+                 base_url: str = None) -> Response:
         if not self._session:
             self.set_session()
+
+        url = f'{base_url}{path}' if base_url else f'{self.full_url}{path}'
 
         if files:
             response = self._session.request(
                 method,
-                self.full_url + path,
+                url,
                 files=files,
                 data=data or {},
+                headers=headers or {},
+                stream=stream
+            )
+        elif isinstance(data, bytes):
+            response = self._session.request(
+                method,
+                url,
+                files=files,
+                data=data,
                 headers=headers or {},
                 stream=stream
             )
         else:
             response = self._session.request(
                 method,
-                self.full_url + path,
+                url,
                 json=data or {},
                 headers=headers,
                 stream=stream
@@ -116,15 +130,53 @@ class IntezerApi:
                                                   data: dict = None,
                                                   headers: dict = None,
                                                   files: dict = None,
-                                                  stream: bool = None) -> Response:
-        response = self._request(method, path, data, headers, files)
+                                                  stream: bool = None,
+                                                  base_url: str = None) -> Response:
+        response = self._request(method, path, data, headers, files, stream, base_url=base_url)
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             self._access_token = None
             self.set_session()
-            response = self._request(method, path, data, headers, files, stream)
+            response = self._request(method, path, data, headers, files, stream, base_url)
 
         return response
+
+    def _set_access_token(self, api_key: str):
+        response = requests.post(f'{self.full_url}/get-access-token',
+                                 json={'api_key': api_key},
+                                 verify=self.verify_ssl)
+
+        if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
+            raise errors.InvalidApiKeyError(response)
+        if response.status_code != HTTPStatus.OK:
+            raise_for_status(response)
+
+        self._access_token = response.json()['result']
+
+    def set_session(self):
+        self._session = requests.session()
+        self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
+        self._session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
+        self._session.verify = self.verify_ssl
+        self._set_access_token(self.api_key)
+        self._session.headers['Authorization'] = f'Bearer {self._access_token}'
+        self._session.headers['User-Agent'] = self.user_agent
+
+
+class IntezerApi(IntezerProxy):
+    def __init__(self,
+                 api_version: str = None,
+                 api_key: str = None,
+                 base_url: str = None,
+                 verify_ssl: bool = True,
+                 on_premise_version: OnPremiseVersion = None,
+                 user_agent: str = None):
+        super().__init__(api_key=api_key,
+                         base_url=base_url,
+                         verify_ssl=verify_ssl,
+                         user_agent=user_agent,
+                         api_version=api_version,
+                         on_premise_version=on_premise_version)
 
     def analyze_by_hash(self,
                         file_hash: str,
@@ -253,6 +305,17 @@ class IntezerApi:
         self._assert_result_response(False, response)
 
         return response.json()['sub_analyses']
+
+    def  create_endpoint_scan(self, scanner_info: dict) -> Dict[str, str]:
+        if not self.on_premise_version or self.on_premise_version > OnPremiseVersion.V22_10:
+            scanner_info['scan_type'] = consts.SCAN_TYPE_OFFLINE_ENDPOINT_SCAN
+        response = self.request_with_refresh_expired_access_token(path='scans',
+                                                                  data=scanner_info,
+                                                                  method='POST',
+                                                                  base_url=self.base_url)
+
+        raise_for_status(response)
+        return response.json()['result']
 
     def get_iocs(self, analyses_id: str) -> Optional[dict]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
@@ -466,26 +529,6 @@ class IntezerApi:
 
         return response
 
-    def _set_access_token(self):
-        response = requests.post(self.full_url + '/get-access-token',
-                                 json={'api_key': self.api_key},
-                                 verify=self._verify_ssl)
-
-        if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
-            raise errors.InvalidApiKeyError(response)
-        if response.status_code != HTTPStatus.OK:
-            raise_for_status(response)
-
-        self._access_token = response.json()['result']
-
-    def set_session(self):
-        self._session = requests.session()
-        self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
-        self._session.verify = self._verify_ssl
-        self._set_access_token()
-        self._session.headers['Authorization'] = 'Bearer {}'.format(self._access_token)
-        self._session.headers['User-Agent'] = self.user_agent
-
     def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
         self.assert_any_on_premise()
         response = self.request_with_refresh_expired_access_token(method='POST',
@@ -598,3 +641,4 @@ def set_global_api(api_key: str = None,
                              base_url or consts.BASE_URL,
                              verify_ssl,
                              on_premise_version)
+

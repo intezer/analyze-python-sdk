@@ -1,3 +1,8 @@
+1.15.0
+-------
+- Support for offline endpoint scan uploading in 'EndpointAnalysis'.
+
+
 1.14.4
 -------
 - Add analysis time to analysis object
