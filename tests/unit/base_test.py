@@ -19,4 +19,4 @@ class BaseTest(unittest.TestCase):
                      status=200,
                      json={'result': 'access-token'})
             set_global_api()
-            get_global_api().set_session()
+            get_global_api()._set_session()

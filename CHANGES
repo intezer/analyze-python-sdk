@@ -1,3 +1,9 @@
+1.15.1
+-------
+- Add 'is_analysis_running' method to Analysis class.
+- Add 'running_analysis_duration' method to Analysis class.
+- Add 'authenticate' method to IntezerProxy class
+
 1.15.0
 -------
 - Support for offline endpoint scan uploading in 'EndpointAnalysis'.
