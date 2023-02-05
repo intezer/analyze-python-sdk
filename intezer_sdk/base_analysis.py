@@ -20,15 +20,17 @@ class Analysis(metaclass=abc.ABCMeta):
     Analysis is a base class representing an analysis of a file, URL or endpoint.
     It requires an API connection to Intezer.
     """
+
     def __init__(self, api: IntezerApi = None):
         """
         :param api: The API connection to Intezer.
         """
-        self.status = None
-        self.analysis_id = None
+        self.status: Optional[consts.AnalysisStatusCode] = None
+        self.analysis_id: Optional[str] = None
         self.analysis_time: Optional[datetime.datetime] = None
         self._api: IntezerApi = api or get_global_api()
         self._report: Optional[Dict[str, Any]] = None
+        self._send_time: Optional[datetime.datetime] = None
 
     @abc.abstractmethod
     def _query_status_from_api(self) -> Response:
@@ -52,7 +54,7 @@ class Analysis(metaclass=abc.ABCMeta):
         start_time = datetime.datetime.utcnow()
         if not interval:
             interval = consts.CHECK_STATUS_INTERVAL
-        if self._is_analysis_running():
+        if self.is_analysis_running():
             if sleep_before_first_check:
                 time.sleep(interval)
             status_code = self.check_status()
@@ -60,11 +62,11 @@ class Analysis(metaclass=abc.ABCMeta):
             while status_code != consts.AnalysisStatusCode.FINISHED:
                 timeout_passed = timeout and datetime.datetime.utcnow() - start_time > timeout
                 if timeout_passed:
-                    raise TimeoutError
+                    raise TimeoutError()
                 time.sleep(interval)
                 status_code = self.check_status()
 
-    def _is_analysis_running(self) -> bool:
+    def is_analysis_running(self) -> bool:
         """
         Check if the analysis is running.
         :return: True if the analysis is running, False otherwise.
@@ -73,12 +75,23 @@ class Analysis(metaclass=abc.ABCMeta):
                                consts.AnalysisStatusCode.IN_PROGRESS,
                                consts.AnalysisStatusCode.QUEUED)
 
+    @property
+    def running_analysis_duration(self) -> Optional[datetime.timedelta]:
+        """
+        Returns the time elapsed from the analysis sending and now. Returns None when the analysis finished.
+        :return:
+        """
+        if self.is_analysis_running():
+            return datetime.datetime.utcnow() - self._send_time
+        else:
+            return None
+
     def check_status(self) -> consts.AnalysisStatusCode:
         """
         Check the status of the analysis.
         :return: The status of the analysis.
         """
-        if not self._is_analysis_running():
+        if not self.is_analysis_running():
             raise errors.IntezerError('Analysis is not running')
 
         response = self._query_status_from_api()
@@ -97,7 +110,7 @@ class Analysis(metaclass=abc.ABCMeta):
         return self.status
 
     def result(self) -> dict:
-        if self._is_analysis_running():
+        if self.is_analysis_running():
             raise errors.AnalysisIsStillRunningError()
         if not self._report:
             raise errors.ReportDoesNotExistError()
@@ -115,7 +128,7 @@ class Analysis(metaclass=abc.ABCMeta):
         self.status = consts.AnalysisStatusCode.FINISHED
 
     def _assert_analysis_finished(self):
-        if self._is_analysis_running():
+        if self.is_analysis_running():
             raise errors.AnalysisIsStillRunningError()
         if self.status != consts.AnalysisStatusCode.FINISHED:
             raise errors.IntezerError('Analysis not finished successfully')
@@ -152,7 +165,7 @@ class Analysis(metaclass=abc.ABCMeta):
             raise errors.AnalysisHasAlreadyBeenSentError()
 
         self.analysis_id = self._send_analyze_to_api(**additional_parameters)
-
+        self._send_time = datetime.datetime.utcnow()
         self.status = consts.AnalysisStatusCode.CREATED
 
         if wait:
@@ -160,4 +173,3 @@ class Analysis(metaclass=abc.ABCMeta):
                 self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
             else:
                 self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
-

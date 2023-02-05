@@ -91,7 +91,7 @@ class IntezerProxy:
                  stream: bool = None,
                  base_url: str = None) -> Response:
         if not self._session:
-            self.set_session()
+            self._set_session()
 
         url = f'{base_url}{path}' if base_url else f'{self.full_url}{path}'
 
@@ -136,14 +136,14 @@ class IntezerProxy:
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             self._access_token = None
-            self.set_session()
+            self._set_session()
             response = self._request(method, path, data, headers, files, stream, base_url)
 
         return response
 
-    def _set_access_token(self, api_key: str):
+    def _set_access_token(self):
         response = requests.post(f'{self.full_url}/get-access-token',
-                                 json={'api_key': api_key},
+                                 json={'api_key': self.api_key},
                                  verify=self.verify_ssl)
 
         if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
@@ -153,12 +153,20 @@ class IntezerProxy:
 
         self._access_token = response.json()['result']
 
-    def set_session(self):
+    def authenticate(self):
+        """
+        Authenticate against Intezer.
+
+        :raises: `errors.InvalidApiKeyError`: When the API key is invalid
+        """
+        self._set_access_token()
+
+    def _set_session(self):
         self._session = requests.session()
         self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
         self._session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
         self._session.verify = self.verify_ssl
-        self._set_access_token(self.api_key)
+        self._set_access_token()
         self._session.headers['Authorization'] = f'Bearer {self._access_token}'
         self._session.headers['User-Agent'] = self.user_agent
 
