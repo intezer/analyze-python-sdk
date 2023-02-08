@@ -1,9 +1,8 @@
 ![PyPI](https://img.shields.io/pypi/v/intezer_sdk)
+![Build](https://github.com/intezer/analyze-python-sdk/actions/workflows/test.yml/badge.svg)
 # Intezer SDK
 
-Basic SDK for Intezer Analyze API 2.0 
-
-[View full API documentation](https://analyze.intezer.com/api/docs/documentation) (Notice - You must be logged in to Intezer Analyze to access the documentation)
+The SDK wraps Intezer Analyze API 2.0 ([View full API documentation](https://analyze.intezer.com/api-docs.html))
 
 Currently, the following options are available in the SDK:
 
@@ -29,7 +28,7 @@ pip install intezer-sdk
 ### Set global api key
 Before using the SDK functionality we should set the api key:
 ```python
-api.set_global_api('<api_key>')
+    api.set_global_api('<api_key>')
 ```
 
 ### Analyze By File
@@ -142,7 +141,7 @@ index_id = index.index_id
 
 ### Get Latest File Analysis
 ```python
-analysis = get_latest_analysis(file_hash: <file_sha256>)
+analysis = FileAnalysis.from_latest_hash_analysis(file_hash: <file_sha256>)
 result = analysis.result()
 ```
 

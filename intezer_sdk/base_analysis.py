@@ -38,7 +38,7 @@ class Analysis(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None):
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> 'Analysis':
         raise NotImplementedError()
 
     def wait_for_completion(self,
@@ -47,6 +47,7 @@ class Analysis(metaclass=abc.ABCMeta):
                             timeout: Optional[datetime.timedelta] = None):
         """
         Blocks until the analysis is completed.
+
         :param interval: The interval to wait between checks in seconds.
         :param sleep_before_first_check: Whether to sleep before the first status check.
         :param timeout: Maximum duration to wait for analysis completion in seconds.
@@ -54,6 +55,7 @@ class Analysis(metaclass=abc.ABCMeta):
         start_time = datetime.datetime.utcnow()
         if not interval:
             interval = consts.CHECK_STATUS_INTERVAL
+
         if self.is_analysis_running():
             if sleep_before_first_check:
                 time.sleep(interval)
@@ -69,6 +71,7 @@ class Analysis(metaclass=abc.ABCMeta):
     def is_analysis_running(self) -> bool:
         """
         Check if the analysis is running.
+
         :return: True if the analysis is running, False otherwise.
         """
         return self.status in (consts.AnalysisStatusCode.CREATED,
@@ -79,7 +82,8 @@ class Analysis(metaclass=abc.ABCMeta):
     def running_analysis_duration(self) -> Optional[datetime.timedelta]:
         """
         Returns the time elapsed from the analysis sending and now. Returns None when the analysis finished.
-        :return:
+
+        :return: time elapsed from the analysis sending and now.
         """
         if self.is_analysis_running():
             return datetime.datetime.utcnow() - self._send_time
@@ -89,6 +93,7 @@ class Analysis(metaclass=abc.ABCMeta):
     def check_status(self) -> consts.AnalysisStatusCode:
         """
         Check the status of the analysis.
+
         :return: The status of the analysis.
         """
         if not self.is_analysis_running():

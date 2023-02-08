@@ -4,6 +4,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+from intezer_sdk import _operation
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApi
 from intezer_sdk.api import get_global_api
@@ -125,7 +126,7 @@ class SubAnalysis:
         result_url = self._api.get_sub_analysis_related_files_by_family_id(self.composed_analysis_id,
                                                                            self.analysis_id,
                                                                            family_id)
-        return operation.handle_operation(self._operations,
+        return _operation.handle_operation(self._operations,
                                           self._api,
                                           f'Related files: {family_id}',
                                           result_url,
@@ -141,7 +142,7 @@ class SubAnalysis:
         except Exception:
             return None
 
-        return operation.handle_operation(self._operations,
+        return _operation.handle_operation(self._operations,
                                           self._api,
                                           'Account files related samples',
                                           result_url,
@@ -152,19 +153,19 @@ class SubAnalysis:
                          wait: Union[bool, int] = False,
                          wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
         result_url = self._api.generate_sub_analysis_vaccine_by_id(self.composed_analysis_id, self.analysis_id)
-        return operation.handle_operation(self._operations, self._api, 'Vaccine', result_url, wait, wait_timeout)
+        return _operation.handle_operation(self._operations, self._api, 'Vaccine', result_url, wait, wait_timeout)
 
     def get_capabilities(self,
                          wait: Union[bool, int] = False,
                          wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
         result_url = self._api.get_sub_analysis_capabilities_by_id(self.composed_analysis_id, self.analysis_id)
-        return operation.handle_operation(self._operations, self._api, 'Capabilities', result_url, wait, wait_timeout)
+        return _operation.handle_operation(self._operations, self._api, 'Capabilities', result_url, wait, wait_timeout)
 
     def get_strings(self,
                     wait: Union[bool, int] = False,
                     wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
         result = self._api.get_strings_by_id(self.composed_analysis_id, self.analysis_id)
-        return operation.handle_operation(self._operations,
+        return _operation.handle_operation(self._operations,
                                           self._api,
                                           'Strings',
                                           result['result_url'],
@@ -177,7 +178,7 @@ class SubAnalysis:
         result_url = self._api.get_string_related_samples_by_id(self.composed_analysis_id,
                                                                 self.analysis_id,
                                                                 string_value)
-        return operation.handle_operation(self._operations,
+        return _operation.handle_operation(self._operations,
                                           self._api,
                                           f'Strings related samples: {string_value}',
                                           result_url,

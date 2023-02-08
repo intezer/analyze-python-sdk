@@ -820,22 +820,22 @@ class FileAnalysisSpec(BaseTest):
 
             mock.add('GET',
                      url=self.full_url + 'a/b/related-files',
-                     status=HTTPStatus.OK, json={'result': {'files': []}})
+                     status=HTTPStatus.OK, json={'result': {'files': []}, 'status': 'succeeded'})
             mock.add('GET',
                      url=self.full_url + 'a/b/related-samples',
-                     status=HTTPStatus.OK, json={'result': {'related_samples': []}})
+                     status=HTTPStatus.OK, json={'result': {'related_samples': []}, 'status': 'succeeded'})
             mock.add('GET',
                      url=self.full_url + 'a/b/vaccine',
-                     status=HTTPStatus.OK, json={'result': 'abd'})
+                     status=HTTPStatus.OK, json={'result': 'abd', 'status': 'succeeded'})
             mock.add('GET',
                      url=self.full_url + 'a/b/strings',
-                     status=HTTPStatus.OK, json={'result': 'abd'})
+                     status=HTTPStatus.OK, json={'result': 'abd', 'status': 'succeeded'})
             mock.add('GET',
                      url=self.full_url + 'a/b/string-related-samples',
-                     status=HTTPStatus.OK, json={'result': 'abd'})
+                     status=HTTPStatus.OK, json={'result': 'abd', 'status': 'succeeded'})
             mock.add('GET',
                      url=self.full_url + 'a/b/capabilities',
-                     status=HTTPStatus.OK, json={'result': 'abd'})
+                     status=HTTPStatus.OK, json={'result': 'abd', 'status': 'succeeded'})
 
             sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root', None)
 
@@ -1157,7 +1157,7 @@ class FileAnalysisSpec(BaseTest):
             mock.add('GET',
                      url=f'{self.full_url}/analyses/{analysis_id}/detect',
                      status=HTTPStatus.OK,
-                     json={'status': consts.AnalysisStatusCode.FINISHED.value, 'result': [result]}
+                     json={'status': 'succeeded', 'result': [result]}
                      )
 
             # Act
