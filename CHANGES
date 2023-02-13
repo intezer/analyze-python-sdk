@@ -1,3 +1,7 @@
+1.15.2
+-------
+- Fix JSON deserialization of endpoint scan results
+
 1.15.1
 -------
 - Add 'is_analysis_running' method to Analysis class.
