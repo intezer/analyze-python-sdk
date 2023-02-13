@@ -136,7 +136,7 @@ class EndpointAnalysis(Analysis):
         return self.analysis_id
 
     def _create_scan(self):
-        with open(os.path.join(self._offline_scan_directory, 'scanner_info.json')) as f:
+        with open(os.path.join(self._offline_scan_directory, 'scanner_info.json'), encoding='utf-8') as f:
             scanner_info = json.load(f)
         result = self._api.create_endpoint_scan(scanner_info)
         scan_id = result['scan_id']
@@ -149,13 +149,13 @@ class EndpointAnalysis(Analysis):
 
     def _send_host_info(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading host info')
-        with open(os.path.join(self._offline_scan_directory, 'host_info.json')) as f:
+        with open(os.path.join(self._offline_scan_directory, 'host_info.json'), encoding='utf-8') as f:
             host_info = json.load(f)
         self._scan_api.send_host_info(host_info)
 
     def _send_processes_info(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading processes info')
-        with open(os.path.join(self._offline_scan_directory, 'processes_info.json')) as f:
+        with open(os.path.join(self._offline_scan_directory, 'processes_info.json'), encoding='utf-8') as f:
             processes_info = json.load(f)
         self._scan_api.send_processes_info(processes_info)
 
@@ -164,14 +164,17 @@ class EndpointAnalysis(Analysis):
         if not os.path.isfile(scheduled_tasks_info_path):
             return
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading scheduled tasks info')
-        with open(scheduled_tasks_info_path) as f:
-            scheduled_tasks_info = json.load(f)
-        self._scan_api.send_scheduled_tasks_info(scheduled_tasks_info)
+        try:
+            with open(scheduled_tasks_info_path, encoding= 'utf-8') as f:
+                scheduled_tasks_info = json.load(f)
+            self._scan_api.send_scheduled_tasks_info(scheduled_tasks_info)
+        except BaseException:
+            logger.warning(f'Endpoint analysis: {self.analysis_id}, failed to upload scheduled tasks info')
 
     def _send_loaded_modules_info(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading loaded modules info')
         for loaded_module_info_file in glob.glob(os.path.join(self._offline_scan_directory, '*_loaded_modules_info.json')):
-            with open(loaded_module_info_file) as f:
+            with open(loaded_module_info_file, encoding= 'utf-8') as f:
                 loaded_modules_info = json.load(f)
 
             pid = os.path.basename(loaded_module_info_file).split('_', maxsplit=1)[0]
@@ -183,7 +186,7 @@ class EndpointAnalysis(Analysis):
             for files_info_file in glob.glob(os.path.join(self._offline_scan_directory, 'files_info_*.json')):
 
                 logger.debug(f'Endpoint analysis: {self.analysis_id}, uploading {files_info_file}')
-                with open(files_info_file) as f:
+                with open(files_info_file, encoding= 'utf-8') as f:
                     files_info = json.load(f)
                 files_to_upload = self._scan_api.send_files_info(files_info)
 
@@ -199,13 +202,13 @@ class EndpointAnalysis(Analysis):
 
     def _send_module_differences(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading file module differences info')
-        with open(os.path.join(self._offline_scan_directory, 'file_module_differences.json')) as f:
+        with open(os.path.join(self._offline_scan_directory, 'file_module_differences.json'), encoding= 'utf-8') as f:
             file_module_differences = json.load(f)
         self._scan_api.send_file_module_differences(file_module_differences)
 
     def _send_injected_modules_info(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading injected modules info')
-        with open(os.path.join(self._offline_scan_directory, 'injected_modules_info.json')) as f:
+        with open(os.path.join(self._offline_scan_directory, 'injected_modules_info.json'), encoding= 'utf-8') as f:
             injected_modules_info = json.load(f)
         self._scan_api.send_injected_modules_info(injected_modules_info)
 
@@ -216,7 +219,7 @@ class EndpointAnalysis(Analysis):
                                                                        'memory_module_dump_info_*.json')):
 
                 logger.debug(f'Endpoint analysis: {self.analysis_id}, uploading {memory_module_dump_info_file}')
-                with open(memory_module_dump_info_file) as f:
+                with open(memory_module_dump_info_file, encoding= 'utf-8') as f:
                     memory_module_dump_info = json.load(f)
                 files_to_upload = self._scan_api.send_memory_module_dump_info(memory_module_dump_info)
 
