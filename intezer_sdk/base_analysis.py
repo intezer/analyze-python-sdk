@@ -11,7 +11,8 @@ from requests import Response
 
 from intezer_sdk import consts
 from intezer_sdk import errors
-from intezer_sdk.api import IntezerApi
+from intezer_sdk._api import IntezerApi
+from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 
 
@@ -21,14 +22,14 @@ class Analysis(metaclass=abc.ABCMeta):
     It requires an API connection to Intezer.
     """
 
-    def __init__(self, api: IntezerApi = None):
+    def __init__(self, api: IntezerApiClient = None):
         """
         :param api: The API connection to Intezer.
         """
         self.status: Optional[consts.AnalysisStatusCode] = None
         self.analysis_id: Optional[str] = None
         self.analysis_time: Optional[datetime.datetime] = None
-        self._api: IntezerApi = api or get_global_api()
+        self._api = IntezerApi(api or get_global_api())
         self._report: Optional[Dict[str, Any]] = None
         self._send_time: Optional[datetime.datetime] = None
 
@@ -38,7 +39,7 @@ class Analysis(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None):
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None):
         raise NotImplementedError()
 
     def wait_for_completion(self,
@@ -134,7 +135,7 @@ class Analysis(metaclass=abc.ABCMeta):
             raise errors.IntezerError('Analysis not finished successfully')
 
     @classmethod
-    def _create_analysis_from_response(cls, response: Response, api: IntezerApi, analysis_id: str):
+    def _create_analysis_from_response(cls, response: Response, api: IntezerApiClient, analysis_id: str):
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 

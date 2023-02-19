@@ -4,16 +4,17 @@ from http import HTTPStatus
 
 from intezer_sdk import consts
 from intezer_sdk import errors
-from intezer_sdk.api import IntezerApi
+from intezer_sdk._api import IntezerApi
+from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 
 
-class Index(object):
+class Index:
     def __init__(self,
                  index_as: consts.IndexType,
                  file_path: str = None,
                  sha256: str = None,
-                 api: IntezerApi = None,
+                 api: IntezerApiClient = None,
                  family_name: str = None):
         if (sha256 is not None) == (file_path is not None):
             raise ValueError('Choose between sha256 or file indexing')
@@ -25,7 +26,7 @@ class Index(object):
         self.index_id = None
         self._sha256 = sha256
         self._file_path = file_path
-        self._api = api or get_global_api()
+        self._api = IntezerApi(api or get_global_api())
         self._index_as = index_as
         self._family_name = family_name
 

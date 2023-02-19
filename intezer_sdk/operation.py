@@ -1,16 +1,15 @@
 import datetime
 import time
+from http import HTTPStatus
 from typing import Dict
 from typing import Optional
 from typing import Union
 
-from intezer_sdk.api import IntezerApi
-from intezer_sdk.api import get_global_api
-from intezer_sdk.consts import CHECK_STATUS_INTERVAL
-from intezer_sdk.consts import AnalysisStatusCode
 from intezer_sdk import errors
-
-from http import HTTPStatus
+from intezer_sdk._api import IntezerApi
+from intezer_sdk.api import get_global_api
+from intezer_sdk.consts import AnalysisStatusCode
+from intezer_sdk.consts import CHECK_STATUS_INTERVAL
 
 
 class Operation:
