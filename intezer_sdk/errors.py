@@ -27,7 +27,7 @@ class ServerError(IntezerError):
         self.response = response
         detailed_error = _parse_erroneous_response(response)
         if detailed_error:
-            message = '{}. Error:{}'.format(message, detailed_error)
+            message = f'{message}. Error:{detailed_error}'
         super().__init__(message)
 
 
@@ -49,7 +49,7 @@ IndexHasAlreadyBeenSent = IndexHasAlreadyBeenSentError
 
 class FamilyNotFoundError(IntezerError):
     def __init__(self, family_id: str):
-        super().__init__('Family not found: {}'.format(family_id))
+        super().__init__(f'Family not found: {family_id}')
 
 
 class HashDoesNotExistError(ServerError):
@@ -118,7 +118,7 @@ IndexFailed = IndexFailedError
 
 class SubAnalysisOperationStillRunningError(IntezerError):
     def __init__(self, operation):
-        super().__init__('{} is still running'.format(operation))
+        super().__init__(f'{operation} is still running')
 
 
 SubAnalysisOperationStillRunning = SubAnalysisOperationStillRunningError
@@ -126,4 +126,4 @@ SubAnalysisOperationStillRunning = SubAnalysisOperationStillRunningError
 
 class SubAnalysisNotFoundError(IntezerError):
     def __init__(self, analysis_id: str):
-        super().__init__('analysis {} is not found'.format(analysis_id))
+        super().__init__(f'analysis {analysis_id} is not found')

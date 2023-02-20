@@ -1,3 +1,4 @@
+import datetime
 import os
 from http import HTTPStatus
 from typing import Any
@@ -60,7 +61,7 @@ def raise_for_status(response: requests.Response,
         raise requests.HTTPError(http_error_msg, response=response)
 
 
-class IntezerProxy:
+class IntezerApiClient:
     def __init__(self,
                  *,
                  api_version: str = None,
@@ -68,11 +69,14 @@ class IntezerProxy:
                  base_url: str = None,
                  verify_ssl: bool = True,
                  on_premise_version: OnPremiseVersion = None,
-                 user_agent: str = None):
+                 user_agent: str = None,
+                 renew_token_window=20):
         self.full_url = base_url + api_version
         self.base_url = base_url
         self.api_key = api_key
         self._access_token = None
+        self._renew_token_window = renew_token_window
+        self._token_expiration: Optional[int] = None
         self._session = None
         self.verify_ssl = verify_ssl
         self.on_premise_version = on_premise_version
@@ -124,6 +128,13 @@ class IntezerProxy:
 
         return response
 
+    def _refresh_token_if_needed(self):
+        if self._token_expiration:
+            token_expire = datetime.datetime.fromtimestamp(self._token_expiration)
+            now = datetime.datetime.utcnow()
+            if (token_expire - now).total_seconds() < self._renew_token_window:
+                self._set_access_token()
+
     def request_with_refresh_expired_access_token(self,
                                                   method: str,
                                                   path: str,
@@ -132,9 +143,10 @@ class IntezerProxy:
                                                   files: dict = None,
                                                   stream: bool = None,
                                                   base_url: str = None) -> Response:
+        self._refresh_token_if_needed()
         response = self._request(method, path, data, headers, files, stream, base_url=base_url)
 
-        if response.status_code == HTTPStatus.UNAUTHORIZED:
+        if response.status_code == HTTPStatus.UNAUTHORIZED and not self._token_expiration:
             self._access_token = None
             self._set_session()
             response = self._request(method, path, data, headers, files, stream, base_url)
@@ -151,7 +163,9 @@ class IntezerProxy:
         if response.status_code != HTTPStatus.OK:
             raise_for_status(response)
 
-        self._access_token = response.json()['result']
+        result = response.json()
+        self._access_token = result['result']
+        self._token_expiration = result.get('expire_at')
 
     def authenticate(self):
         """
@@ -159,7 +173,7 @@ class IntezerProxy:
 
         :raises: `errors.InvalidApiKeyError`: When the API key is invalid
         """
-        self._set_access_token()
+        self._set_session()
 
     def _set_session(self):
         self._session = requests.session()
@@ -170,8 +184,20 @@ class IntezerProxy:
         self._session.headers['Authorization'] = f'Bearer {self._access_token}'
         self._session.headers['User-Agent'] = self.user_agent
 
+    def assert_on_premise_above_v21_11(self):
+        if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:
+            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on-premise')
 
-class IntezerApi(IntezerProxy):
+    def assert_on_premise_above_v22_10(self):
+        if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V22_10:
+            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on-premise')
+
+    def assert_any_on_premise(self):
+        if self.on_premise_version:
+            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on on-premise')
+
+
+class IntezerApi(IntezerApiClient):
     def __init__(self,
                  api_version: str = None,
                  api_key: str = None,
@@ -186,6 +212,7 @@ class IntezerApi(IntezerProxy):
                          api_version=api_version,
                          on_premise_version=on_premise_version)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def analyze_by_hash(self,
                         file_hash: str,
                         disable_dynamic_unpacking: Optional[bool],
@@ -203,6 +230,7 @@ class IntezerApi(IntezerProxy):
 
         return self._get_analysis_id_from_response(response)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def analyze_by_download_url(self,
                                 download_url: str,
                                 disable_dynamic_unpacking: bool = None,
@@ -236,6 +264,7 @@ class IntezerApi(IntezerProxy):
 
         return self._get_analysis_id_from_response(response)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def analyze_by_file(self,
                         file_path: str = None,
                         file_stream: BinaryIO = None,
@@ -259,6 +288,7 @@ class IntezerApi(IntezerProxy):
         with open(file_path, 'rb') as file_to_upload:
             return self._analyze_file_stream(file_to_upload, file_name, options)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_latest_analysis(self,
                             file_hash: str,
                             private_only: bool = False,
@@ -280,6 +310,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_file_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}'.format(analyses_id),
                                                                   method='GET')
@@ -291,6 +322,7 @@ class IntezerApi(IntezerProxy):
     def get_analysis_response(self, analyses_id: str) -> Response:
         return self.get_file_analysis_response(analyses_id, False)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_url_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
         response = self.request_with_refresh_expired_access_token(path='/url/{}'.format(analyses_id),
                                                                   method='GET')
@@ -298,6 +330,7 @@ class IntezerApi(IntezerProxy):
 
         return response
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_endpoint_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
         response = self.request_with_refresh_expired_access_token(path=f'/endpoint-analyses/{analyses_id}',
                                                                   method='GET')
@@ -305,6 +338,7 @@ class IntezerApi(IntezerProxy):
 
         return response
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_endpoint_sub_analyses(self, analyses_id: str, verdicts: Optional[List[str]]) -> List[dict]:
         data = dict(verdicts=verdicts) if verdicts is not None else None
         response = self.request_with_refresh_expired_access_token(path=f'/endpoint-analyses/{analyses_id}/sub-analyses',
@@ -314,7 +348,8 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['sub_analyses']
 
-    def  create_endpoint_scan(self, scanner_info: dict) -> Dict[str, str]:
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
+    def create_endpoint_scan(self, scanner_info: dict) -> Dict[str, str]:
         if not self.on_premise_version or self.on_premise_version > OnPremiseVersion.V22_10:
             scanner_info['scan_type'] = consts.SCAN_TYPE_OFFLINE_ENDPOINT_SCAN
         response = self.request_with_refresh_expired_access_token(path='scans',
@@ -325,6 +360,7 @@ class IntezerApi(IntezerProxy):
         raise_for_status(response)
         return response.json()['result']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_iocs(self, analyses_id: str) -> Optional[dict]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
                                                                   method='GET')
@@ -332,6 +368,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_detection_result_url(self, analyses_id: str) -> Optional[str]:
         response = self.request_with_refresh_expired_access_token(path=f'/analyses/{analyses_id}/detect',
                                                                   method='GET')
@@ -341,6 +378,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result_url']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_dynamic_ttps(self, analyses_id: str) -> Optional[dict]:
         self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
@@ -349,6 +387,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_family_info(self, family_id: str) -> Optional[dict]:
         response = self.request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
         if response.status_code == HTTPStatus.NOT_FOUND:
@@ -357,6 +396,7 @@ class IntezerApi(IntezerProxy):
         raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
         return response.json()['result']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_family_by_name(self, family_name: str) -> Optional[Dict[str, Any]]:
         response = self.request_with_refresh_expired_access_token('GET', '/families', {'family_name': family_name})
         if response.status_code == HTTPStatus.NOT_FOUND:
@@ -365,6 +405,7 @@ class IntezerApi(IntezerProxy):
         raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
         return response.json()['result']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_sub_analyses_by_id(self, analysis_id: str) -> Optional[List[dict]]:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses'.format(analysis_id),
                                                                   method='GET')
@@ -372,6 +413,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['sub_analyses']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_sub_analysis_code_reuse_by_id(self,
                                           composed_analysis_id: str,
                                           sub_analysis_id: str) -> Optional[dict]:
@@ -385,6 +427,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_sub_analysis_metadata_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/metadata'
                                                                   .format(composed_analysis_id, sub_analysis_id),
@@ -393,6 +436,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_sub_analysis_related_files_by_family_id(self,
                                                     composed_analysis_id: str,
                                                     sub_analysis_id: str,
@@ -406,6 +450,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result_url']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_sub_analysis_account_related_samples_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
         response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/get-account-related-samples'.format(composed_analysis_id,
@@ -416,6 +461,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result_url']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_sub_analysis_capabilities_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
         self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(
@@ -426,6 +472,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result_url']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def generate_sub_analysis_vaccine_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
         response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/generate-vaccine'.format(composed_analysis_id, sub_analysis_id),
@@ -435,6 +482,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result_url']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_strings_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
         response = self.request_with_refresh_expired_access_token(
             path='/analyses/{}/sub-analyses/{}/strings'.format(composed_analysis_id, sub_analysis_id),
@@ -444,6 +492,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_string_related_samples_by_id(self,
                                          composed_analysis_id: str,
                                          sub_analysis_id: str,
@@ -457,6 +506,7 @@ class IntezerApi(IntezerProxy):
 
         return response.json()['result_url']
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_url_result(self, url: str) -> Optional[Response]:
         response = self.request_with_refresh_expired_access_token(path=url, method='GET')
 
@@ -469,6 +519,7 @@ class IntezerApi(IntezerProxy):
 
         return response
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def download_file_by_sha256(self, sha256: str, path: str = None, output_stream: IO = None) -> None:
         if not path and not output_stream:
             raise ValueError('You must provide either path or output_stream')
@@ -502,6 +553,7 @@ class IntezerApi(IntezerProxy):
                 for chunk in response.iter_content(chunk_size=8192):
                     file.write(chunk)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def index_by_sha256(self, sha256: str, index_as: IndexType, family_name: str = None) -> Response:
         data = {'index_as': index_as.value}
         if family_name:
@@ -513,6 +565,7 @@ class IntezerApi(IntezerProxy):
 
         return self._get_index_id_from_response(response)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def index_by_file(self, file_path: str, index_as: IndexType, family_name: str = None) -> Response:
         data = {'index_as': index_as.value}
         if family_name:
@@ -530,6 +583,7 @@ class IntezerApi(IntezerProxy):
 
         return self._get_index_id_from_response(response)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_index_response(self, index_id: str) -> Response:
         response = self.request_with_refresh_expired_access_token(path='/files/index/{}'.format(index_id),
                                                                   method='GET')
@@ -537,6 +591,7 @@ class IntezerApi(IntezerProxy):
 
         return response
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
         self.assert_any_on_premise()
         response = self.request_with_refresh_expired_access_token(method='POST',
@@ -546,6 +601,7 @@ class IntezerApi(IntezerProxy):
 
         return self._get_analysis_id_from_response(response)
 
+    @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_edr_assessments_by_alert_ids(self, edr_alert_ids: List[str]):
         response = self.request_with_refresh_expired_access_token(path='/edr-connector/notes/get-by-edr-alert-ids',
                                                                   method='GET',
@@ -615,18 +671,6 @@ class IntezerApi(IntezerProxy):
     def _get_index_id_from_response(response: Response):
         return response.json()['result_url'].split('/')[3]
 
-    def assert_on_premise_above_v21_11(self):
-        if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:
-            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on-premise')
-
-    def assert_on_premise_above_v22_10(self):
-        if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V22_10:
-            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on-premise')
-
-    def assert_any_on_premise(self):
-        if self.on_premise_version:
-            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on on-premise')
-
 
 def get_global_api() -> IntezerApi:
     global _global_api
@@ -641,7 +685,7 @@ def set_global_api(api_key: str = None,
                    api_version: str = None,
                    base_url: str = None,
                    verify_ssl: bool = True,
-                   on_premise_version: OnPremiseVersion = None):
+                   on_premise_version: OnPremiseVersion = None) -> IntezerApiClient:
     global _global_api
     api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
     _global_api = IntezerApi(api_version or consts.API_VERSION,
@@ -649,4 +693,7 @@ def set_global_api(api_key: str = None,
                              base_url or consts.BASE_URL,
                              verify_ssl,
                              on_premise_version)
+    return _global_api
 
+
+IntezerProxy = IntezerApiClient
