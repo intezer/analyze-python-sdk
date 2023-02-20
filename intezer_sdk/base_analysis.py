@@ -101,8 +101,7 @@ class Analysis(metaclass=abc.ABCMeta):
             if result['status'] == consts.AnalysisStatusCode.FAILED.value:
                 self.status = consts.AnalysisStatusCode.FAILED
                 raise errors.IntezerError('Analysis failed')
-            self._report = result['result']
-            self.status = consts.AnalysisStatusCode.FINISHED
+            self._set_report(result['result'])
         elif response.status_code == HTTPStatus.ACCEPTED:
             self.status = consts.AnalysisStatusCode.IN_PROGRESS
         else:
