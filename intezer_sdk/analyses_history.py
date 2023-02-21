@@ -1,11 +1,11 @@
 import datetime
-from typing import List
-from typing import Dict
 from typing import Any
+from typing import Dict
+from typing import List
 
-from intezer_sdk.api import IntezerApi
-from intezer_sdk.api import get_global_api
 from intezer_sdk.analyses_results import AnalysesHistoryResult
+from intezer_sdk.api import IntezerApiClient
+from intezer_sdk.api import get_global_api
 
 DEFAULT_LIMIT = 100
 DEFAULT_OFFSET = 0
@@ -17,7 +17,7 @@ ENDPOINT_ANALYSES_REQUEST = '/endpoint-analyses/history'
 def query_file_analyses_history(*,
                                 start_date: datetime.datetime,
                                 end_date: datetime.datetime,
-                                api: IntezerApi = None,
+                                api: IntezerApiClient = None,
                                 aggregated_view: bool = None,
                                 sources: List[str] = None,
                                 verdicts: List[str] = None,
@@ -66,7 +66,7 @@ def query_file_analyses_history(*,
 def query_endpoint_analyses_history(*,
                                     start_date: datetime.datetime,
                                     end_date: datetime.datetime,
-                                    api: IntezerApi = None,
+                                    api: IntezerApiClient = None,
                                     aggregated_view: bool = None,
                                     sources: List[str] = None,
                                     verdicts: List[str] = None,
@@ -103,7 +103,7 @@ def query_endpoint_analyses_history(*,
 def query_url_analyses_history(*,
                                start_date: datetime.datetime,
                                end_date: datetime.datetime,
-                               api: IntezerApi = None,
+                               api: IntezerApiClient = None,
                                sources: List[str] = None,
                                verdicts: List[str] = None,
                                sub_verdicts: List[str] = None,

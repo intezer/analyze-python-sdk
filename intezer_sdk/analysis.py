@@ -15,8 +15,9 @@ from intezer_sdk import _operation
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk import operation
+from intezer_sdk._api import IntezerApi
 from intezer_sdk._util import deprecated
-from intezer_sdk.api import IntezerApi
+from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import Analysis
 from intezer_sdk.sub_analysis import SubAnalysis
@@ -42,7 +43,7 @@ class FileAnalysis(Analysis):
                  file_stream: BinaryIO = None,
                  disable_dynamic_unpacking: bool = None,
                  disable_static_unpacking: bool = None,
-                 api: IntezerApi = None,
+                 api: IntezerApiClient = None,
                  file_name: str = None,
                  code_item_type: str = None,
                  zip_password: str = None,
@@ -102,7 +103,7 @@ class FileAnalysis(Analysis):
                 self._file_name = 'file.zip'
 
     @classmethod
-    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> Optional['FileAnalysis']:
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> Optional['FileAnalysis']:
         """
         Returns a FileAnalysis instance with the given analysis ID.
         Returns None when analysis doesn't exist.
@@ -111,14 +112,13 @@ class FileAnalysis(Analysis):
        :param api: The API connection to Intezer.
        :return: A FileAnalysis instance with the given analysis ID.
         """
-        api = api or get_global_api()
-        response = api.get_file_analysis_response(analysis_id, True)
+        response = IntezerApi(api or get_global_api()).get_file_analysis_response(analysis_id, True)
         return cls._create_analysis_from_response(response, api, analysis_id)
 
     @classmethod
     def from_latest_hash_analysis(cls,
                                   file_hash: str,
-                                  api: IntezerApi = None,
+                                  api: IntezerApiClient = None,
                                   private_only: bool = False,
                                   **additional_parameters) -> Optional['FileAnalysis']:
         """
@@ -131,8 +131,7 @@ class FileAnalysis(Analysis):
         :param additional_parameters: Additional parameters to pass to the API.
         :return: The latest FileAnalysis instance for the given file hash.
         """
-        api = api or get_global_api()
-        analysis_report = api.get_latest_analysis(file_hash, private_only, **additional_parameters)
+        analysis_report = IntezerApi(api or get_global_api()).get_latest_analysis(file_hash, private_only, **additional_parameters)
 
         if not analysis_report:
             return None
@@ -204,7 +203,7 @@ class FileAnalysis(Analysis):
                                               sub_analysis['sha256'],
                                               sub_analysis['source'],
                                               sub_analysis.get('extraction_info'),
-                                              api=self._api)
+                                              api=self._api.api)
             if sub_analysis_object.source == 'root':
                 self._root_analysis = sub_analysis_object
             else:
@@ -309,7 +308,7 @@ class UrlAnalysis(Analysis):
     :ivar url: The analyzed url
     :vartype url: str
     """
-    def __init__(self, url: Optional[str] = None, api: IntezerApi = None):
+    def __init__(self, url: Optional[str] = None, api: IntezerApiClient = None):
         """
          UrlAnalysis is a class for analyzing URLs.
 
@@ -322,7 +321,7 @@ class UrlAnalysis(Analysis):
         self._file_analysis: Optional[FileAnalysis] = None
 
     @classmethod
-    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> Optional['UrlAnalysis']:
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> Optional['UrlAnalysis']:
         """
         Returns a UrlAnalysis instance with the given analysis ID.
         Returns None when analysis doesn't exist.
@@ -331,8 +330,7 @@ class UrlAnalysis(Analysis):
        :param api: The API connection to Intezer.
        :return: A UrlAnalysis instance with the given analysis ID.
         """
-        api = api or get_global_api()
-        response = api.get_url_analysis_response(analysis_id, True)
+        response = IntezerApi(api or get_global_api()).get_url_analysis_response(analysis_id, True)
         return cls._create_analysis_from_response(response, api, analysis_id)
 
     def _set_report(self, report: dict):
@@ -362,7 +360,7 @@ class UrlAnalysis(Analysis):
             return None
 
         file_analysis_id = self._report['downloaded_file']['analysis_id']
-        self._file_analysis = get_file_analysis_by_id(file_analysis_id)
+        self._file_analysis = FileAnalysis.from_analysis_id(file_analysis_id, self._api.api)
         return self._file_analysis
 
 

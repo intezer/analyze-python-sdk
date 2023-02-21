@@ -100,9 +100,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
 
             with patch(self.patch_prop, mock_open(read_data='data')):
@@ -120,9 +120,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
             wait = 1
 
@@ -144,9 +144,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
 
             with patch(self.patch_prop, mock_open(read_data='data')):
@@ -165,15 +165,15 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=202)
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=202)
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
 
             with patch(self.patch_prop, mock_open(read_data='data')):
@@ -194,9 +194,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
             with patch(self.patch_prop, mock_open(read_data='data')):
                 # Act
@@ -204,19 +204,19 @@ class FileAnalysisSpec(BaseTest):
 
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
-        self.assertEqual(analysis.result(), 'report')
+        self.assertDictEqual({'analysis_id': 'asd'}, analysis.result())
 
     def test_send_analysis_by_download_url_and_get_report(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/analyze-by-url',
+                     url=f'{self.full_url}/analyze-by-url',
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(download_url='http://intezer-download.com')
 
             # Act
@@ -224,7 +224,7 @@ class FileAnalysisSpec(BaseTest):
 
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISH)
-        self.assertEqual(analysis.result(), 'report')
+        self.assertDictEqual({'analysis_id': 'asd'}, analysis.result())
 
     def test_send_analysis_by_file_and_get_iocs(self):
         # Arrange
@@ -234,11 +234,11 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/iocs',
+                     url=f'{self.full_url}/analyses/asd/iocs',
                      status=HTTPStatus.OK,
                      json={'result': 'ioc_report'})
             analysis = FileAnalysis(file_path='a')
@@ -259,11 +259,11 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/dynamic-ttps',
+                     url=f'{self.full_url}/analyses/asd/dynamic-ttps',
                      status=HTTPStatus.OK,
                      json={'result': 'ttps_report'})
             analysis = FileAnalysis(file_path='a')
@@ -294,11 +294,11 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/dynamic-ttps',
+                     url=f'{self.full_url}/analyses/asd/dynamic-ttps',
                      status=HTTPStatus.NOT_FOUND)
             analysis = FileAnalysis(file_path='a')
             with patch(self.patch_prop, mock_open(read_data='data')):
@@ -314,11 +314,11 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/dynamic-ttps',
+                     url=f'{self.full_url}/analyses/asd/dynamic-ttps',
                      status=405)
             analysis = FileAnalysis(file_path='a')
             with patch(self.patch_prop, mock_open(read_data='data')):
@@ -335,11 +335,11 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/iocs',
+                     url=f'{self.full_url}/analyses/asd/iocs',
                      status=405,
                      json={'result': 'ioc_report'})
             analysis = FileAnalysis(file_path='a')
@@ -357,11 +357,11 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/iocs',
+                     url=f'{self.full_url}/analyses/asd/iocs',
                      status=HTTPStatus.NOT_FOUND,
                      json={'result': 'ioc_report'})
             analysis = FileAnalysis(file_path='a')
@@ -378,9 +378,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a',
                                     disable_dynamic_unpacking=True,
                                     disable_static_unpacking=True)
@@ -390,7 +390,7 @@ class FileAnalysisSpec(BaseTest):
 
             # Assert
             self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
-            self.assertEqual(analysis.result(), 'report')
+            self.assertDictEqual({'analysis_id': 'asd'}, analysis.result())
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="disable_static_extraction"\r\n\r\nTrue'
                             in request_body)
@@ -405,9 +405,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a',
                                     file_name='b.zip',
                                     zip_password='asd')
@@ -418,7 +418,7 @@ class FileAnalysisSpec(BaseTest):
 
             # Assert
             self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
-            self.assertEqual(analysis.result(), 'report')
+            self.assertDictEqual({'analysis_id': 'asd'}, analysis.result())
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
                             in request_body)
@@ -433,9 +433,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a',
                                     file_name='b.zip',
                                     sandbox_command_line_arguments='-c hello')
@@ -446,7 +446,7 @@ class FileAnalysisSpec(BaseTest):
 
             # Assert
             self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
-            self.assertEqual(analysis.result(), 'report')
+            self.assertDictEqual({'analysis_id': 'asd'}, analysis.result())
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="sandbox_command_line_arguments"\r\n\r\n-c hello'
                             in request_body)
@@ -461,9 +461,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_hash=sha256,
                                     sandbox_command_line_arguments='-c hello')
 
@@ -472,7 +472,7 @@ class FileAnalysisSpec(BaseTest):
 
             # Assert
             self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
-            self.assertEqual(analysis.result(), 'report')
+            self.assertDictEqual({'analysis_id': 'asd'}, analysis.result())
             request_body_json = json.loads(mock.calls[0].request.body)
             self.assertTrue('-c hello', request_body_json['sandbox_command_line_arguments'])
 
@@ -484,9 +484,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_stream=__file__,
                                     zip_password='asd')
 
@@ -496,7 +496,7 @@ class FileAnalysisSpec(BaseTest):
 
             # Assert
             self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
-            self.assertEqual(analysis.result(), 'report')
+            self.assertDictEqual({'analysis_id': 'asd'}, analysis.result())
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
                             in request_body)
@@ -511,9 +511,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a',
                                     zip_password='asd')
 
@@ -523,7 +523,7 @@ class FileAnalysisSpec(BaseTest):
 
             # Assert
             self.assertEqual(analysis.status, consts.AnalysisStatusCode.FINISHED)
-            self.assertEqual(analysis.result(), 'report')
+            self.assertDictEqual({'analysis_id': 'asd'}, analysis.result())
             request_body = mock.calls[0].request.body.decode()
             self.assertTrue('Content-Disposition: form-data; name="zip_password"\r\n\r\nasd'
                             in request_body)
@@ -557,7 +557,7 @@ class FileAnalysisSpec(BaseTest):
 
             mock.add_callback('POST', url=f'{self.full_url}/analyze-by-hash', callback=request_callback)
             mock.add('POST',
-                     url=self.full_url + '/get-access-token',
+                     url=f'{self.full_url}/get-access-token',
                      status=HTTPStatus.OK,
                      json={'result': 'newer-access-token'})
 
@@ -570,7 +570,7 @@ class FileAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST', url=f'{self.full_url}/analyze-by-hash', status=HTTPStatus.UNAUTHORIZED)
             mock.add('POST',
-                     url=self.full_url + '/get-access-token',
+                     url=f'{self.full_url}/get-access-token',
                      status=HTTPStatus.OK,
                      json={'result': 'newer-access-token'})
 
@@ -604,7 +604,7 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses',
                      status=HTTPStatus.OK,
                      json={'sub_analyses': [{'source': 'root', 'sub_analysis_id': 'ab', 'sha256': 'axaxaxax'},
                                             {'source': 'static_extraction', 'sub_analysis_id': 'ac', 'sha256': 'ba'}]})
@@ -629,7 +629,7 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses',
                      status=HTTPStatus.OK,
                      json={'sub_analyses': [{'source': 'root', 'sub_analysis_id': 'ab', 'sha256': 'axaxaxax'},
                                             {'source': 'static_extraction', 'sub_analysis_id': 'ac', 'sha256': 'ba'}]})
@@ -654,21 +654,21 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses',
                      status=HTTPStatus.OK,
                      json={'sub_analyses': [{'source': 'root', 'sub_analysis_id': 'ab', 'sha256': 'axaxaxax'},
                                             {'source': 'static_extraction', 'sub_analysis_id': 'ac', 'sha256': 'ba'}]})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/code-reuse',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/code-reuse',
                      status=HTTPStatus.OK, json={})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/metadata',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/metadata',
                      status=HTTPStatus.OK, json={})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ac/code-reuse',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ac/code-reuse',
                      status=HTTPStatus.OK, json={})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ac/metadata',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ac/metadata',
                      status=HTTPStatus.OK, json={})
 
             analysis = FileAnalysis(file_hash='a' * 64)
@@ -697,11 +697,11 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses',
                      status=HTTPStatus.OK,
                      json={'sub_analyses': [{'source': 'root', 'sub_analysis_id': 'ab', 'sha256': 'axaxaxax'}]})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/metadata',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/metadata',
                      status=HTTPStatus.OK,
                      json={'indicators': [{'name': 'password_protected', 'classification': 'neutral'}]})
 
@@ -794,47 +794,47 @@ class FileAnalysisSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/code-reuse/families/ax/find-related-files',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/code-reuse/families/ax/find-related-files',
                      status=HTTPStatus.OK,
                      json={'result_url': 'a/b/related-files'})
             mock.add('POST',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/get-account-related-samples',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/get-account-related-samples',
                      status=HTTPStatus.OK,
                      json={'result_url': 'a/b/related-samples'})
             mock.add('POST',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/generate-vaccine',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/generate-vaccine',
                      status=HTTPStatus.OK,
                      json={'result_url': 'a/b/vaccine'})
             mock.add('POST',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/strings',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/strings',
                      status=HTTPStatus.OK,
                      json={'result_url': 'a/b/strings'})
             mock.add('POST',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/string-related-samples',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/string-related-samples',
                      status=HTTPStatus.OK,
                      json={'result_url': 'a/b/string-related-samples'})
             mock.add('POST',
-                     url=self.full_url + '/analyses/asd/sub-analyses/ab/capabilities',
+                     url=f'{self.full_url}/analyses/asd/sub-analyses/ab/capabilities',
                      status=HTTPStatus.OK,
                      json={'result_url': 'a/b/capabilities'})
 
             mock.add('GET',
-                     url=self.full_url + 'a/b/related-files',
+                     url=f'{self.full_url}a/b/related-files',
                      status=HTTPStatus.OK, json={'result': {'files': []}, 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + 'a/b/related-samples',
+                     url=f'{self.full_url}a/b/related-samples',
                      status=HTTPStatus.OK, json={'result': {'related_samples': []}, 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + 'a/b/vaccine',
+                     url=f'{self.full_url}a/b/vaccine',
                      status=HTTPStatus.OK, json={'result': 'abd', 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + 'a/b/strings',
+                     url=f'{self.full_url}a/b/strings',
                      status=HTTPStatus.OK, json={'result': 'abd', 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + 'a/b/string-related-samples',
+                     url=f'{self.full_url}a/b/string-related-samples',
                      status=HTTPStatus.OK, json={'result': 'abd', 'status': 'succeeded'})
             mock.add('GET',
-                     url=self.full_url + 'a/b/capabilities',
+                     url=f'{self.full_url}a/b/capabilities',
                      status=HTTPStatus.OK, json={'result': 'abd', 'status': 'succeeded'})
 
             sub_analysis = SubAnalysis('ab', 'asd', 'axaxax', 'root', None)
@@ -919,9 +919,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
 
             with patch(self.patch_prop, mock_open(read_data='data')):
@@ -1220,9 +1220,9 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.CREATED,
                      json={'result_url': 'a/sd/asd'})
             mock.add('GET',
-                     url=self.full_url + '/analyses/asd',
+                     url=f'{self.full_url}/analyses/asd',
                      status=HTTPStatus.OK,
-                     json={'result': 'report', 'status': 'succeeded'})
+                     json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_hash='a' * 64)
 
             # Act
@@ -1231,14 +1231,66 @@ class FileAnalysisSpec(BaseTest):
         # Assert
         self.assertIsNone(analysis.running_analysis_duration)
 
+    def test_compare_file_analysis(self):
+        # Arrange
+        analysis_id = 'analysis_id'
+        analysis_report = {'analysis_id': analysis_id,
+                           'sha256': 'hash',
+                           'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/analyses/{analysis_id}',
+                     status=HTTPStatus.OK,
+                     json={'result': analysis_report, 'status': 'succeeded'})
+
+            # Act
+            analysis1 = FileAnalysis.from_analysis_id(analysis_id)
+            analysis2 = FileAnalysis.from_analysis_id(analysis_id)
+
+        # Assert
+        self.assertEqual(analysis1, analysis2)
+        analysis2.analysis_id = 'asd'
+        self.assertNotEqual(analysis1, analysis2)
+
+    def test_compare_returns_false_when_analysis_not_the_same_type(self):
+        # Arrange
+        analysis_id = str(uuid.uuid4())
+        endpoint_result = {
+            'status': 'succeeded',
+            'result': {
+                'analysis_id': analysis_id,
+                'scan_status': 'done'
+            }
+        }
+        file_report = {'analysis_id': analysis_id,
+                           'sha256': 'hash',
+                           'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/endpoint-analyses/{analysis_id}',
+                     status=HTTPStatus.OK,
+                     json=endpoint_result)
+            mock.add('GET',
+                     url=f'{self.full_url}/analyses/{analysis_id}',
+                     status=HTTPStatus.OK,
+                     json={'result': file_report, 'status': 'succeeded'})
+
+            # Act
+            endpoint_analysis = EndpointAnalysis.from_analysis_id(analysis_id)
+            file_analysis = FileAnalysis.from_analysis_id(analysis_id)
+
+        # Assert
+        self.assertNotEqual(endpoint_analysis,file_analysis)
+
+
 
 class EndpointAnalysisSpec(BaseTest):
     def test_analysis_in_progress(self):
         # Arrange
         analysis_id = str(uuid.uuid4())
-        result = {
-            'status': 'in_progress',
-        }
+        result = {'status': 'in_progress'}
 
         with responses.RequestsMock() as mock:
             mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=HTTPStatus.ACCEPTED,

@@ -3,12 +3,12 @@ from typing import Any
 from typing import Dict
 from typing import Tuple
 
-from intezer_sdk.api import IntezerApi
+from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
 
 
 class AnalysesHistoryResult:
-    def __init__(self, request_url_path: str, api: IntezerApi, filters: Dict):
+    def __init__(self, request_url_path: str, api: IntezerApiClient, filters: Dict):
         """
         Fetch all analyses history results from server.
 
@@ -16,7 +16,7 @@ class AnalysesHistoryResult:
         :param api: Instance of Intezer API for request server.
         :param filters: Filters requested from server.
         """
-        self.api: IntezerApi = api
+        self._api = api
         self.filters: Dict = filters
         self._pages: List[Any] = []
         self._current_page: List[Any] = []
@@ -75,7 +75,7 @@ class AnalysesHistoryResult:
         :return: Count of all results exits in filtered request and amount
         analyses as requested.
         """
-        response = self.api.request_with_refresh_expired_access_token(
+        response = self._api.request_with_refresh_expired_access_token(
             path=url_path, method='POST', data=data)
         raise_for_status(response)
         data_response = response.json()

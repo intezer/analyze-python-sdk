@@ -1,3 +1,18 @@
+1.16
+____
+- Use token expiration to auto renew the token
+- Add 'from_family_id' class method to Family
+- Made IntezerAPI private module
+- Rename IntezerProxy to IntezerApiClient
+- Raises InsufficientPermissionsError when accessing enterprise routes that aren't available for the plan
+- Raise InvalidApiKey on any 401 response
+- Analysis and Family are now comparable
+- Add account routes and object
+
+1.15.2
+-------
+- Fix JSON deserialization of endpoint scan results
+
 1.15.1
 -------
 - Add 'is_analysis_running' method to Analysis class.
@@ -8,11 +23,9 @@
 -------
 - Support for offline endpoint scan uploading in 'EndpointAnalysis'.
 
-
 1.14.4
 -------
 - Add analysis time to analysis object
-
 
 1.14.3
 -------

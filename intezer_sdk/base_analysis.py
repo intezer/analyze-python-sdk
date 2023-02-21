@@ -11,7 +11,8 @@ from requests import Response
 
 from intezer_sdk import consts
 from intezer_sdk import errors
-from intezer_sdk.api import IntezerApi
+from intezer_sdk._api import IntezerApi
+from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 
 
@@ -21,14 +22,14 @@ class Analysis(metaclass=abc.ABCMeta):
     It requires an API connection to Intezer.
     """
 
-    def __init__(self, api: IntezerApi = None):
+    def __init__(self, api: IntezerApiClient = None):
         """
         :param api: The API connection to Intezer.
         """
         self.status: Optional[consts.AnalysisStatusCode] = None
         self.analysis_id: Optional[str] = None
         self.analysis_time: Optional[datetime.datetime] = None
-        self._api: IntezerApi = api or get_global_api()
+        self._api = IntezerApi(api or get_global_api())
         self._report: Optional[Dict[str, Any]] = None
         self._send_time: Optional[datetime.datetime] = None
 
@@ -38,7 +39,7 @@ class Analysis(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def from_analysis_id(cls, analysis_id: str, api: IntezerApi = None) -> 'Analysis':
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> 'Analysis':
         raise NotImplementedError()
 
     def wait_for_completion(self,
@@ -105,8 +106,7 @@ class Analysis(metaclass=abc.ABCMeta):
             if result['status'] == consts.AnalysisStatusCode.FAILED.value:
                 self.status = consts.AnalysisStatusCode.FAILED
                 raise errors.IntezerError('Analysis failed')
-            self._report = result['result']
-            self.status = consts.AnalysisStatusCode.FINISHED
+            self._set_report(result['result'])
         elif response.status_code == HTTPStatus.ACCEPTED:
             self.status = consts.AnalysisStatusCode.IN_PROGRESS
         else:
@@ -129,7 +129,7 @@ class Analysis(metaclass=abc.ABCMeta):
         self.analysis_id = report['analysis_id']
         self._report = report
         if 'analysis_time' in report:
-            self.analysis_time = datetime.datetime.strptime(report['analysis_time'], '%a, %d %b %Y %X GMT')
+            self.analysis_time = datetime.datetime.strptime(report['analysis_time'], consts.DEFAULT_DATE_FORMAT)
         self.status = consts.AnalysisStatusCode.FINISHED
 
     def _assert_analysis_finished(self):
@@ -139,7 +139,7 @@ class Analysis(metaclass=abc.ABCMeta):
             raise errors.IntezerError('Analysis not finished successfully')
 
     @classmethod
-    def _create_analysis_from_response(cls, response: Response, api: IntezerApi, analysis_id: str):
+    def _create_analysis_from_response(cls, response: Response, api: IntezerApiClient, analysis_id: str):
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
@@ -178,3 +178,6 @@ class Analysis(metaclass=abc.ABCMeta):
                 self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
             else:
                 self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.analysis_id and other.analysis_id == self.analysis_id

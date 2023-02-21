@@ -6,9 +6,10 @@ from typing import Union
 
 from intezer_sdk import _operation
 from intezer_sdk import errors
-from intezer_sdk.api import IntezerApi
-from intezer_sdk.api import get_global_api
 from intezer_sdk import operation
+from intezer_sdk._api import IntezerApi
+from intezer_sdk.api import IntezerApiClient
+from intezer_sdk.api import get_global_api
 
 
 class SubAnalysis:
@@ -21,7 +22,7 @@ class SubAnalysis:
                  sha256: str,
                  source: str,
                  extraction_info: Optional[dict],
-                 api: IntezerApi = None,
+                 api: IntezerApiClient = None,
                  verdict=None):
         self.composed_analysis_id = composed_analysis_id
         self.analysis_id = analysis_id
@@ -29,7 +30,7 @@ class SubAnalysis:
         self._source = source
         self._extraction_info = extraction_info
         self._verdict = verdict
-        self._api = api or get_global_api()
+        self._api = IntezerApi(api or get_global_api())
         self._code_reuse = None
         self._metadata = None
         self._operations = {}
@@ -40,7 +41,7 @@ class SubAnalysis:
                          analysis_id: str,
                          composed_analysis_id: str,
                          lazy_load=True,
-                         api: IntezerApi = None) -> Optional['SubAnalysis']:
+                         api: IntezerApiClient = None) -> Optional['SubAnalysis']:
         """
         class method that creates a new instance of the class by fetching the details of the sub-analysis from the Intezer API.
         If lazy_load is set to True, the details of the sub-analysis are not fetched immediately.

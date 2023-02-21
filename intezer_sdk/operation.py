@@ -3,7 +3,7 @@ import time
 from typing import Optional
 
 from intezer_sdk import errors
-from intezer_sdk.api import IntezerApi
+from intezer_sdk._api import IntezerApi
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import AnalysisStatusCode
 from intezer_sdk.consts import CHECK_STATUS_INTERVAL
