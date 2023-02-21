@@ -13,6 +13,9 @@ class Family:
         self._type = family_type
         self._api = IntezerApi(api or get_global_api())
 
+    def __eq__(self, other):
+        return isinstance(other, Family) and self.family_id and other.family_id == self.family_id
+
     @classmethod
     def from_family_id(cls, family_id: str, api: IntezerApiClient = None) -> typing.Optional['Family']:
         try:

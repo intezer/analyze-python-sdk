@@ -2,6 +2,7 @@ import enum
 
 from intezer_sdk import __version__
 
+DEFAULT_DATE_FORMAT = '%a, %d %b %Y %X GMT'
 
 class AutoName(enum.Enum):
     def _generate_next_value_(name, start, count, last_values):
