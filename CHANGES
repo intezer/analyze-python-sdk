@@ -4,6 +4,10 @@ ____
 - Add 'from_family_id' class method to Family
 - Made IntezerAPI private module
 - Rename IntezerProxy to IntezerApiClient
+- Raises InsufficientPermissionsError when accessing enterprise routes that aren't available for the plan
+- Raise InvalidApiKey on any 401 response
+- Analysis and Family are now comparable
+- Add account routes and object
 
 1.15.2
 -------
