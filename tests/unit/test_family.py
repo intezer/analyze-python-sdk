@@ -28,6 +28,7 @@ class FamilySpec(BaseTest):
 
         # Assert
         self.assertEqual(expected_name, name)
+
     def test_from_family_id_returns_family(self):
         # Arrange
         family_id = str(uuid.uuid4())
@@ -48,6 +49,27 @@ class FamilySpec(BaseTest):
         self.assertEqual(family_id, family.family_id)
         self.assertEqual(family_name, family.name)
         self.assertEqual(family_type, family.type)
+
+    def test_compare_family(self):
+        # Arrange
+        family_id = str(uuid.uuid4())
+        family_name = 'Burla'
+
+        with responses.RequestsMock() as mock:
+            family_type = 'malware'
+            mock.add('GET',
+                     f'{self.full_url}/families/{family_id}/info',
+                     json={'result': {'family_id': family_id,
+                                      'family_name': family_name,
+                                      'family_type': family_type}})
+            # Act
+            family1 = Family.from_family_id(family_id)
+            family2 = Family.from_family_id(family_id)
+
+        # Assert
+        self.assertEqual(family1, family2)
+        family1.family_id = 'asd'
+        self.assertNotEqual(family1, family2)
 
     def test_access_to_family_name_fetches_the_data_from_cloud_only_once(self):
         # Arrange
@@ -118,6 +140,7 @@ class FamilySpec(BaseTest):
             # Act and Assert
             with self.assertRaises(errors.FamilyNotFoundError):
                 family.fetch_info()
+
     def test_from_family_id_return_none_when_family_not_found(self):
         # Arrange
         family_id = str(uuid.uuid4())

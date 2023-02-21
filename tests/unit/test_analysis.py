@@ -1231,6 +1231,60 @@ class FileAnalysisSpec(BaseTest):
         # Assert
         self.assertIsNone(analysis.running_analysis_duration)
 
+    def test_compare_file_analysis(self):
+        # Arrange
+        analysis_id = 'analysis_id'
+        analysis_report = {'analysis_id': analysis_id,
+                           'sha256': 'hash',
+                           'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/analyses/{analysis_id}',
+                     status=HTTPStatus.OK,
+                     json={'result': analysis_report, 'status': 'succeeded'})
+
+            # Act
+            analysis1 = FileAnalysis.from_analysis_id(analysis_id)
+            analysis2 = FileAnalysis.from_analysis_id(analysis_id)
+
+        # Assert
+        self.assertEqual(analysis1, analysis2)
+        analysis2.analysis_id = 'asd'
+        self.assertNotEqual(analysis1, analysis2)
+
+    def test_compare_returns_false_when_analysis_not_the_same_type(self):
+        # Arrange
+        analysis_id = str(uuid.uuid4())
+        endpoint_result = {
+            'status': 'succeeded',
+            'result': {
+                'analysis_id': analysis_id,
+                'scan_status': 'done'
+            }
+        }
+        file_report = {'analysis_id': analysis_id,
+                           'sha256': 'hash',
+                           'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/endpoint-analyses/{analysis_id}',
+                     status=HTTPStatus.OK,
+                     json=endpoint_result)
+            mock.add('GET',
+                     url=f'{self.full_url}/analyses/{analysis_id}',
+                     status=HTTPStatus.OK,
+                     json={'result': file_report, 'status': 'succeeded'})
+
+            # Act
+            endpoint_analysis = EndpointAnalysis.from_analysis_id(analysis_id)
+            file_analysis = FileAnalysis.from_analysis_id(analysis_id)
+
+        # Assert
+        self.assertNotEqual(endpoint_analysis,file_analysis)
+
+
 
 class EndpointAnalysisSpec(BaseTest):
     def test_analysis_in_progress(self):

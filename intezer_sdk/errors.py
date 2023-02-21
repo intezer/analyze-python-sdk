@@ -127,3 +127,8 @@ SubAnalysisOperationStillRunning = SubAnalysisOperationStillRunningError
 class SubAnalysisNotFoundError(IntezerError):
     def __init__(self, analysis_id: str):
         super().__init__(f'analysis {analysis_id} is not found')
+
+
+class InsufficientPermissionsError(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Account does not have permission to this route', response)

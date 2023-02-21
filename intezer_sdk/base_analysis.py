@@ -124,7 +124,7 @@ class Analysis(metaclass=abc.ABCMeta):
         self.analysis_id = report['analysis_id']
         self._report = report
         if 'analysis_time' in report:
-            self.analysis_time = datetime.datetime.strptime(report['analysis_time'], '%a, %d %b %Y %X GMT')
+            self.analysis_time = datetime.datetime.strptime(report['analysis_time'], consts.DEFAULT_DATE_FORMAT)
         self.status = consts.AnalysisStatusCode.FINISHED
 
     def _assert_analysis_finished(self):
@@ -173,3 +173,6 @@ class Analysis(metaclass=abc.ABCMeta):
                 self.wait_for_completion(sleep_before_first_check=True, timeout=wait_timeout)
             else:
                 self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.analysis_id and other.analysis_id == self.analysis_id

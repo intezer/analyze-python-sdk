@@ -6,6 +6,8 @@ from http import HTTPStatus
 import responses
 
 from intezer_sdk import consts
+from intezer_sdk import errors
+from intezer_sdk.api import raise_for_status
 from intezer_sdk.api import set_global_api
 
 
@@ -23,7 +25,7 @@ class BaseTest(unittest.TestCase):
             set_global_api().authenticate()
 
 
-class TokenRefreshSpec(unittest.TestCase):
+class ApiSpec(unittest.TestCase):
     def setUp(self) -> None:
         self.full_url = consts.BASE_URL + consts.API_VERSION
 
@@ -54,6 +56,39 @@ class TokenRefreshSpec(unittest.TestCase):
             response = api.request_with_refresh_expired_access_token('POST', '/some-route')
             response.raise_for_status()
 
+    def test_api_raise_insufficient_permissions_error_when_insufficient_permissions_received(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=f'{self.full_url}/get-access-token',
+                     status=HTTPStatus.OK,
+                     json={'result': 'access-token', 'expire_at': 2166920067})
+            api = set_global_api()
+            api.authenticate()
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', f'{self.full_url}/some-route', status=HTTPStatus.FORBIDDEN, json={'error': 'Insufficient Permissions'})
+            response = api.request_with_refresh_expired_access_token('GET', '/some-route')
+
+            with self.assertRaises(errors.InsufficientPermissionsError):
+                raise_for_status(response)
+
+    def test_api_raise_invalid_api_key_error_when_unauthorized_received(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=f'{self.full_url}/get-access-token',
+                     status=HTTPStatus.OK,
+                     json={'result': 'access-token', 'expire_at': 2166920067})
+            api = set_global_api()
+            api.authenticate()
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', f'{self.full_url}/some-route', status=HTTPStatus.UNAUTHORIZED)
+            response = api.request_with_refresh_expired_access_token('GET', '/some-route')
+
+            with self.assertRaises(errors.InvalidApiKeyError):
+                raise_for_status(response)
 
 
 
