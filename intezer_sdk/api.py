@@ -38,7 +38,17 @@ def raise_for_status(response: requests.Response,
     elif allowed_statuses and response.status_code not in allowed_statuses:
         http_error_msg = f'{response.status_code} Custom Error: {reason} for url: {response.url}'
     elif 400 <= response.status_code < 500:
-        if response.status_code != 400:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
+            raise errors.InvalidApiKeyError(response)
+        elif response.status_code == HTTPStatus.FORBIDDEN:
+            try:
+                error_message = response.json()['error']
+            except Exception:
+                http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
+            else:
+                if error_message == 'Insufficient Permissions':
+                    raise errors.InsufficientPermissionsError(response)
+        elif response.status_code != HTTPStatus.BAD_REQUEST:
             http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
         else:
             # noinspection PyBroadException
