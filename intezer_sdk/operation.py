@@ -4,6 +4,7 @@ from typing import Optional
 
 from intezer_sdk import errors
 from intezer_sdk._api import IntezerApi
+from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import AnalysisStatusCode
 from intezer_sdk.consts import CHECK_STATUS_INTERVAL
@@ -14,7 +15,7 @@ class Operation:
     The Operation class is used to represent an asynchronous operation with the Intezer API.
     """
 
-    def __init__(self, url: str, name: str, api: IntezerApi = None):
+    def __init__(self, url: str, name: str, api: IntezerApiClient = None):
         """
         Initializes the Operation instance with the given url, name, and api (defaults to the global API instance if not specified).
         :param url: The URL of the operation that will be used to query the result.
@@ -25,7 +26,7 @@ class Operation:
         self.url = url
         self.result = None
         self.name = name
-        self._api = api or get_global_api()
+        self._api = IntezerApi(api or get_global_api())
 
     def get_result(self):
         """

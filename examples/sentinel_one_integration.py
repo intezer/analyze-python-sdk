@@ -3,13 +3,12 @@
 import argparse
 import datetime
 import io
-import json
 import logging
 import logging.handlers
+import secrets
 import sys
 import time
 import urllib.parse
-import zipfile
 from http import HTTPStatus
 from typing import Optional
 from typing import Tuple
@@ -62,64 +61,29 @@ def init_s1_requests_session(api_token: str, base_url: str, skip_ssl_verificatio
     _s1_session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
 
 
-def fetch_file_from_endpoint(agent_id: str, file_path: str):
-    password = 'Infected1234!'
-    response = _s1_session.post(f'/web/api/v2.1/agents/{agent_id}/actions/fetch-files',
-                                json={
-                                    'data': {
-                                        'password': password,
-                                        'files': [file_path]}})
-    assert_s1_response(response)
-    return monitor_file_download(80, password, {'agentIds': agent_id})
-
-
-def analyze_by_file(threat_id: str, agent_id: str, file_path: str):
-    response = _s1_session.get(f'/web/api/v2.1/threats/{threat_id}/download-from-cloud')
-    if response.status_code == HTTPStatus.OK:
-        data = response.json()['data']
-        download_url = data['downloadUrl']
-        file = download_file(download_url, None)
-        file_name = data['fileName']
-        zip_password = 'S1BinaryVault'
-    else:
-        raise Exception()
-        try:
-            download_url, zip_password = fetch_file(threat_id)
-            file = download_file(download_url, zip_password)
-            file_name = f'{threat_id}.zip'
-        except Exception:
-            if not file_path:
-                raise
-            download_url, zip_password = fetch_file_from_endpoint(agent_id, file_path)
-            file = download_file(download_url, zip_password)
-            file_name = file_path.split('\\')[-1]
-
+def analyze_by_file(threat_id: str):
+    download_url, zipp_password = fetch_file(threat_id)
+    file = download_file(download_url)
     _logger.debug('starting to analyze file')
-    analysis = FileAnalysis(file_stream=file, file_name=file_name, zip_password=zip_password)
+    analysis = FileAnalysis(file_stream=file, file_name=f'{threat_id}.zip', zip_password=zipp_password)
     return analysis
 
 
 def fetch_file(threat_id: str) -> Tuple[str, Optional[str]]:
-    zip_password = 'Infected1234!'
+    zip_password = secrets.token_urlsafe(32)
+    fetch_file_time = datetime.datetime.utcnow() - datetime.timedelta(seconds=5)
 
     _logger.debug('sending fetch command to the endpoint')
     response = _s1_session.post('/web/api/v2.1/threats/fetch-file',
                                 json={'data': {'password': zip_password}, 'filter': {'ids': [threat_id]}})
     assert_s1_response(response)
-    return monitor_file_download(86, zip_password, {'threatIds': threat_id})
 
-
-def monitor_file_download(activity_type: int,
-                          zip_password: str,
-                          additional_filters: dict = None) -> Tuple[str, Optional[str]]:
-    fetch_file_time = datetime.datetime.utcnow() - datetime.timedelta(seconds=5)
-    additional_filters = additional_filters or {}
     for count in range(20):
         _logger.debug(f'waiting for s1 to fetch the file from the endpoint ({count})')
         time.sleep(10)
         response = _s1_session.get('/web/api/v2.1/activities',
-                                   params={**additional_filters,
-                                           'activityTypes': activity_type,
+                                   params={'threatIds': threat_id,
+                                           'activityTypes': 86,
                                            'createdAt__gte': fetch_file_time.isoformat()})
         assert_s1_response(response)
         data = response.json()
@@ -136,23 +100,13 @@ def monitor_file_download(activity_type: int,
         raise Exception(err_msg)
 
 
-def download_file(download_url: str, zip_password: Optional[str]):
+def download_file(download_url: str):
     _logger.debug(f'downloading file from s1 (download url of {download_url})')
-    if download_url.startswith('http'):
-        response = requests.get(download_url)
-    else:
-        response = _s1_session.get('/web/api/v2.1' + download_url)
+    response = _s1_session.get('/web/api/v2.1' + download_url)
     assert_s1_response(response)
     _logger.debug(f'download finished')
 
     file = io.BytesIO(response.content)
-    with zipfile.ZipFile(file, 'r') as downloaded_zip:
-        if downloaded_zip.namelist() == ['manifest.json']:
-            manifest_file = downloaded_zip.read('manifest.json', zip_password.encode('ascii'))
-            manifest = json.loads(manifest_file)
-            fail_reason = manifest[0]['reason']
-            raise RuntimeError(fail_reason)
-    file.seek(0)
     return file
 
 
@@ -185,18 +139,11 @@ def get_threat(threat_id: str):
     return response.json()['data'][0]
 
 
-def get_threat_timeline(threat_id: str):
-    response = _s1_session.get(f'/web/api/v2.1/threats/{threat_id}/timeline', params=dict(limit=100))
-    assert_s1_response(response)
-    return response.json()['data']
-
-
 def filter_threat(threat_info: dict) -> bool:
     return threat_info['agentDetectionInfo']['agentOsName'].lower().startswith(('linux', 'windows'))
 
 
 def send_note(threat_id: str, analysis: FileAnalysis):
-    return
     note = util.get_analysis_summary(analysis)
 
     response = _s1_session.post('/web/api/v2.1/threats/notes',
@@ -206,7 +153,6 @@ def send_note(threat_id: str, analysis: FileAnalysis):
 
 
 def send_failure_note(note: str, threat_id: str):
-    return
     note = f'Intezer Analyze File Scan failed: {note}'
     response = _s1_session.post('/web/api/v2.1/threats/notes',
                                 json={'data': {'text': note}, 'filter': {'ids': [threat_id]}})
@@ -218,40 +164,31 @@ def analyze_threat(threat_id: str, threat: dict = None):
     try:
         if not threat:
             threat = get_threat(threat_id)
-        threat_timeline = get_threat_timeline(threat_id)
+        if not filter_threat(threat):
+            _logger.info(f'threat {threat_id} is been filtered')
+            return
 
         threat_info = threat['threatInfo']
         file_hash = threat_info.get('sha256') or threat_info.get('sha1') or threat_info.get('md5')
-        file_path = threat_info.get('filePath')
-        if threat_info['initiatedBy'] == 'star_active':
-            data = threat_timeline[0]['data']
-            file_hash = data.get('sourceprocesssha256') or data.get('sourceprocesssha1') or data.get(
-                'sourceprocessshamd5')
-            file_path = data.get('sourceprocessfilepath')
-
         analysis = None
-        if file_hash and False:
+        if file_hash:
             _logger.debug(f'trying to analyze by hash {file_hash}')
             try:
-                analysis = FileAnalysis.from_latest_hash_analysis(file_hash=file_hash,
-                                                                  private_only=True,
-                                                                  requester='s1')
-                if not analysis:
-                    analysis = FileAnalysis(file_hash=file_hash)
-                    analysis.send(requester='s1')
+                analysis = FileAnalysis(file_hash=file_hash)
+                analysis.send()
             except errors.HashDoesNotExistError:
                 _logger.debug(f'hash {file_hash} not found on server, fetching the file from endpoint')
                 analysis = None
 
         if not analysis:
-            analysis = analyze_by_file(threat_id, threat['agentRealtimeInfo']['agentId'], file_path)
+            analysis = analyze_by_file(threat_id)
             analysis.send(requester='s1')
 
         _logger.debug('waiting for analysis completion')
-        # analysis.wait_for_completion()
-        # _logger.debug('analysis completed')
-        #
-        # send_note(threat_id, analysis)
+        analysis.wait_for_completion()
+        _logger.debug('analysis completed')
+
+        send_note(threat_id, analysis)
     except Exception as ex:
         _logger.exception(f'failed to process threat {threat_id}')
         send_failure_note(str(ex), threat_id)
@@ -277,7 +214,7 @@ def parse_argparse_args():
     query_parser = subparsers.add_parser('query', help='Analyze new incoming threat')
     query_parser.add_argument('--since',
                               help='query threats from certain date in the format YYYY-MM-DD',
-                              type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%d'), )
+                              type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%d'),)
 
     return parser.parse_args()
 
@@ -293,8 +230,7 @@ def query_threats(next_time_query: Optional[datetime.datetime]):
     next_time_query = next_time_query or datetime.datetime.utcnow()
     while True:
         _logger.info('checking for new threats...')
-        response = _s1_session.get('/web/api/v2.1/threats',
-                                   params={'createdAt__gte': next_time_query.isoformat(), 'limit': 100})
+        response = _s1_session.get('/web/api/v2.1/threats', params={'createdAt__gte': next_time_query.isoformat()})
         next_time_query = datetime.datetime.utcnow()
         assert_s1_response(response)
         threats = response.json()['data']
@@ -318,3 +254,4 @@ if __name__ == '__main__':
     else:
         print('error: the following arguments are required: subcommand')
         sys.exit(1)
+

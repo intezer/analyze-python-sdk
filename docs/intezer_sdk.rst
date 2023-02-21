@@ -4,6 +4,14 @@ intezer\_sdk package
 Submodules
 ----------
 
+intezer\_sdk.account module
+-------------------------------------
+
+.. automodule:: intezer_sdk.account
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 intezer\_sdk.analyses\_history module
 -------------------------------------
 

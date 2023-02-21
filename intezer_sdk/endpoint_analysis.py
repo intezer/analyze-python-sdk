@@ -22,7 +22,7 @@ class EndpointAnalysis(Analysis):
     """
     EndpointAnalysis is a class for analyzing endpoints. It is a subclass of the Analysis class and requires an API connection to Intezer.
 
-     :ivar analysis_id: The analysis id.
+    :ivar analysis_id: The analysis id.
     :vartype analysis_id: str
     :ivar status: The status of the analysis.
     :vartype status: intezer_sdk.consts.AnalysisStatusCode
