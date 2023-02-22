@@ -6,10 +6,12 @@ from typing import BinaryIO
 from typing import IO
 from typing import Optional
 from typing import Union
+from typing import List
 
 import requests
 from requests import Response
 
+from intezer_sdk import _operation
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk import operation
@@ -26,7 +28,15 @@ logger = logging.getLogger(__name__)
 class FileAnalysis(Analysis):
     """
     FileAnalysis is a class for analyzing files. It is a subclass of the BaseAnalysis class and requires an API connection to Intezer.
+
+    :ivar analysis_id: The analysis id.
+    :vartype analysis_id: str
+    :ivar status: The status of the analysis.
+    :vartype status: intezer_sdk.consts.AnalysisStatusCode
+    :ivar analysis_time: The date that the analysis was executed.
+    :vartype analysis_time: datetime.datetime
     """
+
     def __init__(self,
                  file_path: str = None,
                  file_hash: str = None,
@@ -76,7 +86,7 @@ class FileAnalysis(Analysis):
         self._code_item_type = code_item_type
         self._zip_password = zip_password
         self._sandbox_command_line_arguments = sandbox_command_line_arguments
-        self._sub_analyses = None
+        self._sub_analyses: List[SubAnalysis] = None
         self._root_analysis = None
         self._iocs_report = None
         self._dynamic_ttps_report = None
@@ -97,6 +107,7 @@ class FileAnalysis(Analysis):
         """
         Returns a FileAnalysis instance with the given analysis ID.
         Returns None when analysis doesn't exist.
+
        :param analysis_id: The ID of the analysis to retrieve.
        :param api: The API connection to Intezer.
        :return: A FileAnalysis instance with the given analysis ID.
@@ -113,6 +124,7 @@ class FileAnalysis(Analysis):
         """
         Returns the latest FileAnalysis instance for the given file hash, with the option to filter by private analyses only.
         Returns None when analysis doesn't exist.
+
         :param file_hash: The hash of the file to retrieve analysis for.
         :param api: The API connection to Intezer.
         :param private_only: A flag to filter results by private analyses only.
@@ -162,12 +174,22 @@ class FileAnalysis(Analysis):
                                              sandbox_command_line_arguments=self._sandbox_command_line_arguments,
                                              **additional_parameters)
 
-    def get_sub_analyses(self):
+    def get_sub_analyses(self) -> List[SubAnalysis]:
+        """
+        Get a list of sub analysis.
+
+        :return: List of sub analyses
+        """
         if self._sub_analyses is None and self.analysis_id:
             self._init_sub_analyses()
         return self._sub_analyses
 
     def get_root_analysis(self) -> SubAnalysis:
+        """
+        Get the root analysis.
+
+        :return: The root analysis.
+        """
         if self._root_analysis is None and self.analysis_id:
             self._init_sub_analyses()
         return self._root_analysis
@@ -190,7 +212,8 @@ class FileAnalysis(Analysis):
     def download_file(self, path: str = None, output_stream: IO = None):
         """
         Downloads the analysis's file.
-        `path` or `output_stream` must be provided.
+
+        ``path`` or ``output_stream`` must be provided.
         :param path: A path to where to save the file, it can be either a directory or non-existing file path.
         :param output_stream: A file-like object to write the file's content to.
         """
@@ -198,6 +221,11 @@ class FileAnalysis(Analysis):
 
     @property
     def iocs(self) -> dict:
+        """
+        Gets the list of network and files IOCs of a specific analysis id.
+
+        :return: a dictionary with network and files IOCs
+        """
         self._assert_analysis_finished()
         if not self._iocs_report:
             try:
@@ -213,6 +241,13 @@ class FileAnalysis(Analysis):
     def get_detections(self,
                        wait: Union[bool, int] = False,
                        wait_timeout: Optional[datetime.timedelta] = None) -> Optional[operation.Operation]:
+        """
+        Gets the detection report :data:`intezer_sdk.operation.Operation` related to specific analysis.
+
+        :param wait: Should wait until the operation completes.
+        :param wait_timeout: Maximum duration to wait for analysis completion in seconds.
+        :return: An operation object.
+        """
         if self._api.on_premise_version:
             raise errors.UnsupportedOnPremiseVersionError("Detection isn't supported yet on on-premise")
         self._assert_analysis_finished()
@@ -220,10 +255,15 @@ class FileAnalysis(Analysis):
         if not result_url:
             return None
 
-        return operation.handle_operation(self._operations, self._api, 'Detection', result_url, wait, wait_timeout)
+        return _operation.handle_operation(self._operations, self._api, 'Detection', result_url, wait, wait_timeout)
 
     @property
-    def dynamic_ttps(self) -> dict:
+    def dynamic_ttps(self) -> list:
+        """
+        Gets the list of dynamic TTP's for a specific analysis id.
+
+        :return: The list of dynamic ttps
+        """
         self._assert_analysis_finished()
         if not self._dynamic_ttps_report:
             try:
@@ -256,7 +296,25 @@ def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[Fil
 
 
 class UrlAnalysis(Analysis):
+    """
+    UrlAnalysis is a class for analyzing URLs. It is a subclass of the BaseAnalysis class and requires an API connection to Intezer.
+
+    :ivar analysis_id: The analysis id.
+    :vartype analysis_id: str
+    :ivar status: The status of the analysis.
+    :vartype status: intezer_sdk.consts.AnalysisStatusCode
+    :ivar analysis_time: The date that the analysis was executed.
+    :vartype analysis_time: datetime.datetime
+    :ivar url: The analyzed url
+    :vartype url: str
+    """
     def __init__(self, url: Optional[str] = None, api: IntezerApiClient = None):
+        """
+         UrlAnalysis is a class for analyzing URLs.
+
+        :param url: URL to analyze.
+        :param api: The API connection to Intezer.
+        """
         super().__init__(api)
         self._api.assert_any_on_premise()
         self.url = url
@@ -264,6 +322,14 @@ class UrlAnalysis(Analysis):
 
     @classmethod
     def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> Optional['UrlAnalysis']:
+        """
+        Returns a UrlAnalysis instance with the given analysis ID.
+        Returns None when analysis doesn't exist.
+
+       :param analysis_id: The ID of the analysis to retrieve.
+       :param api: The API connection to Intezer.
+       :return: A UrlAnalysis instance with the given analysis ID.
+        """
         response = IntezerApi(api or get_global_api()).get_url_analysis_response(analysis_id, True)
         return cls._create_analysis_from_response(response, api, analysis_id)
 
@@ -282,6 +348,9 @@ class UrlAnalysis(Analysis):
 
     @property
     def downloaded_file_analysis(self) -> Optional[FileAnalysis]:
+        """
+        In case the url downloaded a file, returns the downloaded file analysis, otherwise, None.
+        """
         if self.status != consts.AnalysisStatusCode.FINISHED:
             raise
         if self._file_analysis:

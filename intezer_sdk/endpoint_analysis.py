@@ -21,6 +21,13 @@ logger = logging.getLogger(__name__)
 class EndpointAnalysis(Analysis):
     """
     EndpointAnalysis is a class for analyzing endpoints. It is a subclass of the Analysis class and requires an API connection to Intezer.
+
+    :ivar analysis_id: The analysis id.
+    :vartype analysis_id: str
+    :ivar status: The status of the analysis.
+    :vartype status: intezer_sdk.consts.AnalysisStatusCode
+    :ivar analysis_time: The date that the analysis was executed.
+    :vartype analysis_time: datetime.datetime
     """
 
     def __init__(self,

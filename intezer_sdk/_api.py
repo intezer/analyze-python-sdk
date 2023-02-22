@@ -290,17 +290,16 @@ class IntezerApi:
 
         return response.json()['result_url']
 
-    def get_url_result(self, url: str) -> Optional[Response]:
+    def get_url_result(self, url: str) -> dict:
         response = self.api.request_with_refresh_expired_access_token('GET', url)
 
         raise_for_status(response)
+        result = response.json()
 
-        response_json = response.json()
+        if 'error' in result:
+            raise errors.IntezerError(f'response error: {result["error"]}')
 
-        if 'error' in response_json:
-            raise errors.IntezerError(f'response error: {response_json["error"]}')
-
-        return response
+        return result
 
     def download_file_by_sha256(self, sha256: str, path: str = None, output_stream: IO = None) -> None:
         if not path and not output_stream:

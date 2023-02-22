@@ -181,7 +181,7 @@ class IntezerApiClient:
         """
         Authenticate against Intezer.
 
-        :raises: `errors.InvalidApiKeyError`: When the API key is invalid
+        :raises: :data:`intezer_sdk.errors.InvalidApiKeyError`: When the API key is invalid
         """
         self._set_session()
 
@@ -517,17 +517,15 @@ class IntezerApi(IntezerApiClient):
         return response.json()['result_url']
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def get_url_result(self, url: str) -> Optional[Response]:
+    def get_url_result(self, url: str) -> dict:
         response = self.request_with_refresh_expired_access_token(path=url, method='GET')
-
         raise_for_status(response)
-
         response_json = response.json()
 
         if 'error' in response_json:
             raise errors.IntezerError('response error: {}'.format(response_json['error']))
 
-        return response
+        return response_json
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
     def download_file_by_sha256(self, sha256: str, path: str = None, output_stream: IO = None) -> None:
@@ -683,6 +681,12 @@ class IntezerApi(IntezerApiClient):
 
 
 def get_global_api() -> IntezerApi:
+    """
+    Returns the global :data:`IntezerApi` previously configured with :func:`set_global_api`
+
+    :raises: `intezer_sdk.errors.GlobalApiIsNotInitializedError` in case the api wasn't configured
+    :return: The global api
+    """
     global _global_api
 
     if not _global_api:
@@ -692,15 +696,25 @@ def get_global_api() -> IntezerApi:
 
 
 def set_global_api(api_key: str = None,
-                   api_version: str = None,
-                   base_url: str = None,
+                   api_version: str = consts.API_VERSION,
+                   base_url: str = consts.BASE_URL,
                    verify_ssl: bool = True,
                    on_premise_version: OnPremiseVersion = None) -> IntezerApiClient:
+    """
+    Configure the global api
+
+    :param api_key: The api key
+    :param api_version: The api version
+    :param base_url: The base url. Configure this when using on-premise.
+    :param verify_ssl: Weather to verify ssl
+    :param on_premise_version: You're on-premise version
+    :return: The configured api
+    """
     global _global_api
     api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
-    _global_api = IntezerApi(api_version or consts.API_VERSION,
+    _global_api = IntezerApi(api_version,
                              api_key,
-                             base_url or consts.BASE_URL,
+                             base_url,
                              verify_ssl,
                              on_premise_version)
     return _global_api

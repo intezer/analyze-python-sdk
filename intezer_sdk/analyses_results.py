@@ -11,6 +11,7 @@ class AnalysesHistoryResult:
     def __init__(self, request_url_path: str, api: IntezerApiClient, filters: Dict):
         """
         Fetch all analyses history results from server.
+
         :param request_url_path: Url to request new filter from.
         :param api: Instance of Intezer API for request server.
         :param filters: Filters requested from server.
@@ -38,18 +39,18 @@ class AnalysesHistoryResult:
         return self._total_count
 
     @property
-    def current_page(self) -> List:
+    def current_page(self) -> list:
         """Get current page, if not exits, ask a new one from server."""
         return self._current_page or self._fetch_page()
 
-    def all(self) -> List:
+    def all(self) -> list:
         """List all remaining and exists analysis's from server."""
         results = list(self)
         if self._pages:
             self._current_page = self._pages[0]
         return results
 
-    def _fetch_page(self) -> List:
+    def _fetch_page(self) -> list:
         """Request for new page from server."""
         self.filters['offset'] = self._current_offset
         self._total_count, new_page = self._fetch_analyses_history(

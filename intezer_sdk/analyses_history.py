@@ -29,6 +29,7 @@ def query_file_analyses_history(*,
                                 ) -> AnalysesHistoryResult:
     """
     Query for file analyses history.
+
     :param start_date: Date to query from.
     :param end_date: Date to query until.
     :param api: Instance of Intezer API for request server.
@@ -37,11 +38,9 @@ def query_file_analyses_history(*,
     :param verdicts: Filter by the analysis's verdict
     :param file_name: Filter by the uploaded file's name
     :param family_names: Filter by the analysis's malicious family name
-    :param file_hash: Filter by the file's hash, in one of the following
-    formats: SHA256, SHA1 or MD5
+    :param file_hash: Filter by the file's hash, in one of the following formats: SHA256, SHA1 or MD5
     :param limit: Number of analyses returned by the query.
-    :param offset: Number of analyses to skips the before beginning to
-    return the analyses.
+    :param offset: Number of analyses to skips the before beginning to return the analyses.
     :return: File query result from server as Results iterator.
     """
     api = api or get_global_api()
@@ -76,6 +75,7 @@ def query_endpoint_analyses_history(*,
                                     ) -> AnalysesHistoryResult:
     """
     Query for endpoint analyses history.
+
     :param start_date: Date to query from.
     :param end_date: Date to query until.
     :param api: Instance of Intezer API for request server.
@@ -83,8 +83,7 @@ def query_endpoint_analyses_history(*,
     :param sources: Filter the analyses by its source.
     :param verdicts: Filter by the analysis's verdict
     :param limit: Number of analyses returned by the query.
-    :param offset: Number of analyses to skips the before beginning to
-    return the analyses.
+    :param offset: Number of analyses to skips the before beginning to return the analyses.
     :return: Endpoint query result from server as Results iterator.
     """
     api = api or get_global_api()
@@ -127,8 +126,7 @@ def query_url_analyses_history(*,
     :param submitted_url: Filter by specific url
     :param aggregated_view: Should the result be aggregated by latest url.
     :param limit: Number of analyses returned by the query.
-    :param offset: Number of analyses to skips the before beginning to
-    return the analyses.
+    :param offset: Number of analyses to skips the before beginning to return the analyses.
     :return: URL query result from server as Results iterator.
     """
     api = api or get_global_api()

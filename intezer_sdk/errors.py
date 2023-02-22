@@ -116,12 +116,13 @@ class IndexFailedError(ServerError):
 IndexFailed = IndexFailedError
 
 
-class SubAnalysisOperationStillRunningError(IntezerError):
+class OperationStillRunningError(IntezerError):
     def __init__(self, operation):
         super().__init__(f'{operation} is still running')
 
 
-SubAnalysisOperationStillRunning = SubAnalysisOperationStillRunningError
+SubAnalysisOperationStillRunning = OperationStillRunningError
+SubAnalysisOperationStillRunningError = OperationStillRunningError
 
 
 class SubAnalysisNotFoundError(IntezerError):
