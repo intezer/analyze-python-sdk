@@ -1,3 +1,7 @@
+1.16.1
+____
+- Fix equals to check by reference as well
+
 1.16
 ____
 - Use token expiration to auto renew the token

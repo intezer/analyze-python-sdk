@@ -14,7 +14,7 @@ class Account:
         self.details = account_details
 
     def __eq__(self, other):
-        return isinstance(other, Account) and self.account_id == other.account_id
+        return self is other or isinstance(other, Account) and self.account_id == other.account_id
 
     @property
     def name(self) -> str:

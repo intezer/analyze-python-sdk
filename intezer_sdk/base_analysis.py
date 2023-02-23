@@ -180,4 +180,4 @@ class Analysis(metaclass=abc.ABCMeta):
                 self.wait_for_completion(wait, sleep_before_first_check=True, timeout=wait_timeout)
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.analysis_id and other.analysis_id == self.analysis_id
+        return self is other or isinstance(other, self.__class__) and self.analysis_id and other.analysis_id == self.analysis_id
