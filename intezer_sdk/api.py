@@ -696,8 +696,8 @@ def get_global_api() -> IntezerApi:
 
 
 def set_global_api(api_key: str = None,
-                   api_version: str = consts.API_VERSION,
-                   base_url: str = consts.BASE_URL,
+                   api_version: str = None,
+                   base_url: str = None,
                    verify_ssl: bool = True,
                    on_premise_version: OnPremiseVersion = None) -> IntezerApiClient:
     """
@@ -712,9 +712,9 @@ def set_global_api(api_key: str = None,
     """
     global _global_api
     api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
-    _global_api = IntezerApi(api_version,
+    _global_api = IntezerApi(api_version or consts.API_VERSION,
                              api_key,
-                             base_url,
+                             base_url or consts.BASE_URL,
                              verify_ssl,
                              on_premise_version)
     return _global_api

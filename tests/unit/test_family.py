@@ -70,6 +70,8 @@ class FamilySpec(BaseTest):
         self.assertEqual(family1, family2)
         family1.family_id = 'asd'
         self.assertNotEqual(family1, family2)
+        family1.family_id = None
+        self.assertEqual(family1, family1)
 
     def test_access_to_family_name_fetches_the_data_from_cloud_only_once(self):
         # Arrange

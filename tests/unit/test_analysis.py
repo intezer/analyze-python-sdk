@@ -1252,6 +1252,8 @@ class FileAnalysisSpec(BaseTest):
         self.assertEqual(analysis1, analysis2)
         analysis2.analysis_id = 'asd'
         self.assertNotEqual(analysis1, analysis2)
+        analysis1.analysis_id = None
+        self.assertEqual(analysis1, analysis1)
 
     def test_compare_returns_false_when_analysis_not_the_same_type(self):
         # Arrange
