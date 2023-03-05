@@ -31,10 +31,11 @@ class ApiSpec(unittest.TestCase):
 
     def test_renew_token(self):
         with responses.RequestsMock(assert_all_requests_are_fired=True) as mock:
+            token_expiration = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=20.2)
             mock.add('POST',
                      url=f'{self.full_url}/get-access-token',
                      status=HTTPStatus.OK,
-                     json={'result': 'access-token','expire_at': (datetime.datetime.utcnow() + datetime.timedelta(seconds=20.2)).timestamp()})
+                     json={'result': 'access-token','expire_at': token_expiration.timestamp()})
             api = set_global_api()
             api.authenticate()
             mock.reset()

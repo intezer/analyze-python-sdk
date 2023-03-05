@@ -1,3 +1,7 @@
+1.16.3
+____
+- Parse the token expiration as utc timestamp
+
 1.16.2
 ____
 - Family info returns also tags related to family
