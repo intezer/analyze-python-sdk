@@ -1,3 +1,7 @@
+1.16.2
+____
+- Family info returns also tags related to family
+
 1.16.1
 ____
 - Fix equals to check by reference as well

@@ -14,13 +14,12 @@ class Family:
                  family_id: str,
                  name: str = None,
                  family_type: str = None,
-                 family_tags: Optional[List[str]] = None,
                  *,
                  api: IntezerApiClient = None):
         self.family_id = family_id
         self._name = name
         self._type = family_type
-        self._tags = family_tags
+        self._tags = None
         self._api = IntezerApi(api or get_global_api())
 
     def __eq__(self, other):
