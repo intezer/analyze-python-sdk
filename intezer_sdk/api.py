@@ -140,7 +140,7 @@ class IntezerApiClient:
 
     def _refresh_token_if_needed(self):
         if self._token_expiration:
-            token_expire = datetime.datetime.fromtimestamp(self._token_expiration)
+            token_expire = datetime.datetime.utcfromtimestamp(self._token_expiration)
             now = datetime.datetime.utcnow()
             if (token_expire - now).total_seconds() < self._renew_token_window:
                 self._set_access_token()
