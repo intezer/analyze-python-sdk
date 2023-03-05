@@ -33,6 +33,7 @@ class FamilySpec(BaseTest):
         # Arrange
         family_id = str(uuid.uuid4())
         family_name = 'Burla'
+        family_tags = ['my_tag_1', 'my_tag_2']
 
         with responses.RequestsMock() as mock:
             family_type = 'malware'
@@ -40,6 +41,7 @@ class FamilySpec(BaseTest):
                      f'{self.full_url}/families/{family_id}/info',
                      json={'result': {'family_id': family_id,
                                       'family_name': family_name,
+                                      'family_tags': family_tags,
                                       'family_type': family_type}})
             # Act
             family = Family.from_family_id(family_id)
@@ -49,11 +51,13 @@ class FamilySpec(BaseTest):
         self.assertEqual(family_id, family.family_id)
         self.assertEqual(family_name, family.name)
         self.assertEqual(family_type, family.type)
+        self.assertListEqual(family_tags, family.tags)
 
     def test_compare_family(self):
         # Arrange
         family_id = str(uuid.uuid4())
         family_name = 'Burla'
+        family_tags = ['my_tag_1', 'my_tag_2']
 
         with responses.RequestsMock() as mock:
             family_type = 'malware'
@@ -61,6 +65,7 @@ class FamilySpec(BaseTest):
                      f'{self.full_url}/families/{family_id}/info',
                      json={'result': {'family_id': family_id,
                                       'family_name': family_name,
+                                      'family_tags': family_tags,
                                       'family_type': family_type}})
             # Act
             family1 = Family.from_family_id(family_id)

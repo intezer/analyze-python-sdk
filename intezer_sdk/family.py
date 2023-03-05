@@ -1,5 +1,8 @@
 import typing
 
+from typing import Optional
+from typing import List
+
 from intezer_sdk import errors
 from intezer_sdk._api import IntezerApi
 from intezer_sdk.api import IntezerApiClient
@@ -7,10 +10,16 @@ from intezer_sdk.api import get_global_api
 
 
 class Family:
-    def __init__(self, family_id: str, name: str = None, family_type: str = None, *, api: IntezerApiClient = None):
+    def __init__(self,
+                 family_id: str,
+                 name: str = None,
+                 family_type: str = None,
+                 *,
+                 api: IntezerApiClient = None):
         self.family_id = family_id
         self._name = name
         self._type = family_type
+        self._tags = None
         self._api = IntezerApi(api or get_global_api())
 
     def __eq__(self, other):
@@ -33,6 +42,10 @@ class Family:
         self._name = info['family_name']
         self._type = info['family_type']
 
+        family_tags = info.get('family_tags')
+        if family_tags:
+            self._tags = family_tags
+
     @property
     def name(self) -> str:
         if not self._name:
@@ -46,6 +59,13 @@ class Family:
             self.fetch_info()
 
         return self._type
+
+    @property
+    def tags(self) -> Optional[List[str]]:
+        if not self._tags:
+            self.fetch_info()
+
+        return self._tags
 
 
 def get_family_by_name(family_name: str, api: IntezerApiClient = None) -> typing.Optional[Family]:
