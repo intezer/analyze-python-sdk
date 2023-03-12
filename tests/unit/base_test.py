@@ -30,12 +30,14 @@ class ApiSpec(unittest.TestCase):
         self.full_url = consts.BASE_URL + consts.API_VERSION
 
     def test_renew_token(self):
+        # 1678627412
+        # 1678634412
         with responses.RequestsMock(assert_all_requests_are_fired=True) as mock:
-            token_expiration = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=20.2)
+            token_expiration = datetime.datetime.now() + datetime.timedelta(seconds=20.2)
             mock.add('POST',
                      url=f'{self.full_url}/get-access-token',
                      status=HTTPStatus.OK,
-                     json={'result': 'access-token','expire_at': token_expiration.timestamp()})
+                     json={'result': 'access-token', 'expire_at': token_expiration.timestamp()})
             api = set_global_api()
             api.authenticate()
             mock.reset()
@@ -68,7 +70,10 @@ class ApiSpec(unittest.TestCase):
             api.authenticate()
 
         with responses.RequestsMock() as mock:
-            mock.add('GET', f'{self.full_url}/some-route', status=HTTPStatus.FORBIDDEN, json={'error': 'Insufficient Permissions'})
+            mock.add('GET',
+                     f'{self.full_url}/some-route',
+                     status=HTTPStatus.FORBIDDEN,
+                     json={'error': 'Insufficient Permissions'})
             response = api.request_with_refresh_expired_access_token('GET', '/some-route')
 
             with self.assertRaises(errors.InsufficientPermissionsError):
@@ -90,7 +95,3 @@ class ApiSpec(unittest.TestCase):
 
             with self.assertRaises(errors.InvalidApiKeyError):
                 raise_for_status(response)
-
-
-
-
