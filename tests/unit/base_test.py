@@ -30,8 +30,6 @@ class ApiSpec(unittest.TestCase):
         self.full_url = consts.BASE_URL + consts.API_VERSION
 
     def test_renew_token(self):
-        # 1678627412
-        # 1678634412
         with responses.RequestsMock(assert_all_requests_are_fired=True) as mock:
             token_expiration = datetime.datetime.now() + datetime.timedelta(seconds=20.2)
             mock.add('POST',

@@ -97,12 +97,14 @@ class IntezerApi:
     def get_latest_analysis(self,
                             file_hash: str,
                             private_only: bool = False,
+                            composed_only: bool = False,
                             **additional_parameters) -> Optional[dict]:
 
+        options = {**additional_parameters}
         if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V21_11:
-            options = {'should_get_only_private_analysis': private_only, **additional_parameters}
-        else:
-            options = {}
+            options['should_get_only_private_analysis']= private_only
+        if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V22_10:
+            options['should_get_only_composed_analysis']= composed_only
 
         response = self.api.request_with_refresh_expired_access_token('GET', f'/files/{file_hash}', options)
 
