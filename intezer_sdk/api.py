@@ -140,9 +140,8 @@ class IntezerApiClient:
 
     def _refresh_token_if_needed(self):
         if self._token_expiration:
-            token_expire = datetime.datetime.utcfromtimestamp(self._token_expiration)
-            now = datetime.datetime.utcnow()
-            if (token_expire - now).total_seconds() < self._renew_token_window:
+            now = datetime.datetime.now()
+            if self._token_expiration - now.timestamp() < self._renew_token_window:
                 self._set_access_token()
 
     def request_with_refresh_expired_access_token(self,
@@ -157,8 +156,7 @@ class IntezerApiClient:
         response = self._request(method, path, data, headers, files, stream, base_url=base_url)
 
         if response.status_code == HTTPStatus.UNAUTHORIZED and not self._token_expiration:
-            self._access_token = None
-            self._set_session()
+            self._set_access_token()
             response = self._request(method, path, data, headers, files, stream, base_url)
 
         return response
@@ -166,7 +164,8 @@ class IntezerApiClient:
     def _set_access_token(self):
         response = requests.post(f'{self.full_url}/get-access-token',
                                  json={'api_key': self.api_key},
-                                 verify=self.verify_ssl)
+                                 verify=self.verify_ssl,
+                                 headers={'User-Agent': self.user_agent})
 
         if response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
             raise errors.InvalidApiKeyError(response)
@@ -174,8 +173,8 @@ class IntezerApiClient:
             raise_for_status(response)
 
         result = response.json()
-        self._access_token = result['result']
         self._token_expiration = result.get('expire_at')
+        self._session.headers['Authorization'] = f'Bearer {result["result"]}'
 
     def authenticate(self):
         """
@@ -190,9 +189,8 @@ class IntezerApiClient:
         self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
         self._session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
         self._session.verify = self.verify_ssl
-        self._set_access_token()
-        self._session.headers['Authorization'] = f'Bearer {self._access_token}'
         self._session.headers['User-Agent'] = self.user_agent
+        self._set_access_token()
 
     def assert_on_premise_above_v21_11(self):
         if self.on_premise_version and self.on_premise_version <= OnPremiseVersion.V21_11:

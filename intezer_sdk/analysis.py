@@ -120,6 +120,7 @@ class FileAnalysis(Analysis):
                                   file_hash: str,
                                   api: IntezerApiClient = None,
                                   private_only: bool = False,
+                                  composed_only: bool = False,
                                   **additional_parameters) -> Optional['FileAnalysis']:
         """
         Returns the latest FileAnalysis instance for the given file hash, with the option to filter by private analyses only.
@@ -128,10 +129,14 @@ class FileAnalysis(Analysis):
         :param file_hash: The hash of the file to retrieve analysis for.
         :param api: The API connection to Intezer.
         :param private_only: A flag to filter results by private analyses only.
+        :param composed_only: A flag to filter results by composed analyses only.
         :param additional_parameters: Additional parameters to pass to the API.
         :return: The latest FileAnalysis instance for the given file hash.
         """
-        analysis_report = IntezerApi(api or get_global_api()).get_latest_analysis(file_hash, private_only, **additional_parameters)
+        analysis_report = IntezerApi(api or get_global_api()).get_latest_analysis(file_hash,
+                                                                                  private_only,
+                                                                                  composed_only,
+                                                                                  **additional_parameters)
 
         if not analysis_report:
             return None
@@ -308,6 +313,7 @@ class UrlAnalysis(Analysis):
     :ivar url: The analyzed url
     :vartype url: str
     """
+
     def __init__(self, url: Optional[str] = None, api: IntezerApiClient = None):
         """
          UrlAnalysis is a class for analyzing URLs.
