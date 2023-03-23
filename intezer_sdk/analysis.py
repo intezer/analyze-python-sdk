@@ -281,6 +281,16 @@ class FileAnalysis(Analysis):
 
         return self._dynamic_ttps_report
 
+    @property
+    def verdict(self) -> str:
+        self._assert_analysis_finished()
+        return self._report['verdict']
+
+    @property
+    def sub_verdict(self) -> str:
+        self._assert_analysis_finished()
+        return self._report['sub_verdict']
+
 
 @deprecated('This method is deprecated, use FileAnalysis.from_latest_hash_analysis instead to be explict')
 def get_latest_analysis(file_hash: str,
