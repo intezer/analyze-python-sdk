@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 from http import HTTPStatus
 from typing import Any
@@ -20,6 +21,8 @@ from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
 
 _global_api: Optional['IntezerApi'] = None
+
+logger = logging.getLogger(__name__)
 
 
 def raise_for_status(response: requests.Response,
@@ -80,7 +83,8 @@ class IntezerApiClient:
                  verify_ssl: bool = True,
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None,
-                 renew_token_window=20):
+                 renew_token_window=20,
+                 max_retry=3):
         self.full_url = base_url + api_version
         self.base_url = base_url
         self.api_key = api_key
@@ -90,6 +94,7 @@ class IntezerApiClient:
         self._session = None
         self.verify_ssl = verify_ssl
         self.on_premise_version = on_premise_version
+        self.max_retry = max_retry
         if user_agent:
             user_agent = f'{consts.USER_AGENT}/{user_agent}'
         else:
@@ -152,14 +157,20 @@ class IntezerApiClient:
                                                   files: dict = None,
                                                   stream: bool = None,
                                                   base_url: str = None) -> Response:
-        self._refresh_token_if_needed()
-        response = self._request(method, path, data, headers, files, stream, base_url=base_url)
+        for retry_count in range(self.max_retry):
+            try:
+                self._refresh_token_if_needed()
+                response = self._request(method, path, data, headers, files, stream, base_url=base_url)
 
-        if response.status_code == HTTPStatus.UNAUTHORIZED and not self._token_expiration:
-            self._set_access_token()
-            response = self._request(method, path, data, headers, files, stream, base_url)
+                if response.status_code == HTTPStatus.UNAUTHORIZED and not self._token_expiration:
+                    self._set_access_token()
+                    response = self._request(method, path, data, headers, files, stream, base_url)
 
-        return response
+                return response
+            except ConnectionError:
+                if self.max_retry - retry_count <= 1:
+                    raise
+                logger.warning('Encountered connection error, retrying', exc_info=True)
 
     def _set_access_token(self):
         response = requests.post(f'{self.full_url}/get-access-token',
@@ -186,8 +197,8 @@ class IntezerApiClient:
 
     def _set_session(self):
         self._session = requests.session()
-        self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
-        self._session.mount('http://', requests.adapters.HTTPAdapter(max_retries=3))
+        self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=self.max_retry))
+        self._session.mount('http://', requests.adapters.HTTPAdapter(max_retries=self.max_retry))
         self._session.verify = self.verify_ssl
         self._session.headers['User-Agent'] = self.user_agent
         self._set_access_token()

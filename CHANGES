@@ -1,6 +1,7 @@
 1.16.5
 ____
 - Add verdict and sub_verdict properties to FileAnalysis
+- Retry ConnectionError
 
 1.16.4
 ____
