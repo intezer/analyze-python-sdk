@@ -1,3 +1,8 @@
+1.16.6
+____
+- Fix family tag caching when no tags are returned
+
+
 1.16.5
 ____
 - Add verdict and sub_verdict properties to FileAnalysis
