@@ -41,10 +41,7 @@ class Family:
 
         self._name = info['family_name']
         self._type = info['family_type']
-
-        family_tags = info.get('family_tags')
-        if family_tags:
-            self._tags = family_tags
+        self._tags = info.get('family_tags', [])
 
     @property
     def name(self) -> str:
@@ -61,8 +58,8 @@ class Family:
         return self._type
 
     @property
-    def tags(self) -> Optional[List[str]]:
-        if not self._tags:
+    def tags(self) -> List[str]:
+        if self._tags is None:
             self.fetch_info()
 
         return self._tags
