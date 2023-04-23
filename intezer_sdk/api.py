@@ -81,12 +81,14 @@ class IntezerApiClient:
                  api_key: str = None,
                  base_url: str = None,
                  verify_ssl: bool = True,
+                 proxies: Dict[str, str] = None,
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None,
                  renew_token_window=20,
                  max_retry=3):
         self.full_url = base_url + api_version
         self.base_url = base_url
+        self._proxies = proxies
         self.api_key = api_key
         self._access_token = None
         self._renew_token_window = renew_token_window
@@ -196,11 +198,13 @@ class IntezerApiClient:
         self._set_session()
 
     def _set_session(self):
-        self._session = requests.session()
+        self._session = requests.sessions.Session()
         self._session.mount('https://', requests.adapters.HTTPAdapter(max_retries=self.max_retry))
         self._session.mount('http://', requests.adapters.HTTPAdapter(max_retries=self.max_retry))
         self._session.verify = self.verify_ssl
         self._session.headers['User-Agent'] = self.user_agent
+        if self._proxies:
+            self._session.proxies = self._proxies
         self._set_access_token()
 
     def assert_on_premise_above_v21_11(self):
@@ -223,13 +227,15 @@ class IntezerApi(IntezerApiClient):
                  base_url: str = None,
                  verify_ssl: bool = True,
                  on_premise_version: OnPremiseVersion = None,
-                 user_agent: str = None):
+                 user_agent: str = None,
+                 proxies: Dict[str,str] = None):
         super().__init__(api_key=api_key,
                          base_url=base_url,
                          verify_ssl=verify_ssl,
                          user_agent=user_agent,
                          api_version=api_version,
-                         on_premise_version=on_premise_version)
+                         on_premise_version=on_premise_version,
+                         proxies=proxies)
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
     def analyze_by_hash(self,
@@ -708,7 +714,8 @@ def set_global_api(api_key: str = None,
                    api_version: str = None,
                    base_url: str = None,
                    verify_ssl: bool = True,
-                   on_premise_version: OnPremiseVersion = None) -> IntezerApiClient:
+                   on_premise_version: OnPremiseVersion = None,
+                   proxies: Dict[str, str] = None) -> IntezerApiClient:
     """
     Configure the global api
 
@@ -717,15 +724,17 @@ def set_global_api(api_key: str = None,
     :param base_url: The base url. Configure this when using on-premise.
     :param verify_ssl: Weather to verify ssl
     :param on_premise_version: You're on-premise version
+    :param proxies: A requests compatible proxies dict
     :return: The configured api
     """
     global _global_api
     api_key = api_key or os.environ.get('INTEZER_ANALYZE_API_KEY')
-    _global_api = IntezerApi(api_version or consts.API_VERSION,
-                             api_key,
-                             base_url or consts.BASE_URL,
-                             verify_ssl,
-                             on_premise_version)
+    _global_api = IntezerApi(api_version=api_version or consts.API_VERSION,
+                             api_key=api_key,
+                             base_url=base_url or consts.BASE_URL,
+                             verify_ssl=verify_ssl,
+                             on_premise_version=on_premise_version,
+                             proxies=proxies)
     return _global_api
 
 
