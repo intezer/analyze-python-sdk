@@ -378,15 +378,6 @@ class IntezerApi:
 
         return self._get_analysis_id_from_response(response)
 
-    def get_edr_assessments_by_alert_ids(self, edr_alert_ids: List[str]):
-        response = self.api.request_with_refresh_expired_access_token('GET',
-                                                                            '/edr-connector/notes/get-by-edr-alert-ids',
-                                                                      dict(edr_alert_ids=edr_alert_ids))
-
-        raise_for_status(response)
-
-        return response.json()
-
     @staticmethod
     def _assert_result_response(ignore_not_found: bool, response: Response):
         statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None

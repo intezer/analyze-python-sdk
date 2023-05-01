@@ -1,7 +1,11 @@
+Unreleased
+____
+- Add support for proxies
+- Remove deprecated edr assessment routes
+
 1.16.6
 ____
 - Fix family tag caching when no tags are returned
-
 
 1.16.5
 ____
