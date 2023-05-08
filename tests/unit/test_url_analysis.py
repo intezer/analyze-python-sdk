@@ -201,3 +201,47 @@ class UrlAnalysisSpec(BaseTest):
 
             # Assert
             self.assertIsNone(analysis.downloaded_file_analysis)
+
+    def test_get_url_latest_analysis(self):
+        # Arrange
+        url = 'https://intezer.com'
+        analysis_id = str(uuid.uuid4())
+        get_analysis_result = {'analysis_id': analysis_id, 'submitted_url': url}
+        fetch_history_result = {'analyses': [{'analysis_id': analysis_id, 'scanned_url': url, 'submitted_url': url}],
+                                'total_count': 1}
+
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/url-analyses/history',
+                     status=200,
+                     json=fetch_history_result)
+            mock.add('GET',
+                     url='{}/url/{}'.format(self.full_url, analysis_id),
+                     status=200,
+                     json={'result': get_analysis_result, 'status': 'succeeded'})
+
+
+            # Act
+            analysis = UrlAnalysis.from_latest_analysis(url)
+
+            # Assert
+            self.assertEqual(analysis.url, url)
+
+    def test_get_url_latest_analysis_analyses_not_found(self):
+        # Arrange
+        url = 'https://intezer.com'
+        fetch_history_result = {'analyses': [],
+                                'total_count': 0}
+
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/url-analyses/history',
+                     status=200,
+                     json=fetch_history_result)
+
+
+            # Act
+            analysis = UrlAnalysis.from_latest_analysis(url)
+
+            # Assert
+            self.assertIsNone(analysis)
