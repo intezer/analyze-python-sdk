@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import re
 from http import HTTPStatus
 from typing import BinaryIO
 from typing import IO
@@ -17,6 +18,7 @@ from intezer_sdk import errors
 from intezer_sdk import operation
 from intezer_sdk._api import IntezerApi
 from intezer_sdk._util import deprecated
+from intezer_sdk.analyses_history import query_url_analyses_history
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import Analysis
@@ -348,6 +350,36 @@ class UrlAnalysis(Analysis):
         """
         response = IntezerApi(api or get_global_api()).get_url_analysis_response(analysis_id, True)
         return cls._create_analysis_from_response(response, api, analysis_id)
+
+    @classmethod
+    def from_latest_analysis(cls,
+                             url: str,
+                             api: IntezerApiClient = None) -> Optional['UrlAnalysis']:
+        now = datetime.datetime.now()
+        yesterday = now - datetime.timedelta(days=1)
+
+        analysis_history_url_result = query_url_analyses_history(start_date=yesterday,
+                                                                 end_date=now,
+                                                                 api=api)
+        all_analyses_reports = analysis_history_url_result.all()
+
+        analyses_ids = [report['analysis_id'] for report in all_analyses_reports if cls._clean_url(report['scanned_url']) == cls._clean_url(url)]
+
+        if not analyses_ids:
+            return None
+
+        return cls.from_analysis_id(analyses_ids[0])
+
+    @staticmethod
+    def _clean_url(url: str) -> str:
+        """
+        Remove http:// or https:// or www. from the beginning of the URL,
+        and / from the end of the URL.
+        """
+        url = re.sub(r'^https?://(www\.)?', '', url)
+        url = re.sub(r'\/$', '', url)
+
+        return url
 
     def _set_report(self, report: dict):
         super()._set_report(report)

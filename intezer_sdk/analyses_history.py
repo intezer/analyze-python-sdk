@@ -167,7 +167,7 @@ def generate_analyses_history_filter(*,
         'offset': offset
     }
     if aggregated_view is not None:
-        base_filter['aggregate_view'] = aggregated_view
+        base_filter['aggregated_view'] = aggregated_view
     if sources:
         base_filter['sources'] = sources
     if verdicts:
