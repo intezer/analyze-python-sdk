@@ -230,7 +230,6 @@ class UrlAnalysisSpec(BaseTest):
     def test_get_url_latest_analysis_analyses_not_found(self):
         # Arrange
         url = 'https://intezer.com'
-        analysis_id = str(uuid.uuid4())
         fetch_history_result = {'analyses': [],
                                 'total_count': 0}
 
