@@ -1,11 +1,8 @@
-Unreleased
-____
-- Add support for proxies
-- Remove deprecated edr assessment routes
-
 1.16.7
 ____
 - Support latest analysis for URL analysis
+- Add support for proxies
+- Remove deprecated edr assessment routes
 
 1.16.6
 ____

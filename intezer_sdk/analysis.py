@@ -311,6 +311,15 @@ def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optiona
 def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[FileAnalysis]:
     return get_file_analysis_by_id(analysis_id, api)
 
+def _clean_url(url: str) -> str:
+    """
+    Remove http:// or https:// or www. from the beginning of the URL,
+    and / from the end of the URL.
+    """
+    url = re.sub(r'^https?://(www\.)?', '', url)
+    url = re.sub(r'\/$', '', url)
+
+    return url
 
 class UrlAnalysis(Analysis):
     """
@@ -354,32 +363,24 @@ class UrlAnalysis(Analysis):
     @classmethod
     def from_latest_analysis(cls,
                              url: str,
+                             days_threshold_for_latest_analysis: int = 1,
                              api: IntezerApiClient = None) -> Optional['UrlAnalysis']:
         now = datetime.datetime.now()
-        yesterday = now - datetime.timedelta(days=1)
+        yesterday = now - datetime.timedelta(days=days_threshold_for_latest_analysis)
 
         analysis_history_url_result = query_url_analyses_history(start_date=yesterday,
                                                                  end_date=now,
+                                                                 aggregated_view=True,
                                                                  api=api)
         all_analyses_reports = analysis_history_url_result.all()
 
-        analyses_ids = [report['analysis_id'] for report in all_analyses_reports if cls._clean_url(report['scanned_url']) == cls._clean_url(url)]
+        analyses_ids = [report['analysis_id'] for report in all_analyses_reports
+                        if _clean_url(url) in (_clean_url(report['scanned_url']), _clean_url(report['submitted_url']))]
 
         if not analyses_ids:
             return None
 
         return cls.from_analysis_id(analyses_ids[0])
-
-    @staticmethod
-    def _clean_url(url: str) -> str:
-        """
-        Remove http:// or https:// or www. from the beginning of the URL,
-        and / from the end of the URL.
-        """
-        url = re.sub(r'^https?://(www\.)?', '', url)
-        url = re.sub(r'\/$', '', url)
-
-        return url
 
     def _set_report(self, report: dict):
         super()._set_report(report)

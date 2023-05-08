@@ -1,3 +1,4 @@
+import sys
 from pprint import pprint
 
 from intezer_sdk import api
@@ -10,4 +11,4 @@ def get_url_latest_analysis(url: str):
     pprint(analysis.result())
 
 if __name__ == '__main__':
-    get_url_latest_analysis('https://www.google.com/')
+    get_url_latest_analysis(*sys.argv[1:])
