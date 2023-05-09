@@ -380,7 +380,7 @@ class UrlAnalysis(Analysis):
         if not analyses_ids:
             return None
 
-        return cls.from_analysis_id(analyses_ids[0])
+        return cls.from_analysis_id(analyses_ids[0], api=api)
 
     def _set_report(self, report: dict):
         super()._set_report(report)
