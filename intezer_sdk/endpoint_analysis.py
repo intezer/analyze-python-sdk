@@ -1,10 +1,12 @@
 import concurrent.futures
+import datetime
 import glob
 import json
 import logging
 import os
 import pathlib
 from typing import List
+from typing import Optional
 
 from intezer_sdk import consts
 from intezer_sdk._api import IntezerApi
@@ -55,6 +57,8 @@ class EndpointAnalysis(Analysis):
 
         self._sub_analyses: List[SubAnalysis] = []
         self._scan_id = None
+        self.scan_start_time: Optional[datetime.datetime] = None
+        self.scan_end_time: Optional[datetime.datetime] = None
 
     @classmethod
     def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None):
@@ -68,6 +72,13 @@ class EndpointAnalysis(Analysis):
         """
         response = IntezerApi(api or get_global_api()).get_endpoint_analysis_response(analysis_id, True)
         return cls._create_analysis_from_response(response, api, analysis_id)
+
+    def _set_report(self, report: dict):
+        super()._set_report(report)
+        if 'scan_start_time' in report:
+            self.scan_start_time = datetime.datetime.strptime(report['scan_start_time'], consts.DEFAULT_DATE_FORMAT)
+        if 'scan_end_time' in report:
+            self.scan_end_time = datetime.datetime.strptime(report['scan_end_time'], consts.DEFAULT_DATE_FORMAT)
 
     def _query_status_from_api(self):
         return self._api.get_endpoint_analysis_response(self.analysis_id, False)
