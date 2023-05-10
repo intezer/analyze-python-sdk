@@ -1,3 +1,7 @@
+1.16.9
+----
+- Add endpoint scan start and end time for endpoint analysis
+
 1.16.8
 ____
 - Get latest URL analysis bugfix
