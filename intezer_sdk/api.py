@@ -712,9 +712,9 @@ def set_global_api(api_key: str = None,
     :param api_key: The api key
     :param api_version: The api version
     :param base_url: The base url. Configure this when using on-premise.
-    :param verify_ssl: Weather to verify ssl
+    :param verify_ssl: A requests compatible "verify" value. Setting as `False` will not verify the SSL certificate
     :param on_premise_version: You're on-premise version
-    :param proxies: A requests compatible proxies dict
+    :param proxies: A requests compatible "proxies" dict
     :return: The configured api
     """
     global _global_api
