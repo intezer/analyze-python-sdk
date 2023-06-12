@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from intezer_sdk._api import IntezerApi
 from intezer_sdk._api import IntezerApiClient
@@ -8,8 +8,8 @@ from intezer_sdk.api import get_global_api
 
 class Alert:
     def __init__(self,
-                 raw_alert: dict,
-                 alert_mapping: dict,
+                 raw_alert: Dict,
+                 alert_mapping: Dict,
                  source: str,
                  api: IntezerApiClient = None,
                  environment: Optional[str] = None,
