@@ -133,3 +133,8 @@ class SubAnalysisNotFoundError(IntezerError):
 class InsufficientPermissionsError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Account does not have permission to this route', response)
+
+
+class InvalidAlertMappingError(IntezerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Bad request - the mapping is probably malformed', response)

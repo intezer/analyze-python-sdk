@@ -378,6 +378,19 @@ class IntezerApi:
 
         return self._get_analysis_id_from_response(response)
 
+    def send_alert(self,
+                   alert: dict,
+                   definition_mapping: dict,
+                   **additional_parameters):
+        self.assert_any_on_premise()
+        response = self.api.request_with_refresh_expired_access_token(method='POST',
+                                                                      path='/alerts/ingest',
+                                                                      data=dict(alert=alert,
+                                                                                definition_mapping=definition_mapping,
+                                                                                **additional_parameters))
+
+        self._assert_alert_response_status_code(response)
+
     @staticmethod
     def _assert_result_response(ignore_not_found: bool, response: Response):
         statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
@@ -421,6 +434,13 @@ class IntezerApi:
             error = data.get('error', '')
             raise errors.ServerError(f'Server returned bad request error: {error}', response)
         elif response.status_code != HTTPStatus.CREATED:
+            raise errors.ServerError(f'Error in response status code:{response.status_code}', response)
+
+    @staticmethod
+    def _assert_alert_response_status_code(response: Response):
+        if response.status_code == HTTPStatus.BAD_REQUEST:
+            raise errors.InvalidAlertMappingError(response)
+        elif response.status_code != HTTPStatus.OK:
             raise errors.ServerError(f'Error in response status code:{response.status_code}', response)
 
     @staticmethod
