@@ -1,4 +1,7 @@
 from http import HTTPStatus
+from typing import Dict
+from typing import List
+from typing import Tuple
 
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
@@ -14,7 +17,7 @@ class Alerts:
         """
         self._api = api or get_global_api()
 
-    def get_alerts_by_alert_ids(self, alert_ids: list[str], environments: list[str] = None) -> tuple[int, list[dict]]:
+    def get_alerts_by_alert_ids(self, alert_ids: List[str], environments: List[str] = None) -> Tuple[int, List[Dict]]:
         """
         Get alerts by alert ids.
 
