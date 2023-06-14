@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 import responses
 
-from intezer_sdk.alerts import Alerts
+from intezer_sdk.alerts import get_alerts_by_alert_ids
 from tests.unit.base_test import BaseTest
 
 
@@ -25,10 +25,8 @@ class AlertsSpec(BaseTest):
                              'threat_name': 'threat_name',
                              'family_name': 'family_name',
                          }]}})
-            alerts_api = Alerts()
-
             # Act
-            alerts_amount, alerts_details = alerts_api.get_alerts_by_alert_ids(['alert_id'])
+            alerts_amount, alerts_details = get_alerts_by_alert_ids(['alert_id'])
 
             # Assert
             self.assertEqual(alerts_amount, 1)
@@ -44,10 +42,8 @@ class AlertsSpec(BaseTest):
                          'alerts_count': 0,
                          'alerts': []
                      }})
-            alerts_api = Alerts()
-
             # Act
-            alerts_amount, alerts_details = alerts_api.get_alerts_by_alert_ids(['alert_id_2'])
+            alerts_amount, alerts_details = get_alerts_by_alert_ids(['alert_id_2'])
 
             # Assert
             self.assertEqual(alerts_amount, 0)

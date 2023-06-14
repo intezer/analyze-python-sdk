@@ -364,7 +364,7 @@ class IntezerApi:
 
         return self._get_index_id_from_response(response)
 
-    def get_alerts_by_alert_ids(self, alert_ids: List[str], environments: List[str] = None) -> Tuple[int, List[dict]]:
+    def get_alerts_by_alert_ids(self, alert_ids: List[str], environments: List[str] = None) -> Dict:
         response = self.api.request_with_refresh_expired_access_token(method='GET',
                                                                       path='/alerts/search',
                                                                       data=dict(alert_ids=alert_ids,
@@ -372,7 +372,7 @@ class IntezerApi:
         self._assert_index_response_status_code(response)
         data_response = response.json()
 
-        return data_response['result']['alerts_count'], data_response['result']['alerts']
+        return data_response['result']
 
     def get_index_response(self, index_id: str) -> Response:
         response = self.api.request_with_refresh_expired_access_token('GET', f'/files/index/{index_id}')

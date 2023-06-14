@@ -18,4 +18,5 @@ def get_alerts_by_alert_ids(alert_ids: List[str],
     :return: amount of alerts sent from server and list of alerts with all details about each alert.
     """
     api = api or get_global_api()
-    return api.get_alerts_by_alert_ids(alert_ids, environments)
+    result = api.get_alerts_by_alert_ids(alert_ids, environments)
+    return result['alerts_count'], result['alerts']
