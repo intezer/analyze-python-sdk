@@ -17,6 +17,6 @@ def get_alerts_by_alert_ids(alert_ids: List[str],
     :param api: The API connection to Intezer.
     :return: amount of alerts sent from server and list of alerts with all details about each alert.
     """
-    api = api or get_global_api()
+    api = IntezerApi(api or get_global_api())
     result = api.get_alerts_by_alert_ids(alert_ids, environments)
     return result['alerts_count'], result['alerts']

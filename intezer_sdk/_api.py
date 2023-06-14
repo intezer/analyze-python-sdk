@@ -369,7 +369,7 @@ class IntezerApi:
                                                                       path='/alerts/search',
                                                                       data=dict(alert_ids=alert_ids,
                                                                                 environments=environments))
-        self._assert_index_response_status_code(response)
+        raise_for_status(response)
         data_response = response.json()
 
         return data_response['result']
