@@ -1,34 +1,21 @@
-from http import HTTPStatus
 from typing import Dict
 from typing import List
 from typing import Tuple
 
-from intezer_sdk.api import IntezerApiClient
+from intezer_sdk._api import IntezerApi
 from intezer_sdk.api import get_global_api
-from intezer_sdk.api import raise_for_status
 
 
-class Alerts:
-    def __init__(self, api: IntezerApiClient = None):
-        """
-        Query alerts from Intezer Analyze.
+def get_alerts_by_alert_ids(alert_ids: List[str],
+                            environments: List[str] = None,
+                            api: IntezerApi = None) -> Tuple[int, List[Dict]]:
+    """
+    Get alerts by alert ids.
 
-        :param api: Instance of Intezer API for request server.
-        """
-        self._api = api or get_global_api()
-
-    def get_alerts_by_alert_ids(self, alert_ids: List[str], environments: List[str] = None) -> Tuple[int, List[Dict]]:
-        """
-        Get alerts by alert ids.
-
-        :param alert_ids: list of all ids to get alerts from.
-        :param environments: what environments to get alerts from.
-        :return: amount of alerts sent from server and list of alerts with all details about each alert.
-        """
-        response = self._api.request_with_refresh_expired_access_token(method='GET',
-                                                                       path='/alerts/search',
-                                                                       data=dict(alert_ids=alert_ids,
-                                                                                 environments=environments))
-        raise_for_status(response, statuses_to_ignore=[HTTPStatus.BAD_REQUEST])
-        data_response = response.json()
-        return data_response['result']['alerts_count'], data_response['result']['alerts']
+    :param alert_ids: list of all ids to get alerts from.
+    :param environments: what environments to get alerts from.
+    :param api: The API connection to Intezer.
+    :return: amount of alerts sent from server and list of alerts with all details about each alert.
+    """
+    api = api or get_global_api()
+    return api.get_alerts_by_alert_ids(alert_ids, environments)

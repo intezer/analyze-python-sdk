@@ -6,6 +6,7 @@ from typing import Dict
 from typing import IO
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 from requests import Response
 
@@ -102,9 +103,9 @@ class IntezerApi:
 
         options = {**additional_parameters}
         if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V21_11:
-            options['should_get_only_private_analysis']= private_only
+            options['should_get_only_private_analysis'] = private_only
         if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V22_10:
-            options['should_get_only_composed_analysis']= composed_only
+            options['should_get_only_composed_analysis'] = composed_only
 
         response = self.api.request_with_refresh_expired_access_token('GET', f'/files/{file_hash}', options)
 
@@ -152,7 +153,7 @@ class IntezerApi:
         if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V22_10:
             scanner_info['scan_type'] = consts.SCAN_TYPE_OFFLINE_ENDPOINT_SCAN
         response = self.api.request_with_refresh_expired_access_token('POST',
-                                                                            'scans',
+                                                                      'scans',
                                                                       scanner_info,
                                                                       base_url=self.api.base_url)
 
@@ -176,7 +177,7 @@ class IntezerApi:
     def get_dynamic_ttps(self, analyses_id: str) -> Optional[dict]:
         self.assert_on_premise_above_v21_11()
         response = self.api.request_with_refresh_expired_access_token('GET',
-                                                                            f'/analyses/{analyses_id}/dynamic-ttps')
+                                                                      f'/analyses/{analyses_id}/dynamic-ttps')
         raise_for_status(response)
 
         return response.json()['result']
@@ -191,7 +192,7 @@ class IntezerApi:
 
     def get_family_by_name(self, family_name: str) -> Optional[Dict[str, Any]]:
         response = self.api.request_with_refresh_expired_access_token('GET',
-                                                                            '/families',
+                                                                      '/families',
                                                                       {'family_name': family_name})
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -317,7 +318,7 @@ class IntezerApi:
                 raise FileExistsError()
 
         response = self.api.request_with_refresh_expired_access_token('GET',
-                                                                            f'/files/{sha256}/download',
+                                                                      f'/files/{sha256}/download',
                                                                       stream=bool(path))
 
         raise_for_status(response)
@@ -355,13 +356,23 @@ class IntezerApi:
             file = {'file': (os.path.basename(file_path), file_to_upload)}
 
             response = self.api.request_with_refresh_expired_access_token('POST',
-                                                                                '/files/index',
+                                                                          '/files/index',
                                                                           data,
                                                                           files=file)
 
         self._assert_index_response_status_code(response)
 
         return self._get_index_id_from_response(response)
+
+    def get_alerts_by_alert_ids(self, alert_ids: List[str], environments: List[str] = None) -> Tuple[int, List[dict]]:
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path='/alerts/search',
+                                                                      data=dict(alert_ids=alert_ids,
+                                                                                environments=environments))
+        self._assert_index_response_status_code(response)
+        data_response = response.json()
+
+        return data_response['result']['alerts_count'], data_response['result']['alerts']
 
     def get_index_response(self, index_id: str) -> Response:
         response = self.api.request_with_refresh_expired_access_token('GET', f'/files/index/{index_id}')
@@ -372,7 +383,7 @@ class IntezerApi:
     def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
         self.assert_any_on_premise()
         response = self.api.request_with_refresh_expired_access_token('POST',
-                                                                            '/url',
+                                                                      '/url',
                                                                       dict(url=url, **additional_parameters))
         self._assert_analysis_response_status_code(response)
 
