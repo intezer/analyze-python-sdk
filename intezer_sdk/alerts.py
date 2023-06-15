@@ -8,7 +8,7 @@ from intezer_sdk.api import get_global_api
 
 def get_alerts_by_alert_ids(alert_ids: List[str],
                             environments: List[str] = None,
-                            api: IntezerApi = None) -> Tuple[int, List[Dict]]:
+                            api: IntezerApi = None) -> Tuple[int, List[dict]]:
     """
     Get alerts by alert ids.
 
