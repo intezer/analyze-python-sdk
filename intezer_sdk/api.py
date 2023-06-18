@@ -223,7 +223,7 @@ class IntezerApiClient:
     def is_intezer_site_available() -> bool:
         response = requests.get('https://analyze.intezer.com/api/v2-0/is-available')
         if response.status_code == HTTPStatus.OK:
-            is_available = response.json().get('result', {}).get('is_available')
+            is_available = response.json().get('result').get('is_available')
             return is_available
         return False
 

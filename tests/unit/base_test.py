@@ -101,7 +101,7 @@ class ApiSpec(unittest.TestCase):
             mock.add('GET',
                      url=f'{self.full_url}/is-available',
                      status=HTTPStatus.OK,
-                     json={'result': {'Is available': True}})
+                     json={'result': {'is_available': True}})
             self.assertTrue(IntezerApiClient.is_intezer_site_available())
 
     def test_is_intezer_site_available_website_not_available(self):
@@ -110,7 +110,7 @@ class ApiSpec(unittest.TestCase):
             mock.add('GET',
                      url=f'{self.full_url}/is-available',
                      status=HTTPStatus.OK,
-                     json={'result': {'Is available': False}})
+                     json={'result': {'is_available': False}})
             self.assertFalse(IntezerApiClient.is_intezer_site_available())
 
     def test_is_intezer_site_available_server_no_response(self):
