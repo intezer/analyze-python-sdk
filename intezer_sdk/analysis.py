@@ -224,7 +224,7 @@ class FileAnalysis(Analysis):
         :param path: A path to where to save the file, it can be either a directory or non-existing file path.
         :param output_stream: A file-like object to write the file's content to.
         """
-        self._api.download_file_by_sha256(self.result()['sha256'] or self._file_hash, path, output_stream)
+        self._api.download_file_by_sha256(self.result()['sha256'], path, output_stream)
 
     @property
     def iocs(self) -> dict:
