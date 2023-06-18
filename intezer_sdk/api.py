@@ -219,11 +219,10 @@ class IntezerApiClient:
         if self.on_premise_version:
             raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on on-premise')
 
-    @staticmethod
-    def is_intezer_site_available() -> bool:
-        response = requests.get('https://analyze.intezer.com/api/v2-0/is-available')
+    def is_intezer_site_available(self) -> bool:
+        response = requests.get(f'{self.full_url}/is-available')
         if response.status_code == HTTPStatus.OK:
-            is_available = response.json().get('result').get('is_available')
+            is_available = response.json().get('result', {}).get('is_available')
             return is_available
         return False
 

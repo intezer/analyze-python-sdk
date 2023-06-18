@@ -97,27 +97,36 @@ class ApiSpec(unittest.TestCase):
 
     def test_is_intezer_site_available(self):
         # Arrange
+        api = IntezerApiClient(base_url='', api_version='')
+        api.full_url = self.full_url
         with responses.RequestsMock() as mock:
             mock.add('GET',
                      url=f'{self.full_url}/is-available',
                      status=HTTPStatus.OK,
                      json={'result': {'is_available': True}})
-            self.assertTrue(IntezerApiClient.is_intezer_site_available())
+            # Act & Assert
+            self.assertTrue(api.is_intezer_site_available())
 
     def test_is_intezer_site_available_website_not_available(self):
         # Arrange
+        api = IntezerApiClient(base_url='', api_version='')
+        api.full_url = self.full_url
         with responses.RequestsMock() as mock:
             mock.add('GET',
                      url=f'{self.full_url}/is-available',
                      status=HTTPStatus.OK,
                      json={'result': {'is_available': False}})
-            self.assertFalse(IntezerApiClient.is_intezer_site_available())
+            # Act & Assert
+            self.assertFalse(api.is_intezer_site_available())
 
     def test_is_intezer_site_available_server_no_response(self):
         # Arrange
+        api = IntezerApiClient(base_url='', api_version='')
+        api.full_url = self.full_url
         with responses.RequestsMock() as mock:
             mock.add('GET',
                      url=f'{self.full_url}/is-available',
                      status=HTTPStatus.GATEWAY_TIMEOUT,
                      json={})
-            self.assertFalse(IntezerApiClient.is_intezer_site_available())
+            # Act & Assert
+            self.assertFalse(api.is_intezer_site_available())
