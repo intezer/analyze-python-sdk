@@ -7,6 +7,7 @@ import responses
 
 from intezer_sdk import consts
 from intezer_sdk import errors
+from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
 from intezer_sdk.api import set_global_api
 
@@ -93,3 +94,30 @@ class ApiSpec(unittest.TestCase):
 
             with self.assertRaises(errors.InvalidApiKeyError):
                 raise_for_status(response)
+
+    def test_is_intezer_site_available(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/is-available',
+                     status=HTTPStatus.OK,
+                     json={'result': {'Is available': True}})
+            self.assertTrue(IntezerApiClient.is_intezer_site_available())
+
+    def test_is_intezer_site_available_website_not_available(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/is-available',
+                     status=HTTPStatus.OK,
+                     json={'result': {'Is available': False}})
+            self.assertFalse(IntezerApiClient.is_intezer_site_available())
+
+    def test_is_intezer_site_available_server_no_response(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/is-available',
+                     status=HTTPStatus.GATEWAY_TIMEOUT,
+                     json={})
+            self.assertFalse(IntezerApiClient.is_intezer_site_available())
