@@ -347,6 +347,12 @@ class IntezerApi:
 
         return self._get_index_id_from_response(response)
 
+    def unset_index_by_sha256(self, sha256: str):
+        response = self.api.request_with_refresh_expired_access_token('DELETE', f'/files/{sha256}/index')
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        raise_for_status(response)
+
     def index_by_file(self, file_path: str, index_as: IndexType, family_name: str = None) -> Response:
         data = {'index_as': index_as.value}
         if family_name:

@@ -241,3 +241,24 @@ class IndexSpec(BaseTest):
         # Assert
         self.assertEqual(first_index.status, consts.IndexStatusCode.FINISHED)
         self.assertEqual(second_index.status, consts.IndexStatusCode.FINISHED)
+
+    def test_unset_index_type(self):
+        # Arrange
+        sha256 = 'a'
+        index = Index(sha256=sha256, index_as=consts.IndexType.TRUSTED)
+        with responses.RequestsMock() as mock:
+            mock.add('DELETE',
+                     url=self.full_url + f'/files/{sha256}/index',
+                     status=200)
+            index.unset_indexing(wait=True)
+
+    def test_unset_index_type_raises_error(self):
+        # Arrange
+        sha256 = 'a'
+        index = Index(sha256=sha256, index_as=consts.IndexType.TRUSTED)
+        with responses.RequestsMock() as mock:
+            mock.add('DELETE',
+                     url=self.full_url + f'/files/{sha256}/index',
+                     status=404)
+            with self.assertRaises(errors.IntezerError):
+                index.unset_indexing(wait=True)

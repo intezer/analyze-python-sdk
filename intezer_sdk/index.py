@@ -47,6 +47,16 @@ class Index:
             else:
                 self.wait_for_completion(wait, sleep_before_first_check=True)
 
+    def unset_indexing(self, wait: typing.Union[bool, int] = False):
+        self._api.unset_index_by_sha256(self._sha256)
+        self.status = consts.IndexStatusCode.UNSET
+        if wait:
+            if isinstance(wait, bool):
+                self.wait_for_completion(sleep_before_first_check=True)
+            else:
+                self.wait_for_completion(wait, sleep_before_first_check=True)
+
+
     def wait_for_completion(self, interval: int = None, sleep_before_first_check=False):
         """
         Blocks until the index is completed
