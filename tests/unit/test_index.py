@@ -1,4 +1,5 @@
 import datetime
+from http import HTTPStatus
 from unittest.mock import mock_open
 from unittest.mock import patch
 
@@ -249,7 +250,7 @@ class IndexSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('DELETE',
                      url=self.full_url + f'/files/{sha256}/index',
-                     status=200)
+                     status=HTTPStatus.OK)
             index.unset_indexing(wait=True)
 
     def test_unset_index_type_raises_error(self):
@@ -259,6 +260,6 @@ class IndexSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('DELETE',
                      url=self.full_url + f'/files/{sha256}/index',
-                     status=404)
+                     status=HTTPStatus.NOT_FOUND)
             with self.assertRaises(errors.IntezerError):
                 index.unset_indexing(wait=True)

@@ -33,6 +33,16 @@ class IntezerApi:
                         disable_static_unpacking: Optional[bool],
                         sandbox_command_line_arguments: str = None,
                         **additional_parameters) -> str:
+        """
+        Analyze a file by its hash.
+
+        :param file_hash: The hash of the file to analyze.
+        :param disable_dynamic_unpacking: Whether to disable dynamic unpacking.
+        :param disable_static_unpacking: Whether to disable static unpacking.
+        :param sandbox_command_line_arguments: Command line arguments to pass to the sandbox.
+        :param additional_parameters: Additional parameters to pass to the API.
+        :return: The analysis id.
+        """
         data = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                       disable_static_unpacking=disable_static_unpacking,
                                       sandbox_command_line_arguments=sandbox_command_line_arguments,
@@ -52,6 +62,18 @@ class IntezerApi:
                                 zip_password: str = None,
                                 sandbox_command_line_arguments: str = None,
                                 **additional_parameters) -> str:
+        """
+        Analyze a file by its download URL.
+
+        :param download_url: The download URL of the file to analyze.
+        :param disable_dynamic_unpacking: Whether to disable dynamic unpacking.
+        :param disable_static_unpacking: Whether to disable static unpacking.
+        :param code_item_type: The type of the code item to analyze.
+        :param zip_password: The password of the zip file to analyze.
+        :param sandbox_command_line_arguments: Command line arguments to pass to the sandbox.
+        :param additional_parameters: Additional parameters to pass to the API.
+        :return: The analysis id.
+        """
         data = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                       disable_static_unpacking=disable_static_unpacking,
                                       code_item_type=code_item_type,
@@ -66,6 +88,14 @@ class IntezerApi:
         return self._get_analysis_id_from_response(response)
 
     def _analyze_file_stream(self, file_stream: BinaryIO, file_name: str, options: dict) -> str:
+        """
+        Analyze a file by its stream.
+
+        :param file_stream: The stream of the file to analyze.
+        :param file_name: The name of the file to analyze.
+        :param options: Additional parameters to pass to the API.
+        :return: The analysis id.
+        """
         file = {'file': (file_name, file_stream)}
 
         response = self.api.request_with_refresh_expired_access_token('POST', '/analyze', options, files=file)
@@ -82,6 +112,20 @@ class IntezerApi:
                         zip_password: str = None,
                         sandbox_command_line_arguments: str = None,
                         **additional_parameters) -> Optional[str]:
+        """
+        Analyze a file by its path or stream.
+
+        :param file_path: The path of the file to analyze.
+        :param file_stream: The stream of the file to analyze.
+        :param disable_dynamic_unpacking: Whether to disable dynamic unpacking.
+        :param disable_static_unpacking: Whether to disable static unpacking.
+        :param file_name: The name of the file to analyze.
+        :param code_item_type: The type of the code item to analyze.
+        :param zip_password: The password of the zip file to analyze.
+        :param sandbox_command_line_arguments: Command line arguments to pass to the sandbox.
+        :param additional_parameters: Additional parameters to pass to the API.
+        :return: The analysis id.
+        """
         options = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                          disable_static_unpacking=disable_static_unpacking,
                                          code_item_type=code_item_type,
@@ -100,6 +144,15 @@ class IntezerApi:
                             private_only: bool = False,
                             composed_only: bool = False,
                             **additional_parameters) -> Optional[dict]:
+        """
+        Get the latest analysis of a file.
+
+        :param file_hash: The hash of the file to get the analysis of.
+        :param private_only: Whether to get only private analysis.
+        :param composed_only: Whether to get only composed analysis.
+        :param additional_parameters: Additional parameters to pass to the API.
+        :return: The latest analysis of the file.
+        """
 
         options = {**additional_parameters}
         if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V21_11:
@@ -117,6 +170,13 @@ class IntezerApi:
         return response.json()['result']
 
     def get_file_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
+        """
+        Get the analysis response of a file.
+
+        :param analyses_id: The id of the analysis to get the response of.
+        :param ignore_not_found: Whether to ignore not found errors.
+        :return: The analysis response.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET', f'/analyses/{analyses_id}')
         self._assert_result_response(ignore_not_found, response)
 
@@ -127,18 +187,39 @@ class IntezerApi:
         return self.get_file_analysis_response(analyses_id, False)
 
     def get_url_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
+        """
+        Get the analysis response of an url.
+
+        :param analyses_id: The id of the analysis to get the response of.
+        :param ignore_not_found: Whether to ignore not found errors.
+        :return: The analysis response.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET', f'/url/{analyses_id}')
         self._assert_result_response(ignore_not_found, response)
 
         return response
 
     def get_endpoint_analysis_response(self, analyses_id: str, ignore_not_found: bool) -> Response:
+        """
+        Get the analysis response of an endpoint.
+
+        :param analyses_id: The id of the analysis to get the response of.
+        :param ignore_not_found: Whether to ignore not found errors.
+        :return: The analysis response.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET', f'/endpoint-analyses/{analyses_id}')
         self._assert_result_response(ignore_not_found, response)
 
         return response
 
     def get_endpoint_sub_analyses(self, analyses_id: str, verdicts: Optional[List[str]]) -> List[dict]:
+        """
+        Get the sub analyses of an endpoint.
+
+        :param analyses_id: The id of the analysis to get the sub analyses of.
+        :param verdicts: The verdicts of the sub analyses to get.
+        :return: The sub analyses.
+        """
         data = dict(verdicts=verdicts) if verdicts is not None else None
         response = self.api.request_with_refresh_expired_access_token(
             'GET',
@@ -150,6 +231,12 @@ class IntezerApi:
         return response.json()['sub_analyses']
 
     def create_endpoint_scan(self, scanner_info: dict) -> Dict[str, str]:
+        """
+        Create an endpoint scan.
+
+        :param scanner_info: The scanner info.
+        :return: The endpoint scan id.
+        """
         if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V22_10:
             scanner_info['scan_type'] = consts.SCAN_TYPE_OFFLINE_ENDPOINT_SCAN
         response = self.api.request_with_refresh_expired_access_token('POST',
@@ -161,12 +248,24 @@ class IntezerApi:
         return response.json()['result']
 
     def get_iocs(self, analyses_id: str) -> Optional[dict]:
+        """
+        Get the IOCs of an analysis.
+
+        :param analyses_id: The id of the analysis to get the IOCs of.
+        :return: The IOCs.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET', f'/analyses/{analyses_id}/iocs')
         raise_for_status(response)
 
         return response.json()['result']
 
     def get_detection_result_url(self, analyses_id: str) -> Optional[str]:
+        """
+        Get the detection result url of an analysis.
+
+        :param analyses_id: The id of the analysis to get the detection result url of.
+        :return: The detection result url.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET', f'/analyses/{analyses_id}/detect')
         if response.status_code == HTTPStatus.CONFLICT:
             return None
@@ -175,6 +274,12 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_dynamic_ttps(self, analyses_id: str) -> Optional[dict]:
+        """
+        Get the dynamic TTPs of an analysis.
+
+        :param analyses_id: The id of the analysis to get the dynamic TTPs of.
+        :return: The dynamic TTPs.
+        """
         self.assert_on_premise_above_v21_11()
         response = self.api.request_with_refresh_expired_access_token('GET',
                                                                       f'/analyses/{analyses_id}/dynamic-ttps')
@@ -183,6 +288,12 @@ class IntezerApi:
         return response.json()['result']
 
     def get_family_info(self, family_id: str) -> Optional[dict]:
+        """
+        Get the family info of a family.
+
+        :param family_id: The id of the family to get the info of.
+        :return: The family info.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET', f'/families/{family_id}/info')
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -191,6 +302,12 @@ class IntezerApi:
         return response.json()['result']
 
     def get_family_by_name(self, family_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Get the family by name.
+
+        :param family_name: The name of the family to get.
+        :return: The family.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET',
                                                                       '/families',
                                                                       {'family_name': family_name})
@@ -201,6 +318,12 @@ class IntezerApi:
         return response.json()['result']
 
     def get_sub_analyses_by_id(self, analysis_id: str) -> Optional[List[dict]]:
+        """
+        Get the sub analyses of an analysis.
+
+        :param analysis_id: The id of the analysis to get the sub analyses of.
+        :return: The sub analyses.
+        """
         response = self.api.request_with_refresh_expired_access_token(
             'GET', f'/analyses/{analysis_id}/sub-analyses'
         )
@@ -211,6 +334,13 @@ class IntezerApi:
     def get_sub_analysis_code_reuse_by_id(self,
                                           composed_analysis_id: str,
                                           sub_analysis_id: str) -> Optional[dict]:
+        """
+        Get the code reuse of a sub analysis.
+
+        :param composed_analysis_id: The id of the composed analysis to get the code reuse of.
+        :param sub_analysis_id: The id of the sub analysis to get the code reuse of.
+        :return: The code reuse sub analysis.
+        """
         response = self.api.request_with_refresh_expired_access_token(
             'GET', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/code-reuse',
         )
@@ -223,6 +353,13 @@ class IntezerApi:
         return response.json()
 
     def get_sub_analysis_metadata_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
+        """
+        Get the metadata of a sub analysis.
+
+        :param composed_analysis_id: The id of the composed analysis to get the metadata of.
+        :param sub_analysis_id: The id of the sub analysis to get the metadata of.
+        :return: The metadata of the sub analysis.
+        """
         response = self.api.request_with_refresh_expired_access_token(
             'GET', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/metadata'
         )
@@ -234,6 +371,14 @@ class IntezerApi:
                                                     composed_analysis_id: str,
                                                     sub_analysis_id: str,
                                                     family_id: str) -> str:
+        """
+        Get the related files of a sub analysis by family id.
+
+        :param composed_analysis_id: The id of the composed analysis to get the related files of.
+        :param sub_analysis_id: The id of the sub analysis to get the related files of.
+        :param family_id: The id of the family to get the related files of.
+        :return: The related files of the sub analysis.
+        """
         response = self.api.request_with_refresh_expired_access_token(
             'POST',
             f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/code-reuse/families/{family_id}/find-related-files'
@@ -244,6 +389,13 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_sub_analysis_account_related_samples_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+        """
+        Get the account related samples of a sub analysis.
+
+        :param composed_analysis_id: The id of the composed analysis to get the account related samples of.
+        :param sub_analysis_id: The id of the sub analysis to get the account related samples of.
+        :return: The account related samples of the sub analysis.
+        """
         response = self.api.request_with_refresh_expired_access_token(
             'POST', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/get-account-related-samples'
         )
@@ -253,6 +405,13 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_sub_analysis_capabilities_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+        """
+        Get the capabilities of a sub analysis.
+
+        :param composed_analysis_id: The id of the composed analysis to get the capabilities of.
+        :param sub_analysis_id: The id of the sub analysis to get the capabilities of.
+        :return: The capabilities of the sub analysis.
+        """
         self.assert_on_premise_above_v21_11()
         response = self.api.request_with_refresh_expired_access_token(
             'POST', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/capabilities',
@@ -263,6 +422,13 @@ class IntezerApi:
         return response.json()['result_url']
 
     def generate_sub_analysis_vaccine_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> str:
+        """
+        Generate a vaccine for a sub analysis.
+
+        :param composed_analysis_id: The id of the composed analysis to generate the vaccine for.
+        :param sub_analysis_id: The id of the sub analysis to generate the vaccine for.
+        :return: The vaccine of the sub analysis.
+        """
         response = self.api.request_with_refresh_expired_access_token(
             'POST', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/generate-vaccine')
 
@@ -271,6 +437,13 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_strings_by_id(self, composed_analysis_id: str, sub_analysis_id: str) -> dict:
+        """
+        Get the strings of a sub analysis.
+
+        :param composed_analysis_id: The id of the composed analysis to get the strings of.
+        :param sub_analysis_id: The id of the sub analysis to get the strings of.
+        :return: The strings of the sub analysis.
+        """
         response = self.api.request_with_refresh_expired_access_token(
             'POST', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/strings'
         )
@@ -294,6 +467,12 @@ class IntezerApi:
         return response.json()['result_url']
 
     def get_url_result(self, url: str) -> dict:
+        """
+        Send  GET request to an url.
+
+        :param url: The url to get the result of.
+        :return: The response data from the url.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET', url)
 
         raise_for_status(response)
@@ -305,6 +484,13 @@ class IntezerApi:
         return result
 
     def download_file_by_sha256(self, sha256: str, path: str = None, output_stream: IO = None) -> None:
+        """
+        Download a file by its sha256.
+
+        :param sha256: The sha256 of the file to download.
+        :param path: The path to download the file to.
+        :param output_stream: The output stream to write the file to.
+        """
         if not path and not output_stream:
             raise ValueError('You must provide either path or output_stream')
         elif path and output_stream:
@@ -338,6 +524,13 @@ class IntezerApi:
                     file.write(chunk)
 
     def index_by_sha256(self, sha256: str, index_as: IndexType, family_name: str = None) -> Response:
+        """
+        Index a file by its sha256 hash.
+
+        :param sha256: The sha256 hash of the file.
+        :param index_as: The index type to index the file as.
+        :param family_name: The family name to index the file as.
+        """
         data = {'index_as': index_as.value}
         if family_name:
             data['family_name'] = family_name
@@ -348,12 +541,25 @@ class IntezerApi:
         return self._get_index_id_from_response(response)
 
     def unset_index_by_sha256(self, sha256: str):
+        """
+        Unset the index of a file by its sha256 hash.
+
+        :param sha256: The sha256 hash of the file
+        """
         response = self.api.request_with_refresh_expired_access_token('DELETE', f'/files/{sha256}/index')
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError(response)
         raise_for_status(response)
 
     def index_by_file(self, file_path: str, index_as: IndexType, family_name: str = None) -> Response:
+        """
+        Index a file by its path.
+
+        :param file_path: The path of the file to index.
+        :param index_as: The index type to index the file as.
+        :param family_name: The family name to index the file as.
+        :return: The response of the index request.
+        """
         data = {'index_as': index_as.value}
         if family_name:
             data['family_name'] = family_name
@@ -371,6 +577,13 @@ class IntezerApi:
         return self._get_index_id_from_response(response)
 
     def get_alerts_by_alert_ids(self, alert_ids: List[str], environments: List[str] = None) -> Dict:
+        """
+        Get alerts by alert ids.
+
+        :param alert_ids: The alert ids to get.
+        :param environments: The environments to get the alerts from.
+        :return: The alerts' data.
+        """
         response = self.api.request_with_refresh_expired_access_token(method='GET',
                                                                       path='/alerts/search',
                                                                       data=dict(alert_ids=alert_ids,
@@ -381,12 +594,25 @@ class IntezerApi:
         return data_response['result']
 
     def get_index_response(self, index_id: str) -> Response:
+        """
+        Get the index response by its id.
+
+        :param index_id: The id of the index.
+        :return: The index response.
+        """
         response = self.api.request_with_refresh_expired_access_token('GET', f'/files/index/{index_id}')
         raise_for_status(response)
 
         return response
 
     def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
+        """
+        Analyze a url.
+
+        :param url: The url to analyze.
+        :param additional_parameters: Additional parameters to pass to the request.
+        :return: The analysis id.
+        """
         self.assert_any_on_premise()
         response = self.api.request_with_refresh_expired_access_token('POST',
                                                                       '/url',

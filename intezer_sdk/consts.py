@@ -63,7 +63,6 @@ class IndexStatusCode(enum.Enum):
     IN_PROGRESS = 'in_progress'
     FINISH = 'finished'
     FINISHED = 'finished'
-    UNSET = 'unset'
 
 
 class IndexType(AutoName):
