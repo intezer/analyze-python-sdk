@@ -105,7 +105,7 @@ class ApiSpec(unittest.TestCase):
                      status=HTTPStatus.OK,
                      json={'result': {'is_available': True}})
             # Act & Assert
-            self.assertTrue(api.is_intezer_site_available())
+            self.assertTrue(api.is_available())
 
     def test_is_intezer_site_available_website_not_available(self):
         # Arrange
@@ -117,7 +117,7 @@ class ApiSpec(unittest.TestCase):
                      status=HTTPStatus.OK,
                      json={'result': {'is_available': False}})
             # Act & Assert
-            self.assertFalse(api.is_intezer_site_available())
+            self.assertFalse(api.is_available())
 
     def test_is_intezer_site_available_server_no_response(self):
         # Arrange
@@ -129,4 +129,4 @@ class ApiSpec(unittest.TestCase):
                      status=HTTPStatus.GATEWAY_TIMEOUT,
                      json={})
             # Act & Assert
-            self.assertFalse(api.is_intezer_site_available())
+            self.assertFalse(api.is_available())
