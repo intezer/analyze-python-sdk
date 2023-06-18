@@ -1,5 +1,9 @@
+1.17.2
+______
+ - Support check availability.
+
 1.17.1
-----
+______
 - support unset index by hash
 - Add docstring to _api module
 
@@ -8,43 +12,43 @@ ____
 - Support get alerts by alert ids.
 
 1.16.9
-----
+______
 - Add endpoint scan start and end time for endpoint analysis
 
 1.16.8
-____
+______
 - Get latest URL analysis bugfix
 
 1.16.7
-____
+______
 - Support latest analysis for URL analysis
 - Add support for proxies
 - Remove deprecated edr assessment routes
 
 1.16.6
-____
+______
 - Fix family tag caching when no tags are returned
 
 1.16.5
-____
+______
 - Add verdict and sub_verdict properties to FileAnalysis
 - Retry ConnectionError
 
 1.16.4
-____
+______
 - Parse the token expiration as utc timestamp
 - Add composed only flag to latest hash analysis
 
 1.16.3
-____
+______
 - Parse the token expiration as utc timestamp
 
 1.16.2
-____
+______
 - Family info returns also tags related to family
 
 1.16.1
-____
+______
 - Fix equals to check by reference as well
 
 1.16
@@ -59,169 +63,169 @@ ____
 - Add account routes and object
 
 1.15.2
--------
+______
 - Fix JSON deserialization of endpoint scan results
 
 1.15.1
--------
+______
 - Add 'is_analysis_running' method to Analysis class.
 - Add 'running_analysis_duration' method to Analysis class.
 - Add 'authenticate' method to IntezerProxy class
 
 1.15.0
--------
+______
 - Support for offline endpoint scan uploading in 'EndpointAnalysis'.
 
 1.14.4
--------
+______
 - Add analysis time to analysis object
 
 1.14.3
--------
+______
 - Add check status for operation
 
 1.14.2
--------
+______
 - Fix analyze-by-hash with command line args
 
 
 1.14.1
--------
+______
 - Fix: analyze url route
 
 1.14
--------
+____
 - Add enums for the basic consts: SoftwareType, FileAnalysisVerdict, URLAnalysisVerdict, EndpointAnalysisVerdict.
 - Support getting analyses history (url\file\endpoint) from server.
 - New On-premise version support.
 - Python 3.11 Support.
 
 1.13
--------
+____
 - Add detection report
 - Add sandbox command line arguments option for analyses
 
 1.12
--------
+____
 - Add file analysis by download url
 
 1.11.3
--------
+______
 - Get EDR alert assessments by edr alert ids
 
 1.11.2
--------
+______
 - Add action taken emoji
 
 1.11.1
--------
+______
 - Add option to add suffix to user agent
 
 1.11
--------
+____
 - Add indicators to SubAnalysis
 
 1.10
--------
+____
 - Add endpoint analysis
 - Support getting analysis by analysis id while in progress
 
 1.9.2
--------
+_____
 - Allow passing file-like object to download file
 - When providing to download file a directory, the file name is taken from the response
 
 1.9.1
--------
+_____
 - Optional latest family search on get analysis metadata
 
 1.9.0
--------
+_____
 - Rename exception to have Error suffix
 - Add `SubAnalysis.from_analysis_id` to properly initialize SubAnalysis without the composed analysis
 - Fix URL analysis additional parameters propagation
 - Add File analysis summary metadata function
 
 1.8.3
--------
+_____
 - add extraction info to sub analysis
 
 1.8.1
--------
+______
 - Add space in note title
 
 1.8.0
--------
+_____
 - Add on-premise compatability
 - Deprecate `get_analysis_by_id` in favor of `Analysis.from_analysis_id`
 
 
 1.7.0
--------
+______
 - Add UrlAnalysis
 - `Analysis` was renamed to `FileAnalysis`
 - Drop support for python 3.5, add support for python 3.10
 
 1.6.4 - 1.6.10
--------
+______________
 - Analysis summary utility improvements
 
 1.6.3
--------
+______
 - Fix: analysis summary didn't handle no code reuse report
 
 1.6.2
--------
+______
 - Fix: analysis summary didn't look for genes in root analysis
 
 
 1.6.1
--------
+______
 - Fix: Handle no iocs correctly
 
 1.6
-------
+______
 - Add analysis summary utility function
 - Handle no ttps correctly
 
 1.5
-------
+____
 - Add family search
 - Support for zip password
 - Add iocs and dynamic ttps to analysis
 - Add capabilities to sub analysis
 
 1.4.5.2
-------
+_______
 - Fixes for get_analysis_by_id function
 
 1.4.5
-------
+______
 - Add a timeout option when waiting for operation completion
 
 1.4
-------
+____
 - Add support for strings api calls
 
 1.3
-------
+____
 - Add all sub-analyses api calls: code reuse, metadata, account related samples and find related samples
 - Add download
 
 1.2
-------
+____
 - Add option to specify wait interval
 - Errors are more informative now
 
 1.1.1
-------
+______
  - Add support for python 3.8
  - Retry https connection errors
 
 1.1
-------
+____
  - In Analysis: Refresh JWT access token in case of expiration
 
 1.0
-------
+____
  - In Analysis: Change dynamic_unpacking and static_unpacking to disable_dynamic_unpacking and disable_static_unpacking

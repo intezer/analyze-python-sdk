@@ -219,6 +219,13 @@ class IntezerApiClient:
         if self.on_premise_version:
             raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on on-premise')
 
+    def is_available(self) -> bool:
+        response = requests.get(f'{self.full_url}/is-available')
+        if response.status_code == HTTPStatus.OK:
+            is_available = response.json().get('result', {}).get('is_available')
+            return is_available
+        return False
+
 
 class IntezerApi(IntezerApiClient):
     def __init__(self,
@@ -228,7 +235,7 @@ class IntezerApi(IntezerApiClient):
                  verify_ssl: bool = True,
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None,
-                 proxies: Dict[str,str] = None):
+                 proxies: Dict[str, str] = None):
         super().__init__(api_key=api_key,
                          base_url=base_url,
                          verify_ssl=verify_ssl,
