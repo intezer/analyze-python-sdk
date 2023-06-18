@@ -19,7 +19,7 @@ class Index:
         """
         Index a file or a sha256.
 
-        :param index_as: The type of the index.
+        :param index_as: The type of the index trusted or malicious.
         :param file_path: The path to the file to index.
         :param sha256: The sha256 of the file to index.
         :param api: The api to ask for indexing.
