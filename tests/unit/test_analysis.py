@@ -964,6 +964,45 @@ class FileAnalysisSpec(BaseTest):
         self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
 
+    def test_get_latest_analysis_analysis_returns_none_when_latest_analysis_found_but_is_older_than_requested(self):
+        # Arrange
+        file_hash = 'hash'
+        analysis_id = 'analysis_id'
+        day_before_yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=2)
+        analysis_report = {
+            'analysis_id': analysis_id,
+            'analysis_time': day_before_yesterday.strftime(consts.DEFAULT_DATE_FORMAT)}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/files/{file_hash}',
+                     status=HTTPStatus.OK,
+                     json={'result': analysis_report})
+
+            # Act
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash, days_threshold_for_latest_analysis=1)
+
+        self.assertIsNone(analysis)
+    def test_get_latest_analysis_analysis_returns_analysis_when_latest_analysis_found_and_young_than_requested(self):
+        # Arrange
+        file_hash = 'hash'
+        analysis_id = 'analysis_id'
+        day_before_yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=1) + datetime.timedelta(seconds=5)
+        analysis_report = {
+            'analysis_id': analysis_id,
+            'analysis_time': day_before_yesterday.strftime(consts.DEFAULT_DATE_FORMAT)}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/files/{file_hash}',
+                     status=HTTPStatus.OK,
+                     json={'result': analysis_report})
+
+            # Act
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash, days_threshold_for_latest_analysis=1)
+
+        self.assertIsNotNone(analysis)
+
     def test_get_latest_analysis_analysis_object_when_latest_analysis_found_with_on_premise(self):
         # Arrange
         get_global_api().on_premise_version = OnPremiseVersion.V21_11
@@ -1266,8 +1305,8 @@ class FileAnalysisSpec(BaseTest):
             }
         }
         file_report = {'analysis_id': analysis_id,
-                           'sha256': 'hash',
-                           'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
+                       'sha256': 'hash',
+                       'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
@@ -1284,8 +1323,7 @@ class FileAnalysisSpec(BaseTest):
             file_analysis = FileAnalysis.from_analysis_id(analysis_id)
 
         # Assert
-        self.assertNotEqual(endpoint_analysis,file_analysis)
-
+        self.assertNotEqual(endpoint_analysis, file_analysis)
 
 
 class EndpointAnalysisSpec(BaseTest):

@@ -6,7 +6,6 @@ from typing import Dict
 from typing import IO
 from typing import List
 from typing import Optional
-from typing import Tuple
 
 from requests import Response
 
@@ -142,7 +141,7 @@ class IntezerApi:
     def get_latest_analysis(self,
                             file_hash: str,
                             private_only: bool = False,
-                            composed_only: bool = False,
+                            composed_only: bool = None,
                             **additional_parameters) -> Optional[dict]:
         """
         Get the latest analysis of a file.
@@ -157,7 +156,9 @@ class IntezerApi:
         options = {**additional_parameters}
         if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V21_11:
             options['should_get_only_private_analysis'] = private_only
-        if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V22_10:
+        if (composed_only is not None and
+                (not self.api.on_premise_version or
+                 self.api.on_premise_version > OnPremiseVersion.V22_10)):
             options['should_get_only_composed_analysis'] = composed_only
 
         response = self.api.request_with_refresh_expired_access_token('GET', f'/files/{file_hash}', options)
@@ -662,6 +663,10 @@ class IntezerApi:
         elif response.status_code == HTTPStatus.BAD_REQUEST:
             data = response.json()
             error = data.get('error', '')
+            result = data.get('result', {})
+            if result.get('is_url_offline'):
+                raise errors.UrlOfflineError(response)
+
             raise errors.ServerError(f'Server returned bad request error: {error}', response)
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.ServerError(f'Error in response status code:{response.status_code}', response)
