@@ -662,6 +662,10 @@ class IntezerApi:
         elif response.status_code == HTTPStatus.BAD_REQUEST:
             data = response.json()
             error = data.get('error', '')
+            result = data.get('result', {})
+            if result.get('is_url_offline'):
+                raise errors.UrlOfflineError(response)
+
             raise errors.ServerError(f'Server returned bad request error: {error}', response)
         elif response.status_code != HTTPStatus.CREATED:
             raise errors.ServerError(f'Error in response status code:{response.status_code}', response)
