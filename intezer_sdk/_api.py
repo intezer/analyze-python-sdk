@@ -247,6 +247,30 @@ class IntezerApi:
         raise_for_status(response)
         return response.json()['result']
 
+    def send_alert(self,
+                   alert: dict,
+                   definition_mapping: dict,
+                   **additional_parameters) -> str:
+        """
+        Send an alert for further investigation.
+
+        :param alert: The alert to send.
+        :param definition_mapping: The definition mapping that is used to extract relevant information from the alert.
+        :param additional_parameters: Additional parameters to pass to the API.
+
+        :raises: :class:`requests.HTTPError` if the request failed for any reason.
+        :return: The alert id of the submitted alert.
+        """
+        self.assert_any_on_premise()
+        response = self.api.request_with_refresh_expired_access_token(method='POST',
+                                                                      path='/alerts/ingest',
+                                                                      data=dict(alert=alert,
+                                                                                definition_mapping=definition_mapping,
+                                                                                **additional_parameters))
+        raise_for_status(response, statuses_to_ignore=[HTTPStatus.BAD_REQUEST])
+        self._assert_alert_response_status_code(response)
+        return response.json().get('alert_id')
+
     def get_iocs(self, analyses_id: str) -> Optional[dict]:
         """
         Get the IOCs of an analysis.
@@ -584,10 +608,12 @@ class IntezerApi:
         :param environments: The environments to get the alerts from.
         :return: The alerts' data.
         """
+        data = dict(alert_ids=alert_ids)
+        if environments:
+            data['environments'] = environments
         response = self.api.request_with_refresh_expired_access_token(method='GET',
                                                                       path='/alerts/search',
-                                                                      data=dict(alert_ids=alert_ids,
-                                                                                environments=environments))
+                                                                      data=data)
         raise_for_status(response)
         data_response = response.json()
 
@@ -671,6 +697,13 @@ class IntezerApi:
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError(response)
         elif response.status_code != HTTPStatus.CREATED:
+            raise errors.ServerError(f'Error in response status code:{response.status_code}', response)
+
+    @staticmethod
+    def _assert_alert_response_status_code(response: Response):
+        if response.status_code == HTTPStatus.BAD_REQUEST:
+            raise errors.InvalidAlertMappingError(response)
+        elif response.status_code != HTTPStatus.OK:
             raise errors.ServerError(f'Error in response status code:{response.status_code}', response)
 
     @staticmethod
