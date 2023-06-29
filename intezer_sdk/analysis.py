@@ -295,11 +295,17 @@ class FileAnalysis(Analysis):
 
     @property
     def verdict(self) -> str:
+        """
+        The analysis verdict.
+        """
         self._assert_analysis_finished()
         return self._report['verdict']
 
     @property
     def sub_verdict(self) -> str:
+        """
+        The analysis sub-verdict.
+        """
         self._assert_analysis_finished()
         return self._report['sub_verdict']
 
@@ -398,6 +404,22 @@ class UrlAnalysis(Analysis):
             return None
 
         return cls.from_analysis_id(analyses_ids[0], api=api)
+
+    @property
+    def verdict(self) -> str:
+        """
+        The analysis verdict.
+        """
+        self._assert_analysis_finished()
+        return self._report['summary']['verdict_type']
+
+    @property
+    def sub_verdict(self) -> str:
+        """
+        The analysis sub-verdict.
+        """
+        self._assert_analysis_finished()
+        return self._report['summary']['verdict_name']
 
     def _set_report(self, report: dict):
         super()._set_report(report)

@@ -42,6 +42,14 @@ class Analysis(metaclass=abc.ABCMeta):
     def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> 'Analysis':
         raise NotImplementedError()
 
+    @property
+    @abc.abstractmethod
+    def verdict(self) -> str:
+        """
+        The analysis verdict.
+        """
+        raise NotImplementedError()
+
     def wait_for_completion(self,
                             interval: int = None,
                             sleep_before_first_check=False,
