@@ -1,14 +1,16 @@
+1.17.5
+______
+- Add endpoint scans filter by computer names
+
 1.17.4
 ______
 - Add verdict property to `UrlAnalysis` and `EndpointAnalysis`
-
 
 1.17.3
 ______
  - Raise `UrlOfflineError` when analyzing a url that seems offline.
  - Don't set `composed_only` of `from_latest_hash_analysis` if not explicitly set.
  - Add optional day limit to `from_latest_hash_analysis`.
-
 
 1.17.2
 ______
