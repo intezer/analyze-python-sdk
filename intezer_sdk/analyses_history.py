@@ -70,6 +70,7 @@ def query_endpoint_analyses_history(*,
                                     aggregated_view: bool = None,
                                     sources: List[str] = None,
                                     verdicts: List[str] = None,
+                                    computer_names: List[str] = None,
                                     limit: int = DEFAULT_LIMIT,
                                     offset: int = DEFAULT_OFFSET
                                     ) -> AnalysesHistoryResult:
@@ -82,6 +83,7 @@ def query_endpoint_analyses_history(*,
     :param aggregated_view: Should the result be aggregated by latest computer.
     :param sources: Filter the analyses by its source.
     :param verdicts: Filter by the analysis's verdict
+    :param computer_names: Filter by computer names
     :param limit: Number of analyses returned by the query.
     :param offset: Number of analyses to skips the before beginning to return the analyses.
     :return: Endpoint query result from server as Results iterator.
@@ -94,6 +96,7 @@ def query_endpoint_analyses_history(*,
         aggregated_view=aggregated_view,
         sources=sources,
         verdicts=verdicts,
+        computer_names=computer_names,
         limit=limit,
         offset=offset
     )
@@ -157,6 +160,7 @@ def generate_analyses_history_filter(*,
                                      aggregated_view: bool = None,
                                      sources: List[str] = None,
                                      verdicts: List[str] = None,
+                                     computer_names: List[str] = None,
                                      limit: int = DEFAULT_LIMIT,
                                      offset: int = DEFAULT_OFFSET
                                      ) -> Dict[str, Any]:
@@ -172,4 +176,6 @@ def generate_analyses_history_filter(*,
         base_filter['sources'] = sources
     if verdicts:
         base_filter['verdicts'] = verdicts
+    if computer_names:
+        base_filter['computer_names'] = computer_names
     return base_filter
