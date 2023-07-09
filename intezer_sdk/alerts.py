@@ -1,3 +1,4 @@
+import requests
 from typing import Dict
 from typing import List
 from typing import Tuple
@@ -42,6 +43,8 @@ class Alert:
     :vartype family_name: str
     :ivar sender: The sender of the alert.
     :vartype sender: str
+    :ivar url: URL for the alert in Intezer's website.
+    :vartype url: str
     """
     def __init__(self, alert_id: str, api: IntezerApiClient = None):
         """
@@ -59,6 +62,7 @@ class Alert:
         self.verdict: Optional[str] = None
         self.family_name: Optional[str] = None
         self.sender: Optional[str] = None
+        self.url: Optional[str] = None
 
     def refresh_alert(self):
         """
@@ -67,7 +71,10 @@ class Alert:
         :raises intezer_sdk.errors.AlertNotFound: If the alert was not found.
         :raises intezer_sdk.errors.AlertInProgressError: If the alert is still being processed.
         """
-        result = self._api.get_alerts_by_alert_ids(alert_ids=[self.alert_id])
+        try:
+            result = self._api.get_alerts_by_alert_ids(alert_ids=[self.alert_id])
+        except requests.HTTPError:
+            raise errors.AlertNotFound(self.alert_id)
 
         if result.get('alerts_count', 0) != 1:
             raise errors.AlertNotFound(f'Alert not found')
@@ -80,6 +87,7 @@ class Alert:
         self.verdict = alert.get('triage_result', {}).get('alert_verdict')
         self.family_name = alert.get('triage_result', {}).get('family_name')
         self.sender = alert.get('sender')
+        self.url = alert.get('intezer_alert_url')
 
     def result(self) -> Dict:
         """
