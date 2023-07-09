@@ -4,7 +4,6 @@ from typing import List
 from typing import Tuple
 from typing import Optional
 
-from intezer_sdk.types import AlertDefinitionMapping
 from intezer_sdk._api import IntezerApi
 from intezer_sdk._api import IntezerApiClient
 from intezer_sdk.api import get_global_api
@@ -118,7 +117,7 @@ class Alert:
     @classmethod
     def ingest_alert(cls,
                      raw_alert: Dict,
-                     alert_mapping: AlertDefinitionMapping,
+                     alert_mapping: dict,
                      source: str,
                      api: IntezerApiClient = None,
                      environment: Optional[str] = None,
