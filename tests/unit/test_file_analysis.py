@@ -964,6 +964,46 @@ class FileAnalysisSpec(BaseTest):
         self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
         self.assertDictEqual(analysis_report, analysis.result())
 
+    def test_get_latest_analysis_analysis_returns_none_when_latest_analysis_found_but_is_older_than_requested(self):
+        # Arrange
+        file_hash = 'hash'
+        analysis_id = 'analysis_id'
+        day_before_yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=2)
+        analysis_report = {
+            'analysis_id': analysis_id,
+            'analysis_time': day_before_yesterday.strftime(consts.DEFAULT_DATE_FORMAT)}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/files/{file_hash}',
+                     status=HTTPStatus.OK,
+                     json={'result': analysis_report})
+
+            # Act
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash, days_threshold_for_latest_analysis=1)
+
+        self.assertIsNone(analysis)
+
+    def test_get_latest_analysis_analysis_returns_analysis_when_latest_analysis_found_and_young_than_requested(self):
+        # Arrange
+        file_hash = 'hash'
+        analysis_id = 'analysis_id'
+        day_before_yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=1) + datetime.timedelta(seconds=5)
+        analysis_report = {
+            'analysis_id': analysis_id,
+            'analysis_time': day_before_yesterday.strftime(consts.DEFAULT_DATE_FORMAT)}
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/files/{file_hash}',
+                     status=HTTPStatus.OK,
+                     json={'result': analysis_report})
+
+            # Act
+            analysis = FileAnalysis.from_latest_hash_analysis(file_hash, days_threshold_for_latest_analysis=1)
+
+        self.assertIsNotNone(analysis)
+
     def test_get_latest_analysis_analysis_object_when_latest_analysis_found_with_on_premise(self):
         # Arrange
         get_global_api().on_premise_version = OnPremiseVersion.V21_11
@@ -1266,8 +1306,8 @@ class FileAnalysisSpec(BaseTest):
             }
         }
         file_report = {'analysis_id': analysis_id,
-                           'sha256': 'hash',
-                           'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
+                       'sha256': 'hash',
+                       'analysis_time': 'Wed, 17 Oct 2018 15:16:45 GMT'}
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
@@ -1284,130 +1324,4 @@ class FileAnalysisSpec(BaseTest):
             file_analysis = FileAnalysis.from_analysis_id(analysis_id)
 
         # Assert
-        self.assertNotEqual(endpoint_analysis,file_analysis)
-
-
-
-class EndpointAnalysisSpec(BaseTest):
-    def test_analysis_in_progress(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-        result = {'status': 'in_progress'}
-
-        with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=HTTPStatus.ACCEPTED,
-                     json=result)
-            # Act
-            analysis = EndpointAnalysis.from_analysis_id(analysis_id)
-
-        # Assert
-        self.assertIsNotNone(analysis)
-        self.assertEqual(analysis_id, analysis.analysis_id)
-        self.assertEqual(consts.AnalysisStatusCode.IN_PROGRESS, analysis.status)
-
-    def test_wait_for_completion(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-        in_progress_result = {
-            'status': 'in_progress',
-            'result_url': 'foo'
-        }
-        success_result = {
-            'status': 'succeeded',
-            'result': {
-                'analysis_id': analysis_id,
-                'scan_status': 'done'
-            }
-        }
-
-        with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=HTTPStatus.ACCEPTED,
-                     json=in_progress_result)
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=HTTPStatus.OK,
-                     json=success_result)
-            # Act
-            analysis = EndpointAnalysis.from_analysis_id(analysis_id)
-            analysis.wait_for_completion(sleep_before_first_check=False)
-
-        # Assert
-        self.assertIsNotNone(analysis)
-        self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
-
-    def test_analysis_done(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-        result = {
-            'status': 'succeeded',
-            'result': {
-                'analysis_id': analysis_id,
-                'scan_status': 'done'
-            }
-        }
-
-        with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=HTTPStatus.OK, json=result)
-            # Act
-            analysis = EndpointAnalysis.from_analysis_id(analysis_id)
-
-        # Assert
-        self.assertIsNotNone(analysis)
-        self.assertEqual(analysis_id, analysis.analysis_id)
-        self.assertEqual(consts.AnalysisStatusCode.FINISHED, analysis.status)
-        self.assertDictEqual(result['result'], analysis.result())
-
-    def test_analysis_failed(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-        result = {
-            'status': 'failed',
-        }
-
-        with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=HTTPStatus.OK,
-                     json=result)
-
-            # Act and Assert
-            with self.assertRaises(errors.AnalysisFailedError):
-                EndpointAnalysis.from_analysis_id(analysis_id)
-
-    def test_analysis_not_found(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-
-        with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=HTTPStatus.NOT_FOUND)
-
-            # Act
-            analysis = EndpointAnalysis.from_analysis_id(analysis_id)
-
-        # Assert
-        self.assertIsNone(analysis)
-
-    def test_get_sub_analyses(self):
-        # Arrange
-        analysis_id = str(uuid.uuid4())
-        sub_analysis_id = str(uuid.uuid4())
-        analysis = EndpointAnalysis()
-        analysis.status = consts.AnalysisStatusCode.FINISHED
-        analysis.analysis_id = analysis_id
-        sha256 = 'a' * 64
-        verdict = 'malicious'
-        result = {
-            'sub_analyses': [
-                {'sub_analysis_id': sub_analysis_id,
-                 'source': 'endpoint',
-                 'sha256': sha256,
-                 'verdict': verdict}
-            ]
-        }
-
-        with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}/sub-analyses', status=HTTPStatus.OK,
-                     json=result)
-
-            sub_analyses = analysis.get_sub_analyses()[0]
-
-        # Assert
-        self.assertEqual(sub_analysis_id, sub_analyses.analysis_id)
-        self.assertEqual(verdict, sub_analyses.verdict)
-        self.assertEqual(sha256, sub_analyses.sha256)
+        self.assertNotEqual(endpoint_analysis, file_analysis)

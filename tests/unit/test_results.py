@@ -166,6 +166,7 @@ class ResultsSpec(BaseTest):
                 aggregated_view=False,
                 sources=["xsoar"],
                 verdicts=['malicious'],
+                computer_names=['host-name'],
             )
             for result in results:
                 assert result

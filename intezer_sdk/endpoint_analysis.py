@@ -73,6 +73,14 @@ class EndpointAnalysis(Analysis):
         response = IntezerApi(api or get_global_api()).get_endpoint_analysis_response(analysis_id, True)
         return cls._create_analysis_from_response(response, api, analysis_id)
 
+    @property
+    def verdict(self) -> str:
+        """
+        The analysis verdict.
+        """
+        self._assert_analysis_finished()
+        return self._report['verdict']
+
     def _set_report(self, report: dict):
         super()._set_report(report)
         if 'scan_start_time' in report:

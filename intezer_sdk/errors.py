@@ -152,3 +152,8 @@ class AlertInProgressError(AlertError):
 class AlertNotFound(AlertError):
     def __init__(self, alert_id):
         super().__init__('The given alert does not exist', alert_id)
+
+
+class UrlOfflineError(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Url is offline', response)

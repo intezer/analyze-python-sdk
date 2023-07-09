@@ -1,4 +1,5 @@
 import uuid
+from http import HTTPStatus
 
 import responses
 
@@ -19,8 +20,8 @@ class UrlAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
+                     url=f'{self.full_url}/url/{analysis_id}',
+                     status=HTTPStatus.OK,
                      json={'result': analysis_report, 'status': 'succeeded'})
 
             # Act
@@ -38,7 +39,7 @@ class UrlAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
+                     url=f'{self.full_url}/url/{analysis_id}',
                      status=202,
                      json={'status': consts.AnalysisStatusCode.IN_PROGRESS.value})
 
@@ -55,8 +56,8 @@ class UrlAnalysisSpec(BaseTest):
 
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
+                     url=f'{self.full_url}/url/{analysis_id}',
+                     status=HTTPStatus.OK,
                      json={'status': consts.AnalysisStatusCode.FAILED.value})
 
             # Act
@@ -69,8 +70,8 @@ class UrlAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST',
                      url=self.full_url + '/url',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(analysis_id)})
+                     status=HTTPStatus.CREATED,
+                     json={'result_url': f'/url/{analysis_id}'})
             analysis = UrlAnalysis(url='https://intezer.com')
 
             # Act
@@ -85,12 +86,30 @@ class UrlAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST',
                      url=self.full_url + '/url',
-                     status=400,
+                     status=HTTPStatus.BAD_REQUEST,
                      json={'error': 'Some error description'})
             analysis = UrlAnalysis(url='httpdddds://intezer.com')
 
             # Act
             with self.assertRaises(errors.ServerError):
+                analysis.send()
+
+    def test_send_fail_when_url_is_offline(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=self.full_url + '/url',
+                     status=HTTPStatus.BAD_REQUEST,
+                     json={
+                         'error': 'The URL you entered seems to be offline. Analysis of offline URLs is currently unsupported.',
+                         'result': {
+                             'is_url_offline': True
+                         }
+                     })
+            analysis = UrlAnalysis(url='httpdddds://intezer.com')
+
+            # Act
+            with self.assertRaises(errors.UrlOfflineError):
                 analysis.send()
 
     def test_send_fail_when_on_premise(self):
@@ -108,12 +127,12 @@ class UrlAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST',
                      url=self.full_url + '/url',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(analysis_id)})
+                     status=HTTPStatus.CREATED,
+                     json={'result_url': f'/url/{analysis_id}'})
             result = {'analysis_id': analysis_id}
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
+                     url=f'{self.full_url}/url/{analysis_id}',
+                     status=HTTPStatus.OK,
                      json={'result': result, 'status': 'succeeded'})
             analysis = UrlAnalysis('https://intezer.com')
 
@@ -131,12 +150,12 @@ class UrlAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST',
                      url=self.full_url + '/url',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(analysis_id)})
+                     status=HTTPStatus.CREATED,
+                     json={'result_url': f'/url/{analysis_id}'})
             result = {'analysis_id': analysis_id}
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
+                     url=f'{self.full_url}/url/{analysis_id}',
+                     status=HTTPStatus.OK,
                      json={'result': result, 'status': 'failed'})
             analysis = UrlAnalysis('https://intezer.com')
 
@@ -160,15 +179,15 @@ class UrlAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST',
                      url=self.full_url + '/url',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(url_analysis_id)})
+                     status=HTTPStatus.CREATED,
+                     json={'result_url': f'/url/{url_analysis_id}'})
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, url_analysis_id),
-                     status=200,
+                     url=f'{self.full_url}/url/{url_analysis_id}',
+                     status=HTTPStatus.OK,
                      json={'result': url_result, 'status': 'succeeded'})
             mock.add('GET',
-                     url='{}/analyses/{}'.format(self.full_url, file_analysis_id),
-                     status=200,
+                     url=f'{self.full_url}/analyses/{file_analysis_id}',
+                     status=HTTPStatus.OK,
                      json={'result': file_analysis_report, 'status': 'succeeded'})
             analysis = UrlAnalysis('https://intezer.com')
 
@@ -188,11 +207,11 @@ class UrlAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST',
                      url=self.full_url + '/url',
-                     status=201,
-                     json={'result_url': '/url/{}'.format(analysis_id)})
+                     status=HTTPStatus.CREATED,
+                     json={'result_url': f'/url/{analysis_id}'})
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
+                     url=f'{self.full_url}/url/{analysis_id}',
+                     status=HTTPStatus.OK,
                      json={'result': result, 'status': 'succeeded'})
             analysis = UrlAnalysis('https://intezer.com')
 
@@ -213,13 +232,12 @@ class UrlAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST',
                      url=self.full_url + '/url-analyses/history',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json=fetch_history_result)
             mock.add('GET',
-                     url='{}/url/{}'.format(self.full_url, analysis_id),
-                     status=200,
+                     url=f'{self.full_url}/url/{analysis_id}',
+                     status=HTTPStatus.OK,
                      json={'result': get_analysis_result, 'status': 'succeeded'})
-
 
             # Act
             analysis = UrlAnalysis.from_latest_analysis(url)
@@ -236,9 +254,8 @@ class UrlAnalysisSpec(BaseTest):
         with responses.RequestsMock() as mock:
             mock.add('POST',
                      url=self.full_url + '/url-analyses/history',
-                     status=200,
+                     status=HTTPStatus.OK,
                      json=fetch_history_result)
-
 
             # Act
             analysis = UrlAnalysis.from_latest_analysis(url)

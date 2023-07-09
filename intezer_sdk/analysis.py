@@ -122,7 +122,8 @@ class FileAnalysis(Analysis):
                                   file_hash: str,
                                   api: IntezerApiClient = None,
                                   private_only: bool = False,
-                                  composed_only: bool = False,
+                                  composed_only: bool = None,
+                                  days_threshold_for_latest_analysis: int = None,
                                   **additional_parameters) -> Optional['FileAnalysis']:
         """
         Returns the latest FileAnalysis instance for the given file hash, with the option to filter by private analyses only.
@@ -132,6 +133,7 @@ class FileAnalysis(Analysis):
         :param api: The API connection to Intezer.
         :param private_only: A flag to filter results by private analyses only.
         :param composed_only: A flag to filter results by composed analyses only.
+        :param days_threshold_for_latest_analysis: The number of days to look back for the latest analysis.
         :param additional_parameters: Additional parameters to pass to the API.
         :return: The latest FileAnalysis instance for the given file hash.
         """
@@ -145,6 +147,14 @@ class FileAnalysis(Analysis):
 
         analysis = cls(file_hash=file_hash, api=api)
         analysis._set_report(analysis_report)
+
+        if days_threshold_for_latest_analysis:
+            oldest_acceptable_date = datetime.datetime.utcnow() - datetime.timedelta(days=days_threshold_for_latest_analysis)
+
+            if analysis.analysis_time >= oldest_acceptable_date:
+                return analysis
+
+            return None
 
         return analysis
 
@@ -285,11 +295,17 @@ class FileAnalysis(Analysis):
 
     @property
     def verdict(self) -> str:
+        """
+        The analysis verdict.
+        """
         self._assert_analysis_finished()
         return self._report['verdict']
 
     @property
     def sub_verdict(self) -> str:
+        """
+        The analysis sub-verdict.
+        """
         self._assert_analysis_finished()
         return self._report['sub_verdict']
 
@@ -365,6 +381,13 @@ class UrlAnalysis(Analysis):
                              url: str,
                              days_threshold_for_latest_analysis: int = 1,
                              api: IntezerApiClient = None) -> Optional['UrlAnalysis']:
+        """
+        Returns a UrlAnalysis instance with the latest analysis of the given URL.
+        :param url: The URL to retrieve the latest analysis for.
+        :param days_threshold_for_latest_analysis: The number of days to look back for the latest analysis.
+        :param api: The API connection to Intezer.
+        :return: A UrlAnalysis instance with the latest analysis of the given URL.
+        """
         now = datetime.datetime.now()
         yesterday = now - datetime.timedelta(days=days_threshold_for_latest_analysis)
 
@@ -381,6 +404,22 @@ class UrlAnalysis(Analysis):
             return None
 
         return cls.from_analysis_id(analyses_ids[0], api=api)
+
+    @property
+    def verdict(self) -> str:
+        """
+        The analysis verdict.
+        """
+        self._assert_analysis_finished()
+        return self._report['summary']['verdict_type']
+
+    @property
+    def sub_verdict(self) -> str:
+        """
+        The analysis sub-verdict.
+        """
+        self._assert_analysis_finished()
+        return self._report['summary']['verdict_name']
 
     def _set_report(self, report: dict):
         super()._set_report(report)
