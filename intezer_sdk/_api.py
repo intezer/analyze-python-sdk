@@ -270,7 +270,7 @@ class IntezerApi:
                                                                                 **additional_parameters))
         raise_for_status(response, statuses_to_ignore=[HTTPStatus.BAD_REQUEST])
         self._assert_alert_response_status_code(response)
-        return response.json().get('alert_id')
+        return response.json()['alert_id']
 
     def get_iocs(self, analyses_id: str) -> Optional[dict]:
         """
