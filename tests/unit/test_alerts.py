@@ -90,7 +90,7 @@ class AlertsSpec(BaseTest):
         with responses.RequestsMock() as mock:
             self._mock_alert_search(mock)
             # Act
-            alert = Alert.from_alert_id('alert_id')
+            alert = Alert.from_id('alert_id')
 
             # Assert
             self.assertEqual(alert.alert_id, 'alert_id')

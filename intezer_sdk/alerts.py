@@ -4,9 +4,14 @@ import datetime
 from typing import Dict
 from typing import List
 from typing import Tuple
+from typing import Union
+from typing import Type
 from typing import Optional
 
 from intezer_sdk._api import IntezerApi
+from intezer_sdk.analysis import FileAnalysis
+from intezer_sdk.analysis import UrlAnalysis
+from intezer_sdk.endpoint_analysis import EndpointAnalysis
 from intezer_sdk.consts import AlertStatusCode
 from intezer_sdk._api import IntezerApiClient
 from intezer_sdk.api import get_global_api
@@ -48,6 +53,8 @@ class Alert:
     :vartype sender: str
     :ivar url: URL for the alert in Intezer's website.
     :vartype url: str
+    :ivar url: Relevant scans for the alert.
+    :vartype url: list
     """
     def __init__(self, alert_id: str, api: IntezerApiClient = None):
         """
@@ -59,6 +66,7 @@ class Alert:
         :param api: The API connection to Intezer.
         """
         self.alert_id: str = alert_id
+        self._intezer_api_client = api
         self._api = IntezerApi(api or get_global_api())
         self.raw_alert: Optional[Dict] = None
         self.source: Optional[str] = None
@@ -67,22 +75,25 @@ class Alert:
         self.sender: Optional[str] = None
         self.url: Optional[str] = None
         self.status: Optional[AlertStatusCode] = None
+        self.scans: Optional[List[Union[UrlAnalysis, FileAnalysis, EndpointAnalysis]]] = None
 
     def check_status(self) -> AlertStatusCode:
         """
         Refresh the alert data from the Intezer Analyze API - overrides current data (if exists) with the new data.
 
         :return: The updated status of the alert.
+
         """
         try:
             result = self._api.get_alerts_by_alert_ids(alert_ids=[self.alert_id])
         except requests.HTTPError:
             self.status = AlertStatusCode.NOT_FOUND
-            return self.status
+            raise errors.AlertNotFoundError('Alert not found, the request might be malformed '
+                                            'or the service might be down.')
 
         if result.get('alerts_count', 0) != 1:
             self.status = AlertStatusCode.NOT_FOUND
-            return self.status
+            raise errors.AlertNotFoundError('Alert not found')
         alert = result['alerts'][0]
         if not alert.get('triage_result'):
             self.status = AlertStatusCode.IN_PROGRESS
@@ -100,39 +111,43 @@ class Alert:
     def is_running(self) -> bool:
         return self.status not in [AlertStatusCode.FINISHED, AlertStatusCode.FAILED, AlertStatusCode.NOT_FOUND]
 
-    def result(self) -> Dict:
+    def result(self) -> dict:
         """
         Get the raw alert result, as received from Intezer Analyze API.
 
         :raises intezer_sdk.errors.AlertNotFound: If the alert was not found.
+        :raises intezer_sdk.errors.AlertInProgressError: If the alert is in progress
         :return: The raw alert dictionary.
         """
-        if self.status != AlertStatusCode.FINISHED:
-            raise errors.AlertNotFound(f'Alert not found, try refreshing the alert by calling check_status()')
+        if self.status == AlertStatusCode.NOT_FOUND:
+            raise errors.AlertNotFoundError('Alert not found, try refreshing the alert by calling check_status()')
+        if self.status == AlertStatusCode.IN_PROGRESS:
+            raise errors.AlertInProgressError()
         return self.raw_alert
 
     @classmethod
-    def from_alert_id(cls, alert_id: str, api: IntezerApiClient = None):
+    def from_id(cls, alert_id: str, api: IntezerApiClient = None, fetch_scans: bool = False):
         """
         Create a new Alert instance, and fetch the alert data from the Intezer Analyze API.
 
         :param alert_id: The alert id.
         :param api: The API connection to Intezer.
+        :param fetch_scans: Whether to fetch the scans for the alert - this could take some time.
         :raises intezer_sdk.errors.AlertNotFound: If the alert was not found.
         :raises intezer_sdk.errors.AlertInProgressError: If the alert is still being processed.
         :return: The Alert instance, with the updated alert data.
         """
         new_alert = cls(alert_id=alert_id, api=api)
         status = new_alert.check_status()
-        if status == AlertStatusCode.NOT_FOUND:
-            raise errors.AlertNotFound(f'Alert not found, try refreshing the alert')
-        elif status == AlertStatusCode.IN_PROGRESS:
+        if status == AlertStatusCode.IN_PROGRESS:
             raise errors.AlertInProgressError()
+        if fetch_scans:
+            new_alert.fetch_scans()
         return new_alert
 
     @classmethod
     def send(cls,
-             raw_alert: Dict,
+             raw_alert: dict,
              alert_mapping: dict,
              source: str,
              api: IntezerApiClient = None,
@@ -141,6 +156,8 @@ class Alert:
              default_verdict: Optional[str] = None,
              alert_sender: Optional[str] = None,
              wait: bool = False,
+             interval: Optional[int] = None,
+             timeout: Optional[int] = None,
              ):
         """
         Send an alert for further investigation using the Intezer Analyze API.
@@ -154,6 +171,8 @@ class Alert:
         :param default_verdict: The default verdict to send the alert with.
         :param alert_sender: The sender of the alert.
         :param wait: Wait for the alert to finish processing before returning.
+        :param interval: The interval to wait between each status check.
+        :param timeout: The timeout for the wait operation.
         :raises: :class:`requests.HTTPError` if the request failed for any reason.
         :return: The Alert instance, initialized with the alert id. when the `wait` parameter is set to True, the
                  resulting alert object will be initialized with the alert triage data.
@@ -173,7 +192,8 @@ class Alert:
 
         alert = cls(alert_id=alert_id, api=api)
         if wait:
-            alert.wait_for_completion()
+            alert.wait_for_completion(timeout=timeout,
+                                      interval=interval)
         return alert
 
     def wait_for_completion(self,
@@ -186,6 +206,7 @@ class Alert:
         :param interval: The interval to wait between checks in seconds.
         :param sleep_before_first_check: Whether to sleep before the first status check.
         :param timeout: Maximum duration to wait for analysis completion in seconds.
+        :raises intezer_sdk.errors.AlertNotFoundError: If the alert was not found.
         :raise TimeoutError: If the timeout was reached.
         """
         start_time = datetime.datetime.utcnow()
@@ -197,9 +218,35 @@ class Alert:
                 time.sleep(interval)
             status_code: AlertStatusCode = self.check_status()
 
-            while status_code != consts.AnalysisStatusCode.FINISHED:
+            while status_code != AlertStatusCode.FINISHED:
                 timeout_passed = timeout and datetime.datetime.utcnow() - start_time > timeout
                 if timeout_passed:
                     raise TimeoutError()
                 time.sleep(interval)
                 status_code = self.check_status()
+
+    def fetch_scans(self):
+        """
+        Fetch the scans of the alert.
+        """
+        if self.status == AlertStatusCode.NOT_FOUND:
+            raise errors.AlertNotFoundError(f'Alert not found, try refreshing the alert')
+        elif self.status == AlertStatusCode.IN_PROGRESS:
+            raise errors.AlertInProgressError()
+
+        def _fetch_scan(scan_: dict,
+                        scan_key: str,
+                        scan_object: Union[Type[FileAnalysis], Type[EndpointAnalysis], Type[UrlAnalysis]]):
+            current_analysis_id = scan_.get(scan_key, {}).get('analysis_id')
+            if current_analysis_id:
+                self.scans.append(scan_object.from_analysis_id(analysis_id=current_analysis_id,
+                                                               api=self._intezer_api_client))
+
+        self.scans = []
+        for scan in self.raw_alert.get('scans', []):
+            if scan.get('scan_type') == 'file':
+                _fetch_scan(scan, 'file_analysis', FileAnalysis)
+            elif scan.get('scan_type') == 'endpoint':
+                _fetch_scan(scan, 'endpoint_analysis', EndpointAnalysis)
+            elif scan.get('scan_type') == 'url':
+                _fetch_scan(scan, 'url_analysis', UrlAnalysis)

@@ -149,7 +149,7 @@ class AlertInProgressError(AlertError):
         super().__init__('The alert is being processed at the moment, please try again later')
 
 
-class AlertNotFound(AlertError):
+class AlertNotFoundError(AlertError):
     def __init__(self, alert_id):
         super().__init__('The given alert does not exist', alert_id)
 
