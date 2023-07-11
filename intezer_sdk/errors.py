@@ -145,13 +145,13 @@ class InvalidAlertMappingError(AlertError):
 
 
 class AlertInProgressError(AlertError):
-    def __init__(self):
-        super().__init__('The alert is being processed at the moment, please try again later')
+    def __init__(self, alert_id: str):
+        super().__init__(f'The alert {alert_id} is being processed at the moment, please try again later')
 
 
 class AlertNotFoundError(AlertError):
-    def __init__(self, alert_id):
-        super().__init__('The given alert does not exist', alert_id)
+    def __init__(self, alert_id: str):
+        super().__init__(f'The given alert does not exist - {alert_id}')
 
 
 class UrlOfflineError(ServerError):
