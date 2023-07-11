@@ -41,9 +41,7 @@ class Alert:
 
     :ivar alert_id: The alert id.
     :vartype alert_id: str
-    :ivar raw_alert: The raw alert data.
-    :vartype raw_alert: dict
-    :ivar source: The source of the alert.
+    :ivar _report: The raw alert data.
     :vartype source: str
     :ivar verdict: The verdict of the alert.
     :vartype verdict: str
@@ -68,7 +66,7 @@ class Alert:
         self.alert_id: str = alert_id
         self._intezer_api_client = api
         self._api = IntezerApi(api or get_global_api())
-        self.raw_alert: Optional[Dict] = None
+        self._report: Optional[Dict] = None
         self.source: Optional[str] = None
         self.verdict: Optional[str] = None
         self.family_name: Optional[str] = None
@@ -94,7 +92,7 @@ class Alert:
             self.status = AlertStatusCode.NOT_FOUND
             raise errors.AlertNotFoundError(self.alert_id)
         alert = result['alerts'][0]
-        self.raw_alert = alert
+        self._report = alert
         if not alert.get('triage_result'):
             self.status = AlertStatusCode.IN_PROGRESS
             return self.status
@@ -122,7 +120,7 @@ class Alert:
             raise errors.AlertNotFoundError(self.alert_id)
         if self.status == AlertStatusCode.IN_PROGRESS:
             raise errors.AlertInProgressError(self.alert_id)
-        return self.raw_alert
+        return self._report
 
     @classmethod
     def from_id(cls,
@@ -130,7 +128,6 @@ class Alert:
                 api: IntezerApiClient = None,
                 fetch_scans: bool = False,
                 wait: bool = False,
-                interval: Optional[int] = None,
                 timeout: Optional[int] = None,
                 ):
         """
@@ -140,7 +137,6 @@ class Alert:
         :param api: The API connection to Intezer.
         :param fetch_scans: Whether to fetch the scans for the alert - this could take some time.
         :param wait: Wait for the alert to finish processing before returning.
-        :param interval: The interval to wait between each status check.
         :param timeout: The timeout for the wait operation.
         :raises intezer_sdk.errors.AlertNotFound: If the alert was not found.
         :raises intezer_sdk.errors.AlertInProgressError: If the alert is still being processed.
@@ -153,8 +149,7 @@ class Alert:
         if fetch_scans:
             new_alert.fetch_scans()
         if wait:
-            new_alert.wait_for_completion(timeout=timeout,
-                                          interval=interval)
+            new_alert.wait_for_completion(timeout=timeout)
         return new_alert
 
     @classmethod
@@ -168,7 +163,6 @@ class Alert:
              default_verdict: Optional[str] = None,
              alert_sender: Optional[str] = None,
              wait: bool = False,
-             interval: Optional[int] = None,
              timeout: Optional[int] = None,
              ):
         """
@@ -183,7 +177,6 @@ class Alert:
         :param default_verdict: The default verdict to send the alert with.
         :param alert_sender: The sender of the alert.
         :param wait: Wait for the alert to finish processing before returning.
-        :param interval: The interval to wait between each status check.
         :param timeout: The timeout for the wait operation.
         :raises: :class:`requests.HTTPError` if the request failed for any reason.
         :return: The Alert instance, initialized with the alert id. when the `wait` parameter is set to True, the
@@ -204,8 +197,7 @@ class Alert:
 
         alert = cls(alert_id=alert_id, api=api)
         if wait:
-            alert.wait_for_completion(timeout=timeout,
-                                      interval=interval)
+            alert.wait_for_completion(timeout=timeout)
         return alert
 
     def wait_for_completion(self,
@@ -255,7 +247,7 @@ class Alert:
                                                                api=self._intezer_api_client))
 
         self.scans = []
-        for scan in self.raw_alert.get('scans', []):
+        for scan in self._report.get('scans', []):
             scan_type = scan.get('scan_type')
             if scan_type == 'file':
                 _fetch_scan(scan, 'file_analysis', FileAnalysis)
