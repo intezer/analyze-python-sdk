@@ -135,6 +135,25 @@ class InsufficientPermissionsError(ServerError):
         super().__init__('Account does not have permission to this route', response)
 
 
+class AlertError(IntezerError):
+    pass
+
+
+class InvalidAlertMappingError(AlertError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Bad request - the mapping is probably malformed', response)
+
+
+class AlertInProgressError(AlertError):
+    def __init__(self, alert_id: str):
+        super().__init__(f'The alert {alert_id} is being processed at the moment, please try again later')
+
+
+class AlertNotFoundError(AlertError):
+    def __init__(self, alert_id: str):
+        super().__init__(f'The given alert does not exist - {alert_id}')
+
+
 class UrlOfflineError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Url is offline', response)

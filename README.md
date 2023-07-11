@@ -240,6 +240,13 @@ for analyse in history_results:
     print(analyse)
 ```
 
+### Get alert by id
+```python
+alert = Alert.from_id(alert_id=alert_id,
+                      fetch_scans=False,
+                      wait=False)
+```
+
 ## Code examples
 You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
 

@@ -1,3 +1,7 @@
+1.17.5
+______
+- Add `Alert` object, which allows sending / querying for alerts.
+
 1.17.4
 ______
 - Add verdict property to `UrlAnalysis` and `EndpointAnalysis`

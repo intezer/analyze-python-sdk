@@ -18,6 +18,12 @@ class AnalysisStatusCode(enum.Enum):
     FINISHED = 'finished'
 
 
+class AlertStatusCode(AutoName):
+    IN_PROGRESS = enum.auto()
+    NOT_FOUND = enum.auto()
+    FINISHED = enum.auto()
+
+
 class EndpointAnalysisEndReason(enum.Enum):
     DONE = 'done'
     INTERRUPTED = 'interrupted'
