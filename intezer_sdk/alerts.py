@@ -79,7 +79,7 @@ class Alert:
 
         if alert_stream:
             if not bool(alert_stream.getvalue()):
-                raise errors.AlertGotEmptyStreamError()
+                raise ValueError('alert_stream is empty')
 
             self.alert_id: str = self._parse_alert_id_from_alert_stream(alert_stream)
         else:
@@ -249,7 +249,7 @@ class Alert:
             )
         else:
             if not bool(alert.getvalue()):
-                raise errors.AlertGotEmptyStreamError()
+                raise ValueError('alert cannot be empty')
 
             send_alert_params = dict(
                 alert=alert,
