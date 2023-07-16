@@ -649,7 +649,7 @@ class IntezerApi:
 
     def get_alert_by_alert_id(self, alert_id: str, environment: Optional[str] = None) -> Tuple[Dict, str]:
         """
-        Get alerts by alert id.
+        Get alert by alert id.
 
         :param alert_id: The alert id to get.
         :param environment: The environment to get the alerts from.
