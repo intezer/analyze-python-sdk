@@ -222,30 +222,3 @@ def human_readable_size(num: int) -> str:
 
 def get_emoji(key: str):
     return emojis_by_key[key]
-
-def is_eml_file(stream: BinaryIO) -> bool:
-    mail_parser = email.parser.BytesParser()
-    required_headers = ['From', 'Date', 'To', 'Subject']
-    try:
-        parsed_email = mail_parser.parse(stream, headersonly=True)
-        return all(header in parsed_email for header in required_headers)
-    except Exception:
-        pass
-    finally:
-        stream.seek(0)
-    return False
-
-
-def is_msg_file(stream: BinaryIO) -> bool:
-    try:
-        # Check if the stream starts with the magic bytes of a .msg file
-        magic_bytes = b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'
-        stream.seek(0)
-        header = stream.read(len(magic_bytes))
-        return header == magic_bytes
-    except Exception:
-        pass
-    finally:
-        stream.seek(0)
-    return False
-
