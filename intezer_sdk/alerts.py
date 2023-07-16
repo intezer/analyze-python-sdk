@@ -107,7 +107,7 @@ class Alert:
 
         """
         try:
-            alert, status = self._api.get_alerts_by_alert_id(alert_id=self.alert_id)
+            alert, status = self._api.get_alert_by_alert_id(alert_id=self.alert_id)
         except requests.HTTPError:
             self.status = AlertStatusCode.NOT_FOUND
             raise errors.AlertNotFoundError(self.alert_id)

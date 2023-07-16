@@ -647,7 +647,7 @@ class IntezerApi:
 
         return data_response['result']
 
-    def get_alerts_by_alert_id(self, alert_id: str, environment: Optional[str] = None) -> Tuple[Dict, str]:
+    def get_alert_by_alert_id(self, alert_id: str, environment: Optional[str] = None) -> Tuple[Dict, str]:
         """
         Get alerts by alert id.
 
