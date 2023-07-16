@@ -1,3 +1,4 @@
+import io
 import os
 from http import HTTPStatus
 from typing import Any
@@ -6,6 +7,7 @@ from typing import Dict
 from typing import IO
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 from requests import Response
 
@@ -268,6 +270,31 @@ class IntezerApi:
                                                                       data=dict(alert=alert,
                                                                                 definition_mapping=definition_mapping,
                                                                                 **additional_parameters))
+        raise_for_status(response, statuses_to_ignore=[HTTPStatus.BAD_REQUEST])
+        self._assert_alert_response_status_code(response)
+        return response.json()['alert_id']
+
+    def send_binary_alert(self,
+                          alert: io.BytesIO,
+                          file_name: str,
+                          **additional_parameters) -> str:
+        """
+        Send a binary alert for further investigation.
+
+        :param alert: The binary alert to send.
+        :param file_name: The binary alert file name.
+        :param additional_parameters: Additional parameters to pass to the API.
+
+        :raises: :class:`requests.HTTPError` if the request failed for any reason.
+        :return: The alert id of the submitted alert.
+        """
+        self.assert_any_on_premise()
+
+        file = {'file': (file_name, alert)}
+        response = self.api.request_with_refresh_expired_access_token(method='POST',
+                                                                      path='/alerts/ingest/binary',
+                                                                      data=additional_parameters,
+                                                                      files=file)
         raise_for_status(response, statuses_to_ignore=[HTTPStatus.BAD_REQUEST])
         self._assert_alert_response_status_code(response)
         return response.json()['alert_id']
@@ -619,6 +646,25 @@ class IntezerApi:
         data_response = response.json()
 
         return data_response['result']
+
+    def get_alerts_by_alert_id(self, alert_id: str, environment: Optional[str] = None) -> Tuple[Dict, str]:
+        """
+        Get alerts by alert id.
+
+        :param alert_id: The alert id to get.
+        :param environment: The environment to get the alerts from.
+        :return: The alert data.
+        """
+        data = dict(alert_id=alert_id)
+        if environment:
+            data['environment'] = environment
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path='/alerts/get-by-id',
+                                                                      data=data)
+        raise_for_status(response)
+        data_response = response.json()
+
+        return data_response['result'], data_response['status']
 
     def get_index_response(self, index_id: str) -> Response:
         """

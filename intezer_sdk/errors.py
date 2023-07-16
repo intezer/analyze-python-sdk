@@ -38,6 +38,10 @@ class AnalysisHasAlreadyBeenSentError(IntezerError):
 
 AnalysisHasAlreadyBeenSent = AnalysisHasAlreadyBeenSentError
 
+class UnsupportedBinaryAlertType(IntezerError):
+    def __init__(self):
+        super().__init__('Unsupported binary alert type')
+
 
 class IndexHasAlreadyBeenSentError(IntezerError):
     def __init__(self):
@@ -153,6 +157,9 @@ class AlertNotFoundError(AlertError):
     def __init__(self, alert_id: str):
         super().__init__(f'The given alert does not exist - {alert_id}')
 
+class InvalidAlertArgumentError(AlertError):
+    def __init__(self, message: str):
+        super().__init__(message)
 
 class UrlOfflineError(ServerError):
     def __init__(self, response: requests.Response):
