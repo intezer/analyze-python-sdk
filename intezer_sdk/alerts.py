@@ -1,4 +1,5 @@
 import hashlib
+import json
 import time
 from typing import BinaryIO
 
@@ -77,6 +78,9 @@ class Alert:
             raise ValueError('One of alert_id and alert_stream should be provided')
 
         if alert_stream:
+            if not bool(alert_stream.getvalue()):
+                raise errors.AlertGotEmptyStreamError()
+
             self.alert_id: str = self._parse_alert_id_from_alert_stream(alert_stream)
         else:
             self.alert_id: str = alert_id
@@ -244,10 +248,13 @@ class Alert:
                 alert_sender=alert_sender
             )
         else:
+            if not bool(alert.getvalue()):
+                raise errors.AlertGotEmptyStreamError()
+
             send_alert_params = dict(
                 alert=alert,
                 file_name=cls._parse_alert_id_from_alert_stream(alert),
-                definition_mapping=definition_mapping,
+                definition_mapping=json.dumps(definition_mapping) if definition_mapping else None,
                 alert_source=alert_source,
                 environment=environment,
                 display_fields=','.join(display_fields) if display_fields else None,
