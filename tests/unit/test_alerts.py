@@ -1,3 +1,4 @@
+import hashlib
 from http import HTTPStatus
 import uuid
 
@@ -6,6 +7,7 @@ import responses
 from intezer_sdk.alerts import get_alerts_by_alert_ids
 from intezer_sdk.alerts import Alert
 from tests.unit.base_test import BaseTest
+from tests.utils import load_binary_file_from_resources
 
 
 class AlertsSpec(BaseTest):
@@ -88,10 +90,32 @@ class AlertsSpec(BaseTest):
     def test_get_alert_with_alert_object(self):
         # Arrange
         with responses.RequestsMock() as mock:
-            self._mock_alert_search(mock)
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {}, 'status': 'success'})
             # Act
             alert = Alert.from_id('alert_id')
 
             # Assert
             self.assertEqual(alert.alert_id, 'alert_id')
 
+    def test_ingest_binary_alert_success(self):
+        # Arrange
+        raw_alert = load_binary_file_from_resources('binary_alerts/test.eml')
+        alert_id = hashlib.sha256(raw_alert.read()).hexdigest()
+
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=f'{self.full_url}/alerts/ingest/binary',
+                     status=HTTPStatus.OK,
+                     json={'result': True, 'alert_id': alert_id})
+            # Act
+            alert = Alert.send(raw_alert=raw_alert,
+                                     source='source',
+                                     environment='environment',
+                                     display_fields=['display_fields'],
+                                     alert_sender='alert_sender')
+
+            # Assert
+            self.assertEqual(alert.alert_id, alert_id)

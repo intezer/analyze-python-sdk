@@ -1,5 +1,9 @@
 import collections
+import email
+import email.parser
 import itertools
+import os
+from typing import BinaryIO
 from typing import Dict
 from typing import List
 from typing import Optional

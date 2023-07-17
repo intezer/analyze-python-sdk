@@ -1,4 +1,8 @@
+import hashlib
+import json
 import time
+from typing import BinaryIO
+
 import requests
 import datetime
 from typing import Dict
@@ -54,7 +58,11 @@ class Alert:
     :ivar scans: Relevant scans for the alert.
     :vartype scans: list
     """
-    def __init__(self, alert_id: str, api: IntezerApiClient = None):
+
+    def __init__(self,
+                 alert_id: Optional[str] = None,
+                 alert_stream: Optional[BinaryIO] = None,
+                 api: IntezerApiClient = None):
         """
         Create a new Alert instance with the given alert id.
         Please note that this does not query the Intezer Analyze API for the alert data, but rather creates an Alert
@@ -63,7 +71,20 @@ class Alert:
         :param alert_id: The alert id.
         :param api: The API connection to Intezer.
         """
-        self.alert_id: str = alert_id
+        if alert_stream and alert_id:
+            raise ValueError('Only one of alert_id and alert_stream should be provided')
+
+        if not alert_stream and not alert_id:
+            raise ValueError('One of alert_id and alert_stream should be provided')
+
+        if alert_stream:
+            if not bool(alert_stream.getvalue()):
+                raise ValueError('alert_stream is empty')
+
+            self.alert_id: str = self._parse_alert_id_from_alert_stream(alert_stream)
+        else:
+            self.alert_id: str = alert_id
+
         self._intezer_api_client = api
         self._api = IntezerApi(api or get_global_api())
         self._report: Optional[Dict] = None
@@ -75,6 +96,13 @@ class Alert:
         self.status: Optional[AlertStatusCode] = None
         self.scans: List[Union[UrlAnalysis, FileAnalysis, EndpointAnalysis]] = []
 
+    @classmethod
+    def _parse_alert_id_from_alert_stream(cls, alert_stream: BinaryIO) -> str:
+        try:
+            return hashlib.sha256(alert_stream.read()).hexdigest()
+        finally:
+            alert_stream.seek(0)
+
     def check_status(self) -> AlertStatusCode:
         """
         Refresh the alert data from the Intezer Analyze API - overrides current data (if exists) with the new data.
@@ -83,17 +111,14 @@ class Alert:
 
         """
         try:
-            result = self._api.get_alerts_by_alert_ids(alert_ids=[self.alert_id])
+            alert, status = self._api.get_alert_by_alert_id(alert_id=self.alert_id)
         except requests.HTTPError:
             self.status = AlertStatusCode.NOT_FOUND
             raise errors.AlertNotFoundError(self.alert_id)
 
-        if result.get('alerts_count', 0) != 1:
-            self.status = AlertStatusCode.NOT_FOUND
-            raise errors.AlertNotFoundError(self.alert_id)
-        alert = result['alerts'][0]
         self._report = alert
-        if not alert.get('triage_result'):
+
+        if status in (AlertStatusCode.IN_PROGRESS.value, AlertStatusCode.QUEUED.value):
             self.status = AlertStatusCode.IN_PROGRESS
             return self.status
 
@@ -128,8 +153,7 @@ class Alert:
                 api: IntezerApiClient = None,
                 fetch_scans: bool = False,
                 wait: bool = False,
-                timeout: Optional[int] = None,
-                ):
+                timeout: Optional[int] = None):
         """
         Create a new Alert instance, and fetch the alert data from the Intezer Analyze API.
 
@@ -154,9 +178,9 @@ class Alert:
 
     @classmethod
     def send(cls,
-             raw_alert: dict,
-             alert_mapping: dict,
+             raw_alert: Union[dict, BinaryIO],
              source: str,
+             alert_mapping: Optional[dict] = None,
              api: IntezerApiClient = None,
              environment: Optional[str] = None,
              display_fields: Optional[List[str]] = None,
@@ -183,22 +207,62 @@ class Alert:
                  resulting alert object will be initialized with the alert triage data.
         """
         _api = IntezerApi(api or get_global_api())
-        send_alert_params = dict(
-            alert=raw_alert,
-            definition_mapping=alert_mapping,
-            alert_source=source,
-            environment=environment,
-            display_fields=display_fields,
-            default_verdict=default_verdict,
-            alert_sender=alert_sender
-        )
-        send_alert_params = {key: value for key, value in send_alert_params.items() if value is not None}
-        alert_id = _api.send_alert(**send_alert_params)
+        send_alert_params = cls._get_alert_params(alert=raw_alert,
+                                                  alert_source=source,
+                                                  definition_mapping=alert_mapping,
+                                                  environment=environment,
+                                                  display_fields=display_fields,
+                                                  default_verdict=default_verdict,
+                                                  alert_sender=alert_sender)
+
+        if isinstance(raw_alert, dict):
+            alert_id = _api.send_alert(**send_alert_params)
+        else:
+            alert_id = _api.send_binary_alert(**send_alert_params)
 
         alert = cls(alert_id=alert_id, api=api)
         if wait:
             alert.wait_for_completion(timeout=timeout)
         return alert
+
+    @classmethod
+    def _get_alert_params(cls,
+                          alert: Union[dict, BinaryIO],
+                          alert_source: str,
+                          definition_mapping: Optional[dict] = None,
+                          environment: IntezerApiClient = None,
+                          display_fields: Optional[str] = None,
+                          default_verdict: Optional[str] = None,
+                          alert_sender: Optional[str] = None) -> Dict:
+        if isinstance(alert, dict):
+            if not definition_mapping:
+                raise errors.InvalidAlertArgumentError('alert_mapping must be provided when sending a raw alert')
+
+            send_alert_params = dict(
+                alert=alert,
+                definition_mapping=definition_mapping,
+                alert_source=alert_source,
+                environment=environment,
+                display_fields=display_fields,
+                default_verdict=default_verdict,
+                alert_sender=alert_sender
+            )
+        else:
+            if not bool(alert.getvalue()):
+                raise ValueError('alert cannot be empty')
+
+            send_alert_params = dict(
+                alert=alert,
+                file_name=cls._parse_alert_id_from_alert_stream(alert),
+                definition_mapping=json.dumps(definition_mapping) if definition_mapping else None,
+                alert_source=alert_source,
+                environment=environment,
+                display_fields=','.join(display_fields) if display_fields else None,
+                default_verdict=default_verdict,
+                alert_sender=alert_sender
+            )
+
+        return {key: value for key, value in send_alert_params.items() if value is not None}
 
     def wait_for_completion(self,
                             interval: int = None,

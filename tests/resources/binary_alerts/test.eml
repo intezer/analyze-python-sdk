@@ -1,0 +1,19 @@
+MIME-Version: 1.0
+Date: Sun, 16 Jul 2023 12:49:30 +0300
+Message-ID: <CAMVirVFU2nGm107Lf8mbgZn3oYgB_=W=G7ZEGVqmzswrZkJGaA@mail.gmail.com>
+Subject: test
+From: Matan Yechiel <matan@intezer.com>
+To: Matan Yechiel <matan@intezer.com>
+Content-Type: multipart/alternative; boundary="00000000000031dc9606009799f4"
+
+--00000000000031dc9606009799f4
+Content-Type: text/plain; charset="UTF-8"
+
+test
+
+--00000000000031dc9606009799f4
+Content-Type: text/html; charset="UTF-8"
+
+<div dir="ltr">test</div>
+
+--00000000000031dc9606009799f4--

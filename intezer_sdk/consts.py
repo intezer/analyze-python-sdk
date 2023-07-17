@@ -19,6 +19,7 @@ class AnalysisStatusCode(enum.Enum):
 
 
 class AlertStatusCode(AutoName):
+    QUEUED = enum.auto()
     IN_PROGRESS = enum.auto()
     NOT_FOUND = enum.auto()
     FINISHED = enum.auto()

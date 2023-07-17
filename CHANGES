@@ -1,3 +1,7 @@
+1.18.1
+______
+- Add binary alert functionality to `Alert` object.
+
 1.17.5
 ______
 - Add `Alert` object, which allows sending / querying for alerts.
