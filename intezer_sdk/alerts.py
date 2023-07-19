@@ -212,17 +212,12 @@ class Alert:
             definition_mapping=alert_mapping,
             alert_source=source,
             environment=environment,
+            display_fields=display_fields,
+            default_verdict=default_verdict,
+            alert_sender=alert_sender
         )
 
-        if display_fields:
-            send_alert_params['display_fields'] = display_fields
-
-        if default_verdict:
-            send_alert_params['default_verdict'] = default_verdict
-
-        if alert_sender:
-            send_alert_params['alert_sender'] = alert_sender
-
+        send_alert_params = {key: value for key, value in send_alert_params.items() if value is not None}
         alert_id = _api.send_alert(**send_alert_params)
 
         alert = cls(alert_id=alert_id, api=api)
@@ -268,51 +263,13 @@ class Alert:
             alert_sender=alert_sender
         )
 
+        send_alert_params = {key: value for key, value in send_alert_params.items() if value is not None}
         alert_id = _api.send_binary_alert(**send_alert_params)
 
         alert = cls(alert_id=alert_id, api=api)
         if wait:
             alert.wait_for_completion(timeout=timeout)
         return alert
-
-    @classmethod
-    def _get_alert_params(cls,
-                          alert: Union[dict, BinaryIO],
-                          alert_source: str,
-                          definition_mapping: Optional[dict] = None,
-                          environment: IntezerApiClient = None,
-                          display_fields: Optional[str] = None,
-                          default_verdict: Optional[str] = None,
-                          alert_sender: Optional[str] = None) -> Dict:
-        if isinstance(alert, dict):
-            if not definition_mapping:
-                raise errors.InvalidAlertArgumentError('alert_mapping must be provided when sending a raw alert')
-
-            send_alert_params = dict(
-                alert=alert,
-                definition_mapping=definition_mapping,
-                alert_source=alert_source,
-                environment=environment,
-                display_fields=display_fields,
-                default_verdict=default_verdict,
-                alert_sender=alert_sender
-            )
-        else:
-            if not bool(alert.getvalue()):
-                raise ValueError('alert cannot be empty')
-
-            send_alert_params = dict(
-                alert=alert,
-                file_name=cls._parse_alert_id_from_alert_stream(alert),
-                definition_mapping=json.dumps(definition_mapping) if definition_mapping else None,
-                alert_source=alert_source,
-                environment=environment,
-                display_fields=','.join(display_fields) if display_fields else None,
-                default_verdict=default_verdict,
-                alert_sender=alert_sender
-            )
-
-        return {key: value for key, value in send_alert_params.items() if value is not None}
 
     def wait_for_completion(self,
                             interval: int = None,
