@@ -1,3 +1,7 @@
+1.18.2
+______
+- Add 'send_phishing_email' method to 'Alert' object.
+
 1.18.1
 ______
 - Add binary alert functionality to `Alert` object.
