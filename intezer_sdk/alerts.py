@@ -226,14 +226,14 @@ class Alert:
 
     @classmethod
     def send_phishing_email(cls,
-             raw_alert: BinaryIO,
-             api: IntezerApiClient = None,
-             environment: Optional[str] = None,
-             default_verdict: Optional[str] = None,
-             alert_sender: Optional[str] = None,
-             wait: bool = False,
-             timeout: Optional[int] = None,
-             ):
+                            raw_alert: BinaryIO,
+                            api: IntezerApiClient = None,
+                            environment: Optional[str] = None,
+                            default_verdict: Optional[str] = None,
+                            alert_sender: Optional[str] = None,
+                            wait: bool = False,
+                            timeout: Optional[int] = None,
+                            ):
         """
         Send an alert for further investigation using the Intezer Analyze API.
 
