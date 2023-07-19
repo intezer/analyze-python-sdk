@@ -212,10 +212,16 @@ class Alert:
             definition_mapping=alert_mapping,
             alert_source=source,
             environment=environment,
-            display_fields=display_fields,
-            default_verdict=default_verdict,
-            alert_sender=alert_sender
         )
+
+        if display_fields:
+            send_alert_params['display_fields'] = display_fields
+
+        if default_verdict:
+            send_alert_params['default_verdict'] = default_verdict
+
+        if alert_sender:
+            send_alert_params['alert_sender'] = alert_sender
 
         alert_id = _api.send_alert(**send_alert_params)
 
