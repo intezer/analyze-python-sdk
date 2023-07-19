@@ -111,11 +111,8 @@ class AlertsSpec(BaseTest):
                      status=HTTPStatus.OK,
                      json={'result': True, 'alert_id': alert_id})
             # Act
-            alert = Alert.send(raw_alert=raw_alert,
-                                     source='source',
-                                     environment='environment',
-                                     display_fields=['display_fields'],
-                                     alert_sender='alert_sender')
+            alert = Alert.send_phishing_email(raw_alert=raw_alert,
+                                              alert_sender='alert_sender')
 
             # Assert
             self.assertEqual(alert.alert_id, alert_id)

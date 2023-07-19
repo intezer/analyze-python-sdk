@@ -178,9 +178,9 @@ class Alert:
 
     @classmethod
     def send(cls,
-             raw_alert: Union[dict, BinaryIO],
+             raw_alert: dict,
+             alert_mapping: dict,
              source: str,
-             alert_mapping: Optional[dict] = None,
              api: IntezerApiClient = None,
              environment: Optional[str] = None,
              display_fields: Optional[List[str]] = None,
@@ -207,18 +207,62 @@ class Alert:
                  resulting alert object will be initialized with the alert triage data.
         """
         _api = IntezerApi(api or get_global_api())
-        send_alert_params = cls._get_alert_params(alert=raw_alert,
-                                                  alert_source=source,
-                                                  definition_mapping=alert_mapping,
-                                                  environment=environment,
-                                                  display_fields=display_fields,
-                                                  default_verdict=default_verdict,
-                                                  alert_sender=alert_sender)
+        send_alert_params = dict(
+            alert=raw_alert,
+            definition_mapping=alert_mapping,
+            alert_source=source,
+            environment=environment,
+            display_fields=display_fields,
+            default_verdict=default_verdict,
+            alert_sender=alert_sender
+        )
 
-        if isinstance(raw_alert, dict):
-            alert_id = _api.send_alert(**send_alert_params)
-        else:
-            alert_id = _api.send_binary_alert(**send_alert_params)
+        alert_id = _api.send_alert(**send_alert_params)
+
+        alert = cls(alert_id=alert_id, api=api)
+        if wait:
+            alert.wait_for_completion(timeout=timeout)
+        return alert
+
+    @classmethod
+    def send_phishing_email(cls,
+             raw_alert: BinaryIO,
+             api: IntezerApiClient = None,
+             environment: Optional[str] = None,
+             default_verdict: Optional[str] = None,
+             alert_sender: Optional[str] = None,
+             wait: bool = False,
+             timeout: Optional[int] = None,
+             ):
+        """
+        Send an alert for further investigation using the Intezer Analyze API.
+
+        :param raw_alert: The raw alert data.
+        :param api: The API connection to Intezer.
+        :param environment: The environment of the alert.
+        :param default_verdict: The default verdict to send the alert with.
+        :param alert_sender: The sender of the alert.
+        :param wait: Wait for the alert to finish processing before returning.
+        :param timeout: The timeout for the wait operation.
+        :raises: :class:`requests.HTTPError` if the request failed for any reason.
+        :return: The Alert instance, initialized with the alert id. when the `wait` parameter is set to True, the
+                 resulting alert object will be initialized with the alert triage data.
+        """
+        _api = IntezerApi(api or get_global_api())
+        if not bool(raw_alert.getvalue()):
+            raise ValueError('alert cannot be empty')
+
+        send_alert_params = dict(
+            alert=raw_alert,
+            file_name=cls._parse_alert_id_from_alert_stream(raw_alert),
+            alert_source='phishing_emails',
+            environment=environment,
+            display_fields=','.join(['sender', 'received', 'subject', 'message_id', 'to']),
+            default_verdict=default_verdict,
+            alert_sender=alert_sender
+        )
+
+        alert_id = _api.send_binary_alert(**send_alert_params)
 
         alert = cls(alert_id=alert_id, api=api)
         if wait:
