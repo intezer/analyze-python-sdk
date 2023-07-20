@@ -28,7 +28,7 @@ setup(
     version=version,
     packages=['intezer_sdk'],
     url='https://github.com/intezer/analyze-python-sdk',
-    license='Apache License v2',
+    license='Apache 2.0',
     author='Intezer Labs ltd.',
     author_email='info@intezer.com',
     description='Intezer Analyze SDK',
@@ -42,6 +42,7 @@ setup(
     ],
     python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*',
     classifiers=[
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
