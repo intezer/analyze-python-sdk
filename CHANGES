@@ -1,3 +1,7 @@
+1.18.3
+______
+- Fix Apache license naming.
+
 1.18.2
 ______
 - Add 'send_phishing_email' method to 'Alert' object.
