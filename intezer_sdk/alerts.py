@@ -227,7 +227,7 @@ class Alert:
 
     @classmethod
     def send_phishing_email(cls,
-                            raw_alert: BinaryIO,
+                            raw_email: BinaryIO,
                             api: IntezerApiClient = None,
                             environment: Optional[str] = None,
                             default_verdict: Optional[str] = None,
@@ -238,7 +238,7 @@ class Alert:
         """
         Send an alert for further investigation using the Intezer Analyze API.
 
-        :param raw_alert: The raw alert data.
+        :param raw_email: The raw alert data.
         :param api: The API connection to Intezer.
         :param environment: The environment of the alert.
         :param default_verdict: The default verdict to send the alert with.
@@ -250,12 +250,12 @@ class Alert:
                  resulting alert object will be initialized with the alert triage data.
         """
         _api = IntezerApi(api or get_global_api())
-        if not bool(raw_alert.getvalue()):
+        if not bool(raw_email.getvalue()):
             raise ValueError('alert cannot be empty')
 
         send_alert_params = dict(
-            alert=raw_alert,
-            file_name=cls._parse_alert_id_from_alert_stream(raw_alert),
+            alert=raw_email,
+            file_name=cls._parse_alert_id_from_alert_stream(raw_email),
             alert_source='phishing_emails',
             environment=environment,
             display_fields=','.join(['sender', 'received', 'subject', 'message_id', 'to']),
