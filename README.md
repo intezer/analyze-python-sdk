@@ -17,6 +17,8 @@ Currently, the following options are available in the SDK:
 - IOCs, Dynamic TTPs and Capabilities
 - Strings related samples
 - Search a family
+- Ingest an alert from any source
+- Ingest a raw email alert (.msg or .eml file)
 
 ## Installation
 
