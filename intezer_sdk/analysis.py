@@ -447,6 +447,9 @@ class UrlAnalysis(Analysis):
         if 'downloaded_file' not in self._report:
             return None
 
+        if not self._report['downloaded_file'].get('analysis_id'):
+            return None
+
         file_analysis_id = self._report['downloaded_file']['analysis_id']
         self._file_analysis = FileAnalysis.from_analysis_id(file_analysis_id, self._api.api)
         return self._file_analysis
