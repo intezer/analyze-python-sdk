@@ -727,6 +727,8 @@ class IntezerApi:
     def _assert_analysis_response_status_code(response: Response):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError(response)
+        elif response.status_code == HTTPStatus.REQUEST_ENTITY_TOO_LARGE:
+            raise errors.FileTooLargeError(response)
         elif response.status_code == HTTPStatus.CONFLICT:
             running_analysis_id = response.json().get('result', {}).get('analysis_id')
             raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
