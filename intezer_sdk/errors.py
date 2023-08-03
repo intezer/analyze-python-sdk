@@ -56,6 +56,9 @@ class HashDoesNotExistError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Hash was not found', response)
 
+class FileTooLargeError(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('File is too large', response)
 
 class ReportDoesNotExistError(IntezerError):
     def __init__(self):

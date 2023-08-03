@@ -541,6 +541,17 @@ class FileAnalysisSpec(BaseTest):
             with self.assertRaises(errors.HashDoesNotExistError):
                 analysis.send()
 
+    def test_send_analysis_by_sha256_that_is_too_large_raise_error(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=f'{self.full_url}/analyze-by-hash',
+                     status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+            analysis = FileAnalysis(file_hash='a' * 64)
+            # Act + Assert
+            with self.assertRaises(errors.FileTooLargeError):
+                analysis.send()
+
     def test_send_analysis_by_sha256_with_expired_jwt_token_gets_new_token(self):
         # Arrange
         analysis = FileAnalysis(file_hash='a' * 64)
@@ -565,7 +576,7 @@ class FileAnalysisSpec(BaseTest):
             analysis.send()
             self.assertEqual(3, len(mock.calls))  # analyze -> refresh access_token -> analyze retry
 
-    def test_send_analysis_by_sha256_with_expired_jwt_token_doesnt_loop_indefinitley(self):
+    def test_send_analysis_by_sha256_with_expired_jwt_token_doesnt_loop_indefinitely(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('POST', url=f'{self.full_url}/analyze-by-hash', status=HTTPStatus.UNAUTHORIZED)
