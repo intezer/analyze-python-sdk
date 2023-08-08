@@ -1,3 +1,7 @@
+1.18.7
+______
+- Support email file path for sending phishing email.
+
 1.18.6
 ______
 - Raise `FileTooLargeError` on analyzing file that is too large.
