@@ -1,6 +1,7 @@
 import hashlib
 import json
 import time
+from io import BytesIO
 from typing import BinaryIO
 
 import requests
@@ -227,16 +228,17 @@ class Alert:
 
     @classmethod
     def send_phishing_email(cls,
-                            raw_email: BinaryIO,
-                            api: IntezerApiClient = None,
+                            raw_email: Optional[BinaryIO] = None,
+                            api: Optional[IntezerApiClient] = None,
                             environment: Optional[str] = None,
                             default_verdict: Optional[str] = None,
                             alert_sender: Optional[str] = None,
                             wait: bool = False,
                             timeout: Optional[int] = None,
-                            ):
+                            email_path: Optional[str] = None):
         """
         Send an alert for further investigation using the Intezer Analyze API.
+        Should pass either raw_email or email_path.
 
         :param raw_email: The raw alert data.
         :param api: The API connection to Intezer.
@@ -245,10 +247,16 @@ class Alert:
         :param alert_sender: The sender of the alert.
         :param wait: Wait for the alert to finish processing before returning.
         :param timeout: The timeout for the wait operation.
+        :param email_path: The path to the email file.
         :raises: :class:`requests.HTTPError` if the request failed for any reason.
         :return: The Alert instance, initialized with the alert id. when the `wait` parameter is set to True, the
                  resulting alert object will be initialized with the alert triage data.
         """
+        if not raw_email and not email_path:
+            raise ValueError('raw_email or email_path must be provided')
+        if email_path:
+            with open(email_path, 'rb') as email_file:
+                raw_email = BytesIO(email_file.read())
         _api = IntezerApi(api or get_global_api())
         if not bool(raw_email.getvalue()):
             raise ValueError('alert cannot be empty')
