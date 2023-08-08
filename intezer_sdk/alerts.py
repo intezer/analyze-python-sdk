@@ -228,16 +228,17 @@ class Alert:
 
     @classmethod
     def send_phishing_email(cls,
-                            raw_email: BinaryIO | None = None,
-                            api: IntezerApiClient | None = None,
-                            environment: str | None = None,
-                            default_verdict: str | None = None,
-                            alert_sender: str | None = None,
+                            raw_email: Optional[BinaryIO] = None,
+                            api: Optional[IntezerApiClient] = None,
+                            environment: Optional[str] = None,
+                            default_verdict: Optional[str] = None,
+                            alert_sender: Optional[str] = None,
                             wait: bool = False,
-                            timeout: int | None = None,
-                            email_path: str | None = None):
+                            timeout: Optional[int] = None,
+                            email_path: Optional[str] = None):
         """
         Send an alert for further investigation using the Intezer Analyze API.
+        Should pass either raw_email or email_path.
 
         :param raw_email: The raw alert data.
         :param api: The API connection to Intezer.
