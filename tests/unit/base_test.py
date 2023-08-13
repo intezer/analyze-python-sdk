@@ -103,7 +103,7 @@ class ApiSpec(unittest.TestCase):
             mock.add('GET',
                      url=f'{self.full_url}/is-available',
                      status=HTTPStatus.OK,
-                     json={'result': {'is_available': True}})
+                     json={'is_available': True})
             # Act & Assert
             self.assertTrue(api.is_available())
 
@@ -115,7 +115,7 @@ class ApiSpec(unittest.TestCase):
             mock.add('GET',
                      url=f'{self.full_url}/is-available',
                      status=HTTPStatus.OK,
-                     json={'result': {'is_available': False}})
+                     json={'is_available': False})
             # Act & Assert
             self.assertFalse(api.is_available())
 
