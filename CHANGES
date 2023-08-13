@@ -1,3 +1,7 @@
+1.18.8
+------
+- Fix is_available method.
+
 1.18.7
 ______
 - Support email file path for sending phishing email.
