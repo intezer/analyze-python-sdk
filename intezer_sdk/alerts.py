@@ -271,7 +271,7 @@ class Alert:
             display_fields=','.join(['received_by', 'sender', 'received', 'subject', 'message_id', 'to']),
             default_verdict=default_verdict,
             alert_sender=alert_sender,
-            additional_info=json.dumps(additional_info) if additional_info else None
+            additional_info=json.dumps(additional_info) if additional_info else None,
         )
 
         send_alert_params = {key: value for key, value in send_alert_params.items() if value is not None}
