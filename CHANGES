@@ -1,3 +1,7 @@
+1.18.9
+------
+- Add additional info property to send phishing email.
+
 1.18.8
 ------
 - Fix is_available method.
