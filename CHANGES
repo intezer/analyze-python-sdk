@@ -1,3 +1,7 @@
+1.19
+------
+- Change "received_by" label to "reported_by" in submit phishing alert.
+
 1.18.9
 ------
 - Add additional info property to send phishing email.

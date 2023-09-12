@@ -268,7 +268,7 @@ class Alert:
             file_name=cls._parse_alert_id_from_alert_stream(raw_email),
             alert_source='phishing_emails',
             environment=environment,
-            display_fields=','.join(['received_by', 'sender', 'received', 'subject', 'message_id', 'to']),
+            display_fields=','.join(['reported_by', 'sender', 'received', 'subject', 'message_id', 'to']),
             default_verdict=default_verdict,
             alert_sender=alert_sender,
             additional_info=json.dumps(additional_info) if additional_info else None,
