@@ -381,7 +381,7 @@ class UrlAnalysis(Analysis):
                              url: str,
                              days_threshold_for_latest_analysis: int = 1,
                              api: IntezerApiClient = None,
-                             exact_match=False) -> Optional['UrlAnalysis']:
+                             exact_match: bool = False) -> Optional['UrlAnalysis']:
         """
         Returns a UrlAnalysis instance with the latest analysis of the given URL.
         :param url: The URL to retrieve the latest analysis for.
