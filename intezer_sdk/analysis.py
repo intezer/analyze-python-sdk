@@ -380,12 +380,14 @@ class UrlAnalysis(Analysis):
     def from_latest_analysis(cls,
                              url: str,
                              days_threshold_for_latest_analysis: int = 1,
-                             api: IntezerApiClient = None) -> Optional['UrlAnalysis']:
+                             api: IntezerApiClient = None,
+                             exact_match=False) -> Optional['UrlAnalysis']:
         """
         Returns a UrlAnalysis instance with the latest analysis of the given URL.
         :param url: The URL to retrieve the latest analysis for.
         :param days_threshold_for_latest_analysis: The number of days to look back for the latest analysis.
         :param api: The API connection to Intezer.
+        :param exact_match: If True, the URL must match exactly. Otherwise, try to find similar URLs which were analyzed.
         :return: A UrlAnalysis instance with the latest analysis of the given URL.
         """
         now = datetime.datetime.now()
@@ -398,7 +400,10 @@ class UrlAnalysis(Analysis):
         all_analyses_reports = analysis_history_url_result.all()
 
         analyses_ids = [report['analysis_id'] for report in all_analyses_reports
-                        if _clean_url(url) in (_clean_url(report['scanned_url']), _clean_url(report['submitted_url']))]
+                        if url in (report['scanned_url'], report['submitted_url'])]
+        if not analyses_ids and not exact_match:
+            analyses_ids = [report['analysis_id'] for report in all_analyses_reports
+                            if _clean_url(url) in (_clean_url(report['scanned_url']), _clean_url(report['submitted_url']))]
 
         if not analyses_ids:
             return None
