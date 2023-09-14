@@ -1,3 +1,7 @@
+1.19.1
+------
+- Add "exact_match option" to UrlAnalysis.from_latest_analysis.
+
 1.19
 ------
 - Change "received_by" label to "reported_by" in submit phishing alert.
