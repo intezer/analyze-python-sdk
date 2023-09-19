@@ -170,6 +170,7 @@ class FileAnalysis(Analysis):
                                              self._disable_dynamic_unpacking,
                                              self._disable_static_unpacking,
                                              self._sandbox_command_line_arguments,
+                                             self._file_name,
                                              **additional_parameters)
         elif self._download_url:
             return self._api.analyze_by_download_url(

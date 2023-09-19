@@ -33,6 +33,7 @@ class IntezerApi:
                         disable_dynamic_unpacking: Optional[bool],
                         disable_static_unpacking: Optional[bool],
                         sandbox_command_line_arguments: str = None,
+                        file_name: str = None,
                         **additional_parameters) -> str:
         """
         Analyze a file by its hash.
@@ -41,6 +42,7 @@ class IntezerApi:
         :param disable_dynamic_unpacking: Whether to disable dynamic unpacking.
         :param disable_static_unpacking: Whether to disable static unpacking.
         :param sandbox_command_line_arguments: Command line arguments to pass to the sandbox.
+        :param file_name: The file name of the file if exists.
         :param additional_parameters: Additional parameters to pass to the API.
         :return: The analysis id.
         """
@@ -48,6 +50,8 @@ class IntezerApi:
                                       disable_static_unpacking=disable_static_unpacking,
                                       sandbox_command_line_arguments=sandbox_command_line_arguments,
                                       **additional_parameters)
+        if file_name and (not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V22_10):
+            data['file_name'] = file_name
 
         data['hash'] = file_hash
         response = self.api.request_with_refresh_expired_access_token('POST', '/analyze-by-hash', data)
