@@ -1,3 +1,7 @@
+1.19.4
+------
+- Add global API custom instance setter.
+
 1.19.3
 ------
 - Add file name to hash analysis.

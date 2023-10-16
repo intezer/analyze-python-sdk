@@ -733,5 +733,16 @@ def set_global_api(api_key: str = None,
                              proxies=proxies)
     return _global_api
 
+def set_global_api_custom_instance(api: IntezerApiClient) -> IntezerApiClient:
+    """
+    Configure the global api with a custom instance
+
+    :param api: The api instance
+    :return: The configured api
+    """
+    global _global_api
+    _global_api = api
+    return _global_api
+
 
 IntezerProxy = IntezerApiClient
