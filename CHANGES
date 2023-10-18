@@ -1,3 +1,7 @@
+1.19.5
+------
+- Latest URL analysis fallback.
+
 1.19.4
 ------
 - Add global API custom instance setter.
