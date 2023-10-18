@@ -405,7 +405,7 @@ class UrlAnalysis(Analysis):
                         if url in (report.get('scanned_url'), report.get('submitted_url'))]
         if not analyses_ids and not exact_match:
             analyses_ids = [report['analysis_id'] for report in all_analyses_reports
-                            if _clean_url(url) in (_clean_url(report['scanned_url']), _clean_url(report['submitted_url']))]
+                            if _clean_url(url) in (_clean_url(report.get('scanned_url', '')), _clean_url(report.get('submitted_url', '')))]
 
         if not analyses_ids:
             return None
