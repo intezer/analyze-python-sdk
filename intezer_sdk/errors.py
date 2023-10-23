@@ -56,9 +56,11 @@ class HashDoesNotExistError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Hash was not found', response)
 
+
 class FileTooLargeError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('File is too large', response)
+
 
 class ReportDoesNotExistError(IntezerError):
     def __init__(self):
@@ -156,10 +158,17 @@ class AlertNotFoundError(AlertError):
     def __init__(self, alert_id: str):
         super().__init__(f'The given alert does not exist - {alert_id}')
 
+
 class InvalidAlertArgumentError(AlertError):
     def __init__(self, message: str):
         super().__init__(message)
 
+
 class UrlOfflineError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Url is offline', response)
+
+
+class InvalidUrlError(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Invalid url', response)
