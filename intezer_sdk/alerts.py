@@ -1,27 +1,34 @@
+import datetime
 import hashlib
 import json
 import time
-import datetime
+import typing
 from io import BytesIO
 from typing import BinaryIO
-
-import requests
 from typing import Dict
 from typing import List
-from typing import Tuple
-from typing import Union
-from typing import Type
 from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import Union
 
+import requests
+
+from intezer_sdk import consts
+from intezer_sdk import errors
 from intezer_sdk._api import IntezerApi
+from intezer_sdk._api import IntezerApiClient
 from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.analysis import UrlAnalysis
-from intezer_sdk.endpoint_analysis import EndpointAnalysis
-from intezer_sdk.consts import AlertStatusCode
-from intezer_sdk._api import IntezerApiClient
 from intezer_sdk.api import get_global_api
-from intezer_sdk import errors
-from intezer_sdk import consts
+from intezer_sdk.consts import AlertStatusCode
+from intezer_sdk.endpoint_analysis import EndpointAnalysis
+
+
+class AdditionalFieldRecord(typing.TypedDict):
+    field_name: str
+    field_display_name: str
+    value: str | int | float
 
 
 def get_alerts_by_alert_ids(alert_ids: List[str],
@@ -184,7 +191,7 @@ class Alert:
              source: str,
              api: IntezerApiClient = None,
              environment: Optional[str] = None,
-             display_fields: Optional[List[str]] = None,
+             additional_fields: Optional[list[AdditionalFieldRecord]] = None,
              default_verdict: Optional[str] = None,
              alert_sender: Optional[str] = None,
              wait: bool = False,
@@ -198,7 +205,7 @@ class Alert:
         :param source: The source of the alert.
         :param api: The API connection to Intezer.
         :param environment: The environment of the alert.
-        :param display_fields: Fields from raw alert to display in the alert's webpage.
+        :param additional_fields: Additional fields to display in the alert
         :param default_verdict: The default verdict to send the alert with.
         :param alert_sender: The sender of the alert.
         :param wait: Wait for the alert to finish processing before returning.
@@ -213,7 +220,7 @@ class Alert:
             definition_mapping=alert_mapping,
             alert_source=source,
             environment=environment,
-            display_fields=display_fields,
+            additional_fields=additional_fields,
             default_verdict=default_verdict,
             alert_sender=alert_sender
         )

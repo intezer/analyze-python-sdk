@@ -80,7 +80,7 @@ class AlertsSpec(BaseTest):
                                alert_mapping={'some': 'mapping'},
                                source='source',
                                environment='environment',
-                               display_fields=['display_fields'],
+                               additional_fields={'field': {'field_display_name': 'Field', 'value': 'value'}},
                                alert_sender='alert_sender',
                                )
 
