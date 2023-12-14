@@ -1,3 +1,7 @@
+1.19.7
+------
+- Removed validating optional directories in endpoint scans
+
 1.19.6
 ------
 - Add InvalidUrlError
