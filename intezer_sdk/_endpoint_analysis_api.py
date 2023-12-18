@@ -1,10 +1,8 @@
 import gzip
 from typing import List
-from urllib.parse import urlparse
-
-from intezer_sdk.api import raise_for_status
 
 from intezer_sdk.api import IntezerApiClient
+from intezer_sdk.api import raise_for_status
 
 
 class EndpointScanApi:
@@ -13,8 +11,7 @@ class EndpointScanApi:
         if not scan_id:
             raise ValueError('scan_id must be provided')
         self.scan_id = scan_id
-        api_base = f'https://{urlparse(api.base_url).netloc}'
-        self.base_url = f'{api_base}/scans/scans/{scan_id}'
+        self.base_url = f"{api.base_url.replace('/api/','')}/scans/scans/{scan_id}"
 
     def request_with_refresh_expired_access_token(self, *args, **kwargs):
         return self.api.request_with_refresh_expired_access_token(base_url=self.base_url, *args, **kwargs)
