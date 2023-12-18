@@ -1,3 +1,7 @@
+1.19.7
+------
+- Fix system URL for EndpointAnalysis
+
 1.19.6
 ------
 - Add InvalidUrlError
