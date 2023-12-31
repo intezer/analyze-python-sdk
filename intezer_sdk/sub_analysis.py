@@ -186,11 +186,12 @@ class SubAnalysis:
                                           wait,
                                           wait_timeout)
 
-    def download_file(self, path: str = None, output_stream: IO = None):
+    def download_file(self, path: str = None, output_stream: IO = None, password_protection: str = None):
         """
         Downloads the analysis's file.
         `path` or `output_stream` must be provided.
         :param path: A path to where to save the file, it can be either a directory or non-existing file path.
         :param output_stream: A file-like object to write the file's content to.
+        :param password_protection: set password protection to download file as zip with password.
         """
-        self._api.download_file_by_sha256(self.sha256, path, output_stream)
+        self._api.download_file_by_sha256(self.sha256, path, output_stream, password_protection)
