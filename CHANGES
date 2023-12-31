@@ -1,3 +1,7 @@
+1.19.8
+------
+- Add download sha256 sample with zip password protected
+
 1.19.7
 ------
 - Fix system URL for EndpointAnalysis

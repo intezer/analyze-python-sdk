@@ -1,4 +1,5 @@
 import io
+import json
 import os
 from http import HTTPStatus
 from typing import Any
@@ -539,13 +540,18 @@ class IntezerApi:
 
         return result
 
-    def download_file_by_sha256(self, sha256: str, path: str = None, output_stream: IO = None) -> None:
+    def download_file_by_sha256(self,
+                                sha256: str,
+                                path: str = None,
+                                output_stream: IO = None,
+                                password_protected: str = None) -> None:
         """
         Download a file by its sha256.
 
         :param sha256: The sha256 of the file to download.
         :param path: The path to download the file to.
         :param output_stream: The output stream to write the file to.
+        :param password_protected: protect with password and download as zip.
         """
         if not path and not output_stream:
             raise ValueError('You must provide either path or output_stream')
@@ -559,25 +565,37 @@ class IntezerApi:
             elif os.path.isfile(path):
                 raise FileExistsError()
 
+        json_data = {'password_protected': password_protected} if password_protected else None
+
         response = self.api.request_with_refresh_expired_access_token('GET',
                                                                       f'/files/{sha256}/download',
-                                                                      stream=bool(path))
+                                                                      stream=bool(path),
+                                                                      data=json_data)
 
         raise_for_status(response)
-        if output_stream:
-            output_stream.write(response.content)
-        else:
-            if should_extract_name_from_request:
-                try:
-                    filename = response.headers['content-disposition'].split('filename=')[1]
-                except Exception:
-                    filename = f'{sha256}.sample'
 
-                path = os.path.join(path, filename)
-
-            with open(path, 'wb') as file:
+        if password_protected:
+            output_location = output_stream if output_stream else os.path.join(path,'{sha256}.zip')
+            with open(output_location, 'wb') as output:
                 for chunk in response.iter_content(chunk_size=8192):
-                    file.write(chunk)
+                    output.write(chunk)
+            if output_stream:
+                output_stream.seek(0)
+        else:
+            if output_stream:
+                output_stream.write(response.content)
+            else:
+                if should_extract_name_from_request:
+                    try:
+                        filename = response.headers['content-disposition'].split('filename=')[1]
+                    except Exception:
+                        filename = f'{sha256}.sample'
+
+                    path = os.path.join(path, filename)
+
+                with open(path, 'wb') as file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        file.write(chunk)
 
     def index_by_sha256(self, sha256: str, index_as: IndexType, family_name: str = None) -> Response:
         """
