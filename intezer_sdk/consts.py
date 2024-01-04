@@ -4,6 +4,7 @@ from intezer_sdk import __version__
 
 DEFAULT_DATE_FORMAT = '%a, %d %b %Y %X GMT'
 
+
 class AutoName(enum.Enum):
     def _generate_next_value_(name, start, count, last_values):
         return name.lower()
@@ -94,6 +95,7 @@ class CodeItemType(AutoName):
 class OnPremiseVersion(enum.IntEnum):
     V21_11 = 21.11
     V22_10 = 22.10
+    V23_10 = 23.10
 
 
 ANALYZE_URL = 'https://analyze.intezer.com'

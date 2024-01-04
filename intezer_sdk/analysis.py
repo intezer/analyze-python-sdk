@@ -361,7 +361,7 @@ class UrlAnalysis(Analysis):
         :param api: The API connection to Intezer.
         """
         super().__init__(api)
-        self._api.assert_any_on_premise()
+        self._api.assert_any_on_premise('query-url-history')
         self.url = url
         self._file_analysis: Optional[FileAnalysis] = None
 
