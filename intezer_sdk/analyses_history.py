@@ -133,7 +133,7 @@ def query_url_analyses_history(*,
     :return: URL query result from server as Results iterator.
     """
     api = api or get_global_api()
-    api.assert_on_premise_above_v22_10()
+    api.assert_any_on_premise()
     filters = generate_analyses_history_filter(
         start_date=start_date,
         end_date=end_date,

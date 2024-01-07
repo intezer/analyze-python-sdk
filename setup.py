@@ -21,7 +21,7 @@ with open('README.md') as f:
     long_description = f.read()
 
 install_requires = [
-    'requests >= 2.22.0,<3'
+    'requests >= 2.29.0,<3'
 ]
 setup(
     name='intezer_sdk',
@@ -37,16 +37,15 @@ setup(
     install_requires=install_requires,
     keywords='intezer',
     tests_requires=[
-        'responses == 0.16.0',
-        'pytest == 6.2.5'
+        'responses == 0.23.3',
+        'pytest == 7.4.4'
     ],
-    python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*',
+    python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*',
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11']
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12']
 )

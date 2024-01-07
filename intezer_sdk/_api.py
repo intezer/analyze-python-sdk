@@ -1,5 +1,4 @@
 import io
-import json
 import os
 from http import HTTPStatus
 from typing import Any
@@ -269,7 +268,7 @@ class IntezerApi:
         :raises: :class:`requests.HTTPError` if the request failed for any reason.
         :return: The alert id of the submitted alert.
         """
-        self.assert_any_on_premise()
+        self.assert_any_on_premise('send-alert')
         response = self.api.request_with_refresh_expired_access_token(method='POST',
                                                                       path='/alerts/ingest',
                                                                       data=dict(alert=alert,
@@ -293,7 +292,7 @@ class IntezerApi:
         :raises: :class:`requests.HTTPError` if the request failed for any reason.
         :return: The alert id of the submitted alert.
         """
-        self.assert_any_on_premise()
+        self.assert_any_on_premise('send-binary-alert')
 
         file = {'file': (file_name, alert)}
         response = self.api.request_with_refresh_expired_access_token(method='POST',
@@ -658,6 +657,7 @@ class IntezerApi:
         :param environments: The environments to get the alerts from.
         :return: The alerts' data.
         """
+        self.assert_any_on_premise('get-alerts-by-id')
         data = dict(alert_ids=alert_ids)
         if environments:
             data['environments'] = environments
@@ -708,7 +708,7 @@ class IntezerApi:
         :param additional_parameters: Additional parameters to pass to the request.
         :return: The analysis id.
         """
-        self.assert_any_on_premise()
+        self.assert_any_on_premise('analyze-url')
         response = self.api.request_with_refresh_expired_access_token('POST',
                                                                       '/url',
                                                                       dict(url=url, **additional_parameters))
@@ -801,6 +801,6 @@ class IntezerApi:
         if self.api.on_premise_version and self.api.on_premise_version <= OnPremiseVersion.V22_10:
             raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on this on-premise')
 
-    def assert_any_on_premise(self):
+    def assert_any_on_premise(self, endpoint: str):
         if self.api.on_premise_version:
-            raise errors.UnsupportedOnPremiseVersionError('This endpoint is not available yet on on-premise')
+            raise errors.UnsupportedOnPremiseVersionError(f'The {endpoint} is not available yet on on-premise')
