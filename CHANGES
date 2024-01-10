@@ -3,6 +3,10 @@ Unreleased
 - Prepare on-premise 23.10
 - Drop python 3.6 and python 3.7 support, add python 3.12 support
 
+1.19.9
+------
+- Fix certificate issue by adding pip-system-certs to requirements
+
 1.19.8
 ------
 - Add download sha256 sample with zip password protected

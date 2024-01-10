@@ -1,3 +1,4 @@
 requests>=2.29.0,<3
+pip-system-certs==4.0
 responses==0.23.3
 pytest==7.4.4
