@@ -85,7 +85,8 @@ class IntezerApiClient:
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None,
                  renew_token_window=20,
-                 max_retry=3):
+                 max_retry=3,
+                 timeout_in_seconds: Optional[int] = None):
         self.full_url = base_url + api_version
         self.base_url = base_url
         self._proxies = proxies
@@ -97,6 +98,7 @@ class IntezerApiClient:
         self.verify_ssl = verify_ssl
         self.on_premise_version = on_premise_version
         self.max_retry = max_retry
+        self.timeout_in_seconds = timeout_in_seconds
         if user_agent:
             user_agent = f'{consts.USER_AGENT}/{user_agent}'
         else:
@@ -110,7 +112,8 @@ class IntezerApiClient:
                  headers: dict = None,
                  files: dict = None,
                  stream: bool = None,
-                 base_url: str = None) -> Response:
+                 base_url: str = None,
+                 timeout_in_seconds: Optional[int] = None) -> Response:
         if not self._session:
             self._set_session()
 
@@ -123,7 +126,8 @@ class IntezerApiClient:
                 files=files,
                 data=data or {},
                 headers=headers or {},
-                stream=stream
+                stream=stream,
+                timeout=timeout_in_seconds or self.timeout_in_seconds
             )
         elif isinstance(data, bytes):
             response = self._session.request(
@@ -132,7 +136,8 @@ class IntezerApiClient:
                 files=files,
                 data=data,
                 headers=headers or {},
-                stream=stream
+                stream=stream,
+                timeout=timeout_in_seconds or self.timeout_in_seconds
             )
         else:
             response = self._session.request(
@@ -140,7 +145,8 @@ class IntezerApiClient:
                 url,
                 json=data or {},
                 headers=headers,
-                stream=stream
+                stream=stream,
+                timeout=timeout_in_seconds or self.timeout_in_seconds
             )
 
         return response
@@ -158,15 +164,16 @@ class IntezerApiClient:
                                                   headers: dict = None,
                                                   files: dict = None,
                                                   stream: bool = None,
-                                                  base_url: str = None) -> Response:
+                                                  base_url: str = None,
+                                                  timeout_in_seconds: Optional[int] = None) -> Response:
         for retry_count in range(self.max_retry):
             try:
                 self._refresh_token_if_needed()
-                response = self._request(method, path, data, headers, files, stream, base_url=base_url)
+                response = self._request(method, path, data, headers, files, stream, base_url, timeout_in_seconds)
 
                 if response.status_code == HTTPStatus.UNAUTHORIZED and not self._token_expiration:
                     self._set_access_token()
-                    response = self._request(method, path, data, headers, files, stream, base_url)
+                    response = self._request(method, path, data, headers, files, stream, base_url, timeout_in_seconds)
 
                 return response
             except ConnectionError:
@@ -732,6 +739,7 @@ def set_global_api(api_key: str = None,
                              on_premise_version=on_premise_version,
                              proxies=proxies)
     return _global_api
+
 
 def set_global_api_custom_instance(api: IntezerApiClient) -> IntezerApiClient:
     """

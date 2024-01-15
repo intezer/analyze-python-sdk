@@ -1,3 +1,8 @@
+1.19.10
+_______
+- Add timeout support to IntezerApiClient
+- Set pip-system-certs requirement correctly
+
 1.19.9
 ------
 - Fix certificate issue by adding pip-system-certs to requirements
