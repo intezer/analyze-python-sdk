@@ -752,6 +752,10 @@ class IntezerApi:
         elif response.status_code == HTTPStatus.REQUEST_ENTITY_TOO_LARGE:
             raise errors.FileTooLargeError(response)
         elif response.status_code == HTTPStatus.CONFLICT:
+            is_skipped_by_rule = response.json().get('result', {}).get('is_skipped_by_rule')
+            if is_skipped_by_rule:
+                raise errors.AnalysisSkippedByRuleError(response)
+
             running_analysis_id = response.json().get('result', {}).get('analysis_id')
             raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
         elif response.status_code == HTTPStatus.FORBIDDEN:
