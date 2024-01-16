@@ -172,3 +172,8 @@ class UrlOfflineError(ServerError):
 class InvalidUrlError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Invalid url', response)
+
+
+class AnalysisSkippedByRuleError(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Analysis skipped by rule', response)
