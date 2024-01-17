@@ -43,6 +43,10 @@ def raise_for_status(response: requests.Response,
     elif 400 <= response.status_code < 500:
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise errors.InvalidApiKeyError(response)
+        elif response.status_code == HTTPStatus.CONFLICT:
+            is_skipped_by_rule = response.json().get('result', {}).get('is_skipped_by_rule')
+            if is_skipped_by_rule:
+                raise errors.AnalysisSkippedByRuleError(response)
         elif response.status_code == HTTPStatus.FORBIDDEN:
             try:
                 error_message = response.json()['error']
@@ -671,6 +675,10 @@ class IntezerApi(IntezerApiClient):
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError(response)
         elif response.status_code == HTTPStatus.CONFLICT:
+            is_skipped_by_rule = response.json().get('result', {}).get('is_skipped_by_rule')
+            if is_skipped_by_rule:
+                raise errors.AnalysisSkippedByRuleError(response)
+
             running_analysis_id = response.json().get('result', {}).get('analysis_id')
             raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
         elif response.status_code == HTTPStatus.FORBIDDEN:

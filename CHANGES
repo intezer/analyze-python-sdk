@@ -1,3 +1,7 @@
+1.19.12
+_______
+- Raise AnalysisSkippedByRuleError when analysis is skipped by rule on server
+
 1.19.11
 _______
 - Add AnalysisSkippedByRuleError
