@@ -1,3 +1,7 @@
+1.19.13
+_______
+- Configurable concurrency for scan uploads
+
 1.19.12
 _______
 - Raise AnalysisSkippedByRuleError when analysis is skipped by rule on server
