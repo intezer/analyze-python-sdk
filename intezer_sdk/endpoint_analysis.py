@@ -133,7 +133,7 @@ class EndpointAnalysis(Analysis):
             self.status = consts.AnalysisStatusCode.IN_PROGRESS
             self._initialize_endpoint_api()
 
-            print(f'Uploading scan {os.path.basename(os.path.normpath(self._offline_scan_directory))}')
+            print(f'Uploading {os.path.basename(os.path.abspath(self._offline_scan_directory))}')
 
             self._send_host_info()
             self._send_scheduled_tasks_info()
