@@ -1,17 +1,22 @@
 import gzip
+import logging
 from typing import List
+
+import requests
 
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
+from intezer_sdk.consts import SCAN_MAX_UPLOAD_RETRIES
 
 
 class EndpointScanApi:
-    def __init__(self, scan_id: str, api: IntezerApiClient):
+    def __init__(self, scan_id: str, api: IntezerApiClient, max_upload_retries: int = SCAN_MAX_UPLOAD_RETRIES):
         self.api = api
         if not scan_id:
             raise ValueError('scan_id must be provided')
         self.scan_id = scan_id
         self.base_url = f"{api.base_url.replace('/api/','')}/scans/scans/{scan_id}"
+        self.max_upload_retries = max_upload_retries
 
     def request_with_refresh_expired_access_token(self, *args, **kwargs):
         return self.api.request_with_refresh_expired_access_token(base_url=self.base_url, *args, **kwargs)
@@ -25,6 +30,12 @@ class EndpointScanApi:
     def send_processes_info(self, processes_info: dict):
         response = self.request_with_refresh_expired_access_token(path='/processes-info',
                                                                   data=processes_info,
+                                                                  method='POST')
+        raise_for_status(response)
+
+    def send_all_loaded_modules_info(self, all_loaded_modules_info: dict):
+        response = self.request_with_refresh_expired_access_token(path=f'/processes/loaded-modules-info',
+                                                                  data=all_loaded_modules_info,
                                                                   method='POST')
         raise_for_status(response)
 
@@ -75,16 +86,26 @@ class EndpointScanApi:
         return response.json()['result']
 
     def upload_collected_binary(self, file_path: str, collected_from: str):
-        with open(file_path, 'rb') as file_to_upload:
-            file_data = file_to_upload.read()
-            compressed_data = gzip.compress(file_data, compresslevel=9)
-            response = self.request_with_refresh_expired_access_token(
-                path=f'/{collected_from}/collected-binaries',
-                data=compressed_data,
-                headers={'Content-Type': 'application/octet-stream', 'Content-Encoding': 'gzip'},
-                method='POST')
+        file_data = open(file_path, 'rb').read()
+        compressed_data = gzip.compress(file_data, compresslevel=9)
+        logger = logging.getLogger(__name__)
+        # we have builtin retry for connection errors, but we want to retry on 500 errors as well
+        for retry_count in range(self.max_upload_retries):
+            try:
+                response = self.request_with_refresh_expired_access_token(
+                    path=f'/{collected_from}/collected-binaries',
+                    data=compressed_data,
+                    headers={'Content-Type': 'application/octet-stream', 'Content-Encoding': 'gzip'},
+                    method='POST')
+                raise_for_status(response)
+                return
+            except requests.HTTPError:
+                if self.max_upload_retries - retry_count <= 1:
+                    raise
+                logger.warning(f'Failed to upload {file_path}, retrying')
+            except Exception:
+                raise
 
-        raise_for_status(response)
 
     def end_scan(self, scan_summary: dict):
         response = self.request_with_refresh_expired_access_token(path='/end',

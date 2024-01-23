@@ -104,3 +104,5 @@ API_VERSION = 'v2-0'
 USER_AGENT = f'intezer-python-sdk-{__version__}'
 CHECK_STATUS_INTERVAL = 1
 SCAN_TYPE_OFFLINE_ENDPOINT_SCAN = 'offline_endpoint_scan'
+SCAN_MAX_WORKERS = 4
+SCAN_MAX_UPLOAD_RETRIES = 3

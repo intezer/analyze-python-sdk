@@ -15,6 +15,7 @@ from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import Analysis
 from intezer_sdk.consts import EndpointAnalysisEndReason
+from intezer_sdk.consts import SCAN_MAX_WORKERS
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,8 @@ class EndpointAnalysis(Analysis):
     def __init__(self,
                  api: IntezerApiClient = None,
                  scan_api: EndpointScanApi = None,
-                 offline_scan_directory: str = None):
+                 offline_scan_directory: str = None,
+                 concurrent_uploads: bool = False):
         """
         Initializes an EndpointAnalysis object.
         Supports offline scan mode, run Scanner.exe with the '-o' flag to generate the offline scan directory.
@@ -45,6 +47,7 @@ class EndpointAnalysis(Analysis):
         :param offline_scan_directory: The directory of the offline scan. (example: C:\scans\scan_%computername%_%time%)
         """
         super().__init__(api)
+        self.max_workers = SCAN_MAX_WORKERS if concurrent_uploads else 1
         self._scan_api = scan_api
         if offline_scan_directory:
             files_dir = os.path.join(offline_scan_directory, '..', 'files')
@@ -124,17 +127,13 @@ class EndpointAnalysis(Analysis):
                 raise ValueError('Scan directory is not set')
             if not os.path.isdir(self._offline_scan_directory):
                 raise ValueError('Scan directory does not exist')
-            if not os.path.isdir(self._files_dir):
-                raise ValueError('Files directory does not exist')
-            if not os.path.isdir(self._fileless_dir):
-                raise ValueError('Fileless directory does not exist')
-            if not os.path.isdir(self._memory_modules_dir):
-                raise ValueError('Memory modules directory does not exist')
 
             self._scan_id, self.analysis_id = self._create_scan()
 
             self.status = consts.AnalysisStatusCode.IN_PROGRESS
             self._initialize_endpoint_api()
+
+            print(f'Uploading scan {os.path.basename(self._offline_scan_directory)}')
 
             self._send_host_info()
             self._send_scheduled_tasks_info()
@@ -201,6 +200,13 @@ class EndpointAnalysis(Analysis):
 
     def _send_loaded_modules_info(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading loaded modules info')
+        unified_modules_file_path = os.path.join(self._offline_scan_directory, 'all_loaded_modules_info.json')
+        if os.path.isfile(unified_modules_file_path):
+            with open(unified_modules_file_path, encoding='utf-8') as f:
+                loaded_modules_info = json.load(f)
+            self._scan_api.send_all_loaded_modules_info(loaded_modules_info)
+            return
+
         for loaded_module_info_file in glob.glob(os.path.join(self._offline_scan_directory,
                                                               '*_loaded_modules_info.json')):
             with open(loaded_module_info_file, encoding='utf-8') as f:
@@ -211,15 +217,14 @@ class EndpointAnalysis(Analysis):
 
     def _send_files_info_and_upload_required(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading files info and uploading required files')
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            for files_info_file in glob.glob(os.path.join(self._offline_scan_directory, 'files_info_*.json')):
+        for files_info_file in glob.glob(os.path.join(self._offline_scan_directory, 'files_info_*.json')):
+            logger.debug(f'Endpoint analysis: {self.analysis_id}, uploading {files_info_file}')
+            with open(files_info_file, encoding='utf-8') as f:
+                files_info = json.load(f)
+            files_to_upload = self._scan_api.send_files_info(files_info)
 
-                logger.debug(f'Endpoint analysis: {self.analysis_id}, uploading {files_info_file}')
-                with open(files_info_file, encoding='utf-8') as f:
-                    files_info = json.load(f)
-                files_to_upload = self._scan_api.send_files_info(files_info)
-
-                futures = []
+            futures = []
+            with concurrent.futures.ThreadPoolExecutor(self.max_workers) as executor:
                 for file_to_upload in files_to_upload:
                     file_path = os.path.join(self._files_dir, f'{file_to_upload}.sample')
                     if os.path.isfile(file_path):
@@ -232,20 +237,26 @@ class EndpointAnalysis(Analysis):
                     future.result()
 
     def _send_module_differences(self):
+        file_module_differences_file_path = os.path.join(self._offline_scan_directory, 'file_module_differences.json')
+        if not os.path.isfile(file_module_differences_file_path):
+            return
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading file module differences info')
-        with open(os.path.join(self._offline_scan_directory, 'file_module_differences.json'), encoding='utf-8') as f:
+        with open(file_module_differences_file_path, encoding='utf-8') as f:
             file_module_differences = json.load(f)
         self._scan_api.send_file_module_differences(file_module_differences)
 
     def _send_injected_modules_info(self):
+        injected_modules_info_path = os.path.join(self._offline_scan_directory, 'injected_modules_info.json')
+        if not os.path.isfile(injected_modules_info_path):
+            return
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading injected modules info')
-        with open(os.path.join(self._offline_scan_directory, 'injected_modules_info.json'), encoding='utf-8') as f:
+        with open(injected_modules_info_path, encoding='utf-8') as f:
             injected_modules_info = json.load(f)
         self._scan_api.send_injected_modules_info(injected_modules_info)
 
     def _send_memory_module_dump_info_and_upload_required(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading memory module dump info')
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor(self.max_workers) as executor:
             for memory_module_dump_info_file in glob.glob(os.path.join(self._offline_scan_directory,
                                                                        'memory_module_dump_info_*.json')):
 
