@@ -15,7 +15,7 @@ from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import Analysis
 from intezer_sdk.consts import EndpointAnalysisEndReason
-from intezer_sdk.consts import SCAN_MAX_WORKERS
+from intezer_sdk.consts import SCAN_DEFAULT_MAX_WORKERS
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class EndpointAnalysis(Analysis):
                  api: IntezerApiClient = None,
                  scan_api: EndpointScanApi = None,
                  offline_scan_directory: str = None,
-                 concurrent_uploads: bool = False):
+                 max_concurrent_uploads: int = None):
         """
         Initializes an EndpointAnalysis object.
         Supports offline scan mode, run Scanner.exe with the '-o' flag to generate the offline scan directory.
@@ -47,7 +47,7 @@ class EndpointAnalysis(Analysis):
         :param offline_scan_directory: The directory of the offline scan. (example: C:\scans\scan_%computername%_%time%)
         """
         super().__init__(api)
-        self.max_workers = SCAN_MAX_WORKERS if concurrent_uploads else 1
+        self.max_workers = max_concurrent_uploads or SCAN_DEFAULT_MAX_WORKERS
         self._scan_api = scan_api
         if offline_scan_directory:
             files_dir = os.path.join(offline_scan_directory, '..', 'files')
