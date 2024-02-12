@@ -1,3 +1,7 @@
+1.19.14
+_______
+- Remove pip-system-certs from dependecies
+
 1.19.13
 _______
 - Configurable concurrency for scan uploads
