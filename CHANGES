@@ -1,6 +1,10 @@
+1.19.15
+_______
+- Remove pip-system-certs from dependencies
+
 1.19.14
 _______
-- Remove pip-system-certs from dependecies
+- Remove pip-system-certs from dependencies
 
 1.19.13
 _______
