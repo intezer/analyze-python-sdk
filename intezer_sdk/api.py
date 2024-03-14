@@ -245,14 +245,16 @@ class IntezerApi(IntezerApiClient):
                  verify_ssl: bool = True,
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None,
-                 proxies: Dict[str, str] = None):
+                 proxies: Dict[str, str] = None,
+                 timeout_in_seconds: Optional[int] = None):
         super().__init__(api_key=api_key,
                          base_url=base_url,
                          verify_ssl=verify_ssl,
                          user_agent=user_agent,
                          api_version=api_version,
                          on_premise_version=on_premise_version,
-                         proxies=proxies)
+                         proxies=proxies,
+                         timeout_in_seconds=timeout_in_seconds)
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
     def analyze_by_hash(self,
