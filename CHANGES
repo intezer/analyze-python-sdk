@@ -1,3 +1,7 @@
+1.19.17
+_______
+- Add sandbox_machine_type to FileAnalysis
+
 1.19.15
 _______
 - Remove pip-system-certs from dependencies
