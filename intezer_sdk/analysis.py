@@ -22,6 +22,7 @@ from intezer_sdk.analyses_history import query_url_analyses_history
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import Analysis
+from intezer_sdk.consts import SandboxMachineType
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,8 @@ class FileAnalysis(Analysis):
                  code_item_type: str = None,
                  zip_password: str = None,
                  download_url: str = None,
-                 sandbox_command_line_arguments: str = None):
+                 sandbox_command_line_arguments: str = None,
+                 sandbox_machine_type: SandboxMachineType = None):
         """
         FileAnalysis is a class for analyzing files. It is a subclass of the BaseAnalysis class and requires an API connection to Intezer.
 
@@ -65,6 +67,7 @@ class FileAnalysis(Analysis):
         :param zip_password: The password for a password-protected zip file.
         :param download_url: A URL from which to download the file to be analyzed.
         :param sandbox_command_line_arguments: The command line arguments for sandbox analysis.
+        :param sandbox_machine_type: The machine type to use in the sandbox. options are WIN7 or WIN10
         """
         super().__init__(api)
         if [file_path, file_hash, file_stream, download_url].count(None) < 3:
@@ -88,6 +91,7 @@ class FileAnalysis(Analysis):
         self._code_item_type = code_item_type
         self._zip_password = zip_password
         self._sandbox_command_line_arguments = sandbox_command_line_arguments
+        self._sandbox_machine_type = sandbox_machine_type
         self._sub_analyses: List[SubAnalysis] = None
         self._root_analysis = None
         self._iocs_report = None
@@ -170,6 +174,7 @@ class FileAnalysis(Analysis):
                                              self._disable_dynamic_unpacking,
                                              self._disable_static_unpacking,
                                              self._sandbox_command_line_arguments,
+                                             self._sandbox_machine_type,
                                              self._file_name,
                                              **additional_parameters)
         elif self._download_url:
@@ -180,6 +185,7 @@ class FileAnalysis(Analysis):
                 code_item_type=self._code_item_type,
                 zip_password=self._zip_password,
                 sandbox_command_line_arguments=self._sandbox_command_line_arguments,
+                sandbox_machine_type=self._sandbox_machine_type,
                 **additional_parameters)
         else:
             return self._api.analyze_by_file(self._file_path,
@@ -190,6 +196,7 @@ class FileAnalysis(Analysis):
                                              code_item_type=self._code_item_type,
                                              zip_password=self._zip_password,
                                              sandbox_command_line_arguments=self._sandbox_command_line_arguments,
+                                             sandbox_machine_type=self._sandbox_machine_type,
                                              **additional_parameters)
 
     def get_sub_analyses(self) -> List[SubAnalysis]:
