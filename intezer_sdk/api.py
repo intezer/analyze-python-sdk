@@ -1,7 +1,6 @@
 import datetime
 import logging
 import os
-import typing
 from http import HTTPStatus
 from typing import Any
 from typing import BinaryIO
@@ -20,7 +19,6 @@ from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
-from intezer_sdk.consts import SandboxMachineType
 
 _global_api: Optional['IntezerApi'] = None
 
@@ -264,12 +262,10 @@ class IntezerApi(IntezerApiClient):
                         disable_dynamic_unpacking: Optional[bool],
                         disable_static_unpacking: Optional[bool],
                         sandbox_command_line_arguments: str = None,
-                        sandbox_machine_type: SandboxMachineType = None,
                         **additional_parameters) -> str:
         data = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                       disable_static_unpacking=disable_static_unpacking,
                                       sandbox_command_line_arguments=sandbox_command_line_arguments,
-                                      sandbox_machine_type=sandbox_machine_type,
                                       **additional_parameters)
 
         data['hash'] = file_hash
@@ -286,14 +282,12 @@ class IntezerApi(IntezerApiClient):
                                 code_item_type: str = None,
                                 zip_password: str = None,
                                 sandbox_command_line_arguments: str = None,
-                                sandbox_machine_type: SandboxMachineType = None,
                                 **additional_parameters) -> str:
         data = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                       disable_static_unpacking=disable_static_unpacking,
                                       code_item_type=code_item_type,
                                       zip_password=zip_password,
                                       sandbox_command_line_arguments=sandbox_command_line_arguments,
-                                      sandbox_machine_type=sandbox_machine_type,
                                       **additional_parameters)
 
         data['download_url'] = download_url
@@ -324,14 +318,12 @@ class IntezerApi(IntezerApiClient):
                         code_item_type: str = None,
                         zip_password: str = None,
                         sandbox_command_line_arguments: str = None,
-                        sandbox_machine_type: SandboxMachineType = None,
                         **additional_parameters) -> Optional[str]:
         options = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                          disable_static_unpacking=disable_static_unpacking,
                                          code_item_type=code_item_type,
                                          zip_password=zip_password,
                                          sandbox_command_line_arguments=sandbox_command_line_arguments,
-                                         sandbox_machine_type=sandbox_machine_type,
                                          **additional_parameters)
 
         if file_stream:
@@ -662,7 +654,6 @@ class IntezerApi(IntezerApiClient):
                           code_item_type: str = None,
                           zip_password: str = None,
                           sandbox_command_line_arguments: str = None,
-                          sandbox_machine_type: SandboxMachineType = None,
                           **additional_parameters):
         data = {}
 
@@ -676,8 +667,6 @@ class IntezerApi(IntezerApiClient):
             data['zip_password'] = zip_password
         if sandbox_command_line_arguments:
             data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
-        if sandbox_machine_type:
-            data['sandbox_machine_type'] = sandbox_machine_type
 
         data.update(additional_parameters)
 

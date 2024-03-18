@@ -98,11 +98,6 @@ class OnPremiseVersion(enum.IntEnum):
     V23_10 = 23.10
 
 
-class SandboxMachineType(enum.StrEnum):
-    WIN7 = enum.auto()
-    WIN10 = enum.auto()
-
-
 ANALYZE_URL = 'https://analyze.intezer.com'
 BASE_URL = f'{ANALYZE_URL}/api/'
 API_VERSION = 'v2-0'
