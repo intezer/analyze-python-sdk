@@ -13,7 +13,7 @@ from tests.utils import load_binary_file_from_resources
 class AlertsSpec(BaseTest):
     def _mock_alert_search(self, mock):
         mock.add('GET',
-                 url=f'{self.full_url}/alerts/search',
+                 url=f'{self.full_url}/alerts/get-by-ids',
                  status=HTTPStatus.OK,
                  json={'result': {
                      'alerts_count': 1,
@@ -54,7 +54,7 @@ class AlertsSpec(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('GET',
-                     url=f'{self.full_url}/alerts/search',
+                     url=f'{self.full_url}/alerts/get-by-ids',
                      status=HTTPStatus.OK,
                      json={'result': {
                          'alerts_count': 0,

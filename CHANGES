@@ -1,3 +1,7 @@
+1.20
+_______
+- Change route name for get alerts by alert ids
+
 1.19.17
 _______
 - Add sandbox_machine_type to FileAnalysis

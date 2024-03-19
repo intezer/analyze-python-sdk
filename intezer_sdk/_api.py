@@ -672,7 +672,7 @@ class IntezerApi:
         if environments:
             data['environments'] = environments
         response = self.api.request_with_refresh_expired_access_token(method='GET',
-                                                                      path='/alerts/search',
+                                                                      path='/alerts/get-by-ids',
                                                                       data=data)
         raise_for_status(response)
         data_response = response.json()
