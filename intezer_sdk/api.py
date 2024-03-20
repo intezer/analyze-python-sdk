@@ -20,7 +20,6 @@ from intezer_sdk import errors
 from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
-from intezer_sdk.consts import SandboxMachineType
 
 _global_api: Optional['IntezerApi'] = None
 
@@ -264,7 +263,7 @@ class IntezerApi(IntezerApiClient):
                         disable_dynamic_unpacking: Optional[bool],
                         disable_static_unpacking: Optional[bool],
                         sandbox_command_line_arguments: str = None,
-                        sandbox_machine_type: SandboxMachineType = None,
+                        sandbox_machine_type: str = None,
                         **additional_parameters) -> str:
         data = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                       disable_static_unpacking=disable_static_unpacking,
@@ -286,7 +285,7 @@ class IntezerApi(IntezerApiClient):
                                 code_item_type: str = None,
                                 zip_password: str = None,
                                 sandbox_command_line_arguments: str = None,
-                                sandbox_machine_type: SandboxMachineType = None,
+                                sandbox_machine_type: str = None,
                                 **additional_parameters) -> str:
         data = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                       disable_static_unpacking=disable_static_unpacking,
@@ -324,7 +323,7 @@ class IntezerApi(IntezerApiClient):
                         code_item_type: str = None,
                         zip_password: str = None,
                         sandbox_command_line_arguments: str = None,
-                        sandbox_machine_type: SandboxMachineType = None,
+                        sandbox_machine_type: str = None,
                         **additional_parameters) -> Optional[str]:
         options = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                          disable_static_unpacking=disable_static_unpacking,
@@ -662,7 +661,7 @@ class IntezerApi(IntezerApiClient):
                           code_item_type: str = None,
                           zip_password: str = None,
                           sandbox_command_line_arguments: str = None,
-                          sandbox_machine_type: SandboxMachineType = None,
+                          sandbox_machine_type: str = None,
                           **additional_parameters):
         data = {}
 
@@ -677,7 +676,7 @@ class IntezerApi(IntezerApiClient):
         if sandbox_command_line_arguments:
             data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
         if sandbox_machine_type:
-            data['sandbox_machine_type'] = sandbox_machine_type.value
+            data['sandbox_machine_type'] = sandbox_machine_type
 
         data.update(additional_parameters)
 

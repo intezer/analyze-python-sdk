@@ -18,7 +18,6 @@ from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
-from intezer_sdk.consts import SandboxMachineType
 
 
 class IntezerApi:
@@ -34,7 +33,7 @@ class IntezerApi:
                         disable_dynamic_unpacking: Optional[bool],
                         disable_static_unpacking: Optional[bool],
                         sandbox_command_line_arguments: str = None,
-                        sandbox_machine_type: SandboxMachineType = None,
+                        sandbox_machine_type: str = None,
                         file_name: str = None,
                         **additional_parameters) -> str:
         """
@@ -70,7 +69,7 @@ class IntezerApi:
                                 code_item_type: str = None,
                                 zip_password: str = None,
                                 sandbox_command_line_arguments: str = None,
-                                sandbox_machine_type: SandboxMachineType = None,
+                                sandbox_machine_type: str = None,
                                 **additional_parameters) -> str:
         """
         Analyze a file by its download URL.
@@ -123,7 +122,7 @@ class IntezerApi:
                         code_item_type: str = None,
                         zip_password: str = None,
                         sandbox_command_line_arguments: str = None,
-                        sandbox_machine_type: SandboxMachineType = None,
+                        sandbox_machine_type: str = None,
                         **additional_parameters) -> Optional[str]:
         """
         Analyze a file by its path or stream.
@@ -737,7 +736,7 @@ class IntezerApi:
                           code_item_type: str = None,
                           zip_password: str = None,
                           sandbox_command_line_arguments: str = None,
-                          sandbox_machine_type: SandboxMachineType = None,
+                          sandbox_machine_type: str = None,
                           **additional_parameters):
         data = {}
 
@@ -752,7 +751,7 @@ class IntezerApi:
         if sandbox_command_line_arguments:
             data['sandbox_command_line_arguments'] = sandbox_command_line_arguments
         if sandbox_machine_type:
-            data['sandbox_machine_type'] = sandbox_machine_type.value
+            data['sandbox_machine_type'] = sandbox_machine_type
 
         data.update(additional_parameters)
 

@@ -22,7 +22,6 @@ from intezer_sdk.analyses_history import query_url_analyses_history
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk.base_analysis import Analysis
-from intezer_sdk.consts import SandboxMachineType
 from intezer_sdk.sub_analysis import SubAnalysis
 
 logger = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ class FileAnalysis(Analysis):
                  zip_password: str = None,
                  download_url: str = None,
                  sandbox_command_line_arguments: str = None,
-                 sandbox_machine_type: SandboxMachineType = None):
+                 sandbox_machine_type: str = None):
         """
         FileAnalysis is a class for analyzing files. It is a subclass of the BaseAnalysis class and requires an API connection to Intezer.
 
