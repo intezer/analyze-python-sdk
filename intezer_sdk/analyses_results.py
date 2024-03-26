@@ -10,6 +10,9 @@ from intezer_sdk.history_results import HistoryResult
 
 class AnalysesHistoryResult(HistoryResult):
     def __init__(self, request_url_path: str, api: IntezerApiClient, filters: Dict):
+        """
+        Fetch all analyses history results from server.
+        """
         super().__init__(request_url_path, api, filters)
 
     def _fetch_history(self, url_path: str, data: Dict) -> Tuple[int, List]:

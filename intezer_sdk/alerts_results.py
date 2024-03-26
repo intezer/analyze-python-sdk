@@ -8,7 +8,11 @@ from intezer_sdk.history_results import HistoryResult
 
 
 class AlertsHistoryResult(HistoryResult):
+
     def __init__(self, request_url_path: str, api: IntezerApiClient, filters: Dict):
+        """
+        Fetch all alerts history results from server.
+        """
         super().__init__(request_url_path, api, filters)
 
     def _fetch_history(self, url_path: str, data: Dict
@@ -18,7 +22,7 @@ class AlertsHistoryResult(HistoryResult):
         :param url_path: Url to request new data from.
         :param data: filtered data.
         :return: Count of all results exits in filtered request and amount
-        analyses as requested.
+        alerts as requested.
         """
         response = self._api.request_with_refresh_expired_access_token(
             path=url_path, method='POST', data=data)

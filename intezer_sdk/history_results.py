@@ -10,7 +10,7 @@ from intezer_sdk.api import IntezerApiClient
 class HistoryResult:
     def __init__(self, request_url_path: str, api: IntezerApiClient, filters: Dict):
         """
-        Fetch all analyses history results from server.
+        Fetch all history results from server.
 
         :param request_url_path: Url to request new filter from.
         :param api: Instance of Intezer API for request server.
