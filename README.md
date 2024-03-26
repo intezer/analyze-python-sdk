@@ -242,11 +242,23 @@ for analyse in history_results:
     print(analyse)
 ```
 
-### Get alert by id
+### Alerts
+#### Get alert by id
 ```python
 alert = Alert.from_id(alert_id=alert_id,
                       fetch_scans=False,
                       wait=False)
+```
+
+#### Alerts History
+
+```python
+history_results = query_file_analyses_history(
+    api = <IntezerApi>,
+    filters**
+)
+for analyse in history_results:
+    print(analyse)
 ```
 
 ## Code examples
