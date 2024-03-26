@@ -255,7 +255,7 @@ alert = Alert.from_id(alert_id=alert_id,
 ```python
 history_results = query_file_analyses_history(
     api = <IntezerApi>,
-    filters**
+    **filters
 )
 for analyse in history_results:
     print(analyse)
