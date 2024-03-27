@@ -3,6 +3,7 @@ import json
 import time
 import datetime
 from io import BytesIO
+from typing import Any
 from typing import BinaryIO
 
 import requests
@@ -14,6 +15,7 @@ from typing import Type
 from typing import Optional
 
 from intezer_sdk._api import IntezerApi
+from intezer_sdk.alerts_results import AlertsHistoryResult
 from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.analysis import UrlAnalysis
 from intezer_sdk.endpoint_analysis import EndpointAnalysis
@@ -22,6 +24,11 @@ from intezer_sdk._api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk import errors
 from intezer_sdk import consts
+from intezer_sdk.util import add_filter
+
+DEFAULT_LIMIT = 100
+DEFAULT_OFFSET = 0
+ALERTS_SEARCH_REQUEST = '/alerts/search'
 
 
 def get_alerts_by_alert_ids(alert_ids: List[str],
@@ -38,6 +45,191 @@ def get_alerts_by_alert_ids(alert_ids: List[str],
     api = IntezerApi(api or get_global_api())
     result = api.get_alerts_by_alert_ids(alert_ids, environments)
     return result['alerts_count'], result['alerts']
+
+
+def generate_alerts_history_search_filters(*,
+                                           start_time: datetime.datetime = None,
+                                           end_time: datetime.datetime = None,
+                                           environments: List[str] = None,
+                                           offset: int = None,
+                                           limit: int = None,
+                                           sources: List[str] = None,
+                                           risk_categories: List[str] = None,
+                                           alert_verdicts: List[str] = None,
+                                           family_names: List[str] = None,
+                                           response_statuses: List[str] = None,
+                                           hostnames: List[str] = None,
+                                           free_text: str = None,
+                                           site_name: str = None,
+                                           account_name: str = None,
+                                           exclude_alert_ids: List[str] = None,
+                                           usernames: List[str] = None,
+                                           file_hashes: List[str] = None,
+                                           process_commandlines: List[str] = None,
+                                           sort_by: List[str] = None,
+                                           is_mitigated: bool = None,
+                                           email_sender: str = None,
+                                           email_recipient: str = None,
+                                           email_subject: str = None,
+                                           email_cc: str = None,
+                                           email_bcc: str = None,
+                                           email_message_id: str = None,
+                                           email_reported_by: str = None,
+                                           device_private_ips: List[str] = None,
+                                           device_external_ips: List[str] = None,
+                                           device_ids: List[str] = None,
+                                           time_filter_type: List[str] = None,
+                                           sort_order: str = None) -> Dict[str, Any]:
+    filters = {}
+    if start_time:
+        filters['start_time'] = start_time.timestamp()
+    if end_time:
+        filters['end_time'] = end_time.timestamp()
+    add_filter(filters, 'environments', environments)
+    add_filter(filters, 'offset', offset)
+    add_filter(filters, 'limit', limit)
+    add_filter(filters, 'sources', sources)
+    add_filter(filters, 'risk_categories', risk_categories)
+    add_filter(filters, 'alert_verdicts', alert_verdicts)
+    add_filter(filters, 'family_names', family_names)
+    add_filter(filters, 'response_statuses', response_statuses)
+    add_filter(filters, 'hostnames', hostnames)
+    add_filter(filters, 'free_text', free_text)
+    add_filter(filters, 'site_name', site_name)
+    add_filter(filters, 'account_name', account_name)
+    add_filter(filters, 'exclude_alert_ids', exclude_alert_ids)
+    add_filter(filters, 'usernames', usernames)
+    add_filter(filters, 'file_hashes', file_hashes)
+    add_filter(filters, 'process_commandlines', process_commandlines)
+    add_filter(filters, 'sort_by', sort_by)
+    add_filter(filters, 'is_mitigated', is_mitigated)
+    add_filter(filters, 'email_sender', email_sender)
+    add_filter(filters, 'email_recipient', email_recipient)
+    add_filter(filters, 'email_subject', email_subject)
+    add_filter(filters, 'email_cc', email_cc)
+    add_filter(filters, 'email_bcc', email_bcc)
+    add_filter(filters, 'email_message_id', email_message_id)
+    add_filter(filters, 'email_reported_by', email_reported_by)
+    add_filter(filters, 'device_private_ips', device_private_ips)
+    add_filter(filters, 'device_external_ips', device_external_ips)
+    add_filter(filters, 'device_ids', device_ids)
+    add_filter(filters, 'time_filter_type', time_filter_type)
+    add_filter(filters, 'sort_order', sort_order)
+
+    return filters
+
+
+def query_alerts_history(*,
+                         start_time: datetime.datetime = None,
+                         end_time: datetime.datetime = None,
+                         api: IntezerApiClient = None,
+                         environments: List[str] = None,
+                         offset: int = DEFAULT_OFFSET,
+                         limit: int = DEFAULT_LIMIT,
+                         sources: List[str] = None,
+                         risk_categories: List[str] = None,
+                         alert_verdicts: List[str] = None,
+                         family_names: List[str] = None,
+                         response_statuses: List[str] = None,
+                         hostnames: List[str] = None,
+                         free_text: str = None,
+                         site_name: str = None,
+                         account_name: str = None,
+                         exclude_alert_ids: List[str] = None,
+                         usernames: List[str] = None,
+                         file_hashes: List[str] = None,
+                         process_commandlines: List[str] = None,
+                         sort_by: List[str] = None,
+                         is_mitigated: bool = None,
+                         email_sender: str = None,
+                         email_recipient: str = None,
+                         email_subject: str = None,
+                         email_cc: str = None,
+                         email_bcc: str = None,
+                         email_message_id: str = None,
+                         email_reported_by: str = None,
+                         device_private_ips: List[str] = None,
+                         device_external_ips: List[str] = None,
+                         device_ids: List[str] = None,
+                         time_filter_type: List[str] = None,
+                         sort_order: str = None) -> AlertsHistoryResult:
+    """
+    Query for alerts history with query param.
+
+    :param environments: Query alerts only from these environments.
+    :param offset: Offset to start querying from - used for pagination.
+    :param limit: Maximum number of alerts to return - used for pagination.
+    :param start_time: Query alerts that were created after this timestamp (in UTC).
+    :param end_time: Query alerts that were created before this timestamp (in UTC).
+    :param api: Instance of Intezer API for request server.
+    :param sources: Query alerts only with these sources.
+    :param risk_categories: Query alerts only with these risk categories.
+    :param alert_verdicts: Query alerts only with these alert verdicts.
+    :param family_names: Query alerts only with these family names.
+    :param response_statuses: Query alerts only with these response statuses.
+    :param hostnames: Query alerts only with these hostnames.
+    :param free_text: Query alerts that contain this text in the following fields: family name, hostname, alert verdict.
+    :param site_name: Query alerts only with this site name.
+    :param account_name: Query alerts only with this account name.
+    :param exclude_alert_ids: Query alerts that do not have these alert ids.
+    :param usernames: Query alerts only with these usernames.
+    :param file_hashes: Query alerts only with these file hashes.
+    :param process_commandlines: Query alerts only with these process commandlines.
+    :param is_mitigated: Query alerts only with this is_mitigated value.
+    :param email_sender: Query alerts only with these email sender.
+    :param email_recipient: Query alerts only with these email recipient.
+    :param email_subject: Query alerts only with this email subject.
+    :param email_cc: Query alerts only with this email cc.
+    :param email_bcc: Query alerts only with this email bcc.
+    :param email_message_id: Query alerts only with this email message id.
+    :param email_reported_by: Query alerts only with this email reported by.
+    :param device_private_ips: Query alerts only with these private ips.
+    :param device_external_ips: Query alerts only with these external ips.
+    :param device_ids: Query alerts only with these device ids.
+    :param time_filter_type: The time value to filter alerts by (creation_time / triage_time / triage_change_time / triage_or_triage_change_time).
+    :param sort_order: The order to sort the alerts by (asc / desc).
+    :param sort_by: Sort alerts only with this sort_by_key value (CREATION_TIME / TRIAGE_TIME / TRIAGE_CHANGE_TIME ).
+
+    :return: Alert query result from server as Results iterator.
+    """
+    api = api or get_global_api()
+    api.assert_any_on_premise()
+    filters = generate_alerts_history_search_filters(
+        start_time=start_time,
+        end_time=end_time,
+        environments=environments,
+        offset=offset,
+        limit=limit,
+        sources=sources,
+        risk_categories=risk_categories,
+        alert_verdicts=alert_verdicts,
+        family_names=family_names,
+        response_statuses=response_statuses,
+        hostnames=hostnames,
+        free_text=free_text,
+        site_name=site_name,
+        account_name=account_name,
+        exclude_alert_ids=exclude_alert_ids,
+        usernames=usernames,
+        file_hashes=file_hashes,
+        process_commandlines=process_commandlines,
+        sort_by=sort_by,
+        is_mitigated=is_mitigated,
+        email_sender=email_sender,
+        email_recipient=email_recipient,
+        email_subject=email_subject,
+        email_cc=email_cc,
+        email_bcc=email_bcc,
+        email_message_id=email_message_id,
+        email_reported_by=email_reported_by,
+        device_private_ips=device_private_ips,
+        device_external_ips=device_external_ips,
+        device_ids=device_ids,
+        time_filter_type=time_filter_type,
+        sort_order=sort_order
+    )
+
+    return AlertsHistoryResult(ALERTS_SEARCH_REQUEST, api, filters)
 
 
 class Alert:

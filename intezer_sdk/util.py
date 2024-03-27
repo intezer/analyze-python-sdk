@@ -8,6 +8,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Any
 
 from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.consts import ANALYZE_URL
@@ -222,3 +223,8 @@ def human_readable_size(num: int) -> str:
 
 def get_emoji(key: str):
     return emojis_by_key[key]
+
+
+def add_filter(filters: dict, key: str, value: Any):
+    if value is not None:
+        filters[key] = value

@@ -7,6 +7,8 @@ from typing import List
 
 import responses
 
+from intezer_sdk.alerts import query_alerts_history
+from intezer_sdk.alerts import ALERTS_SEARCH_REQUEST
 from intezer_sdk.analyses_history import ENDPOINT_ANALYSES_REQUEST
 from intezer_sdk.analyses_history import URL_ANALYSES_REQUEST
 from intezer_sdk.analyses_history import generate_analyses_history_filter
@@ -30,6 +32,12 @@ class ResultsSpec(BaseTest):
         self.normal_result = {
             'total_count': 2,
             'analyses': [{'account_id': '123'}, {'account_id': '456'}]
+        }
+        self.alerts_history_result = {
+            'result': {
+                'alerts_count': 2,
+                'alerts': [{'account_id': '123'}, {'account_id': '456'}]
+            }
         }
         self.no_result = {'total_count': 0, 'analyses': []}
         self.expected_result = copy.deepcopy(self.normal_result['analyses'])
@@ -183,6 +191,19 @@ class ResultsSpec(BaseTest):
                 sub_verdicts=['phishing'],
                 did_download_file=True,
                 submitted_url='https://example_trusted.com'
+            )
+            for result in results:
+                assert result
+
+    def test_query_alerts_history(self):
+        """Simple usage of alerts history request using the SDK."""
+        end_time = datetime.datetime.utcnow()
+        start_time = end_time - datetime.timedelta(days=3)
+        with self.add_mock_response(self.alerts_history_result, request_url_path=ALERTS_SEARCH_REQUEST):
+            results = query_alerts_history(
+                start_time=start_time,
+                end_time=end_time,
+                sources=["xsoar"]
             )
             for result in results:
                 assert result

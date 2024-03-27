@@ -1,3 +1,7 @@
+1.20
+_______
+- Support getting alerts history with filters from server.
+
 1.19.17
 _______
 - Add sandbox_machine_type to FileAnalysis
