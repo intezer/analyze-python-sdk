@@ -6,7 +6,6 @@ from typing import List
 from intezer_sdk.analyses_results import AnalysesHistoryResult
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
-from intezer_sdk.util import add_filter
 
 DEFAULT_LIMIT = 100
 DEFAULT_OFFSET = 0
@@ -55,9 +54,12 @@ def query_file_analyses_history(*,
         limit=limit,
         offset=offset
     )
-    add_filter(filters, 'hash', file_hash)
-    add_filter(filters, 'family_names', family_names)
-    add_filter(filters, 'file_name', file_name)
+    if file_hash:
+        filters['hash'] = file_hash
+    if family_names:
+        filters['family_names'] = family_names
+    if file_name:
+        filters['file_name'] = file_name
     return AnalysesHistoryResult(FILE_ANALYSES_REQUEST, api, filters)
 
 
@@ -141,9 +143,13 @@ def query_url_analyses_history(*,
         limit=limit,
         offset=offset
     )
-    add_filter(filters, 'did_download_file', did_download_file)
-    add_filter(filters, 'submitted_url', submitted_url)
-    add_filter(filters, 'sub_verdicts', sub_verdicts)
+
+    if did_download_file:
+        filters['did_download_file'] = did_download_file
+    if submitted_url:
+        filters['submitted_url'] = submitted_url
+    if sub_verdicts:
+        filters['sub_verdicts'] = sub_verdicts
 
     return AnalysesHistoryResult(URL_ANALYSES_REQUEST, api, filters)
 
@@ -164,8 +170,12 @@ def generate_analyses_history_filter(*,
         'limit': limit,
         'offset': offset
     }
-    add_filter(base_filter, 'aggregated_view', aggregated_view)
-    add_filter(base_filter, 'sources', sources)
-    add_filter(base_filter, 'verdicts', verdicts)
-    add_filter(base_filter, 'computer_names', computer_names)
+    if aggregated_view is not None:
+        base_filter['aggregated_view'] = aggregated_view
+    if sources:
+        base_filter['sources'] = sources
+    if verdicts:
+        base_filter['verdicts'] = verdicts
+    if computer_names:
+        base_filter['computer_names'] = computer_names
     return base_filter
