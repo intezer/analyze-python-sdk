@@ -24,6 +24,7 @@ from intezer_sdk._api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk import errors
 from intezer_sdk import consts
+from intezer_sdk.util import add_filter
 
 DEFAULT_LIMIT = 100
 DEFAULT_OFFSET = 0
@@ -84,66 +85,36 @@ def generate_alerts_history_search_filters(*,
         filters['start_time'] = start_time.timestamp()
     if end_time:
         filters['end_time'] = end_time.timestamp()
-    if environments:
-        filters['environments'] = environments
-    if offset is not None:
-        filters['offset'] = offset
-    if limit:
-        filters['limit'] = limit
-    if sources:
-        filters['sources'] = sources
-    if risk_categories:
-        filters['risk_categories'] = risk_categories
-    if alert_verdicts:
-        filters['alert_verdicts'] = alert_verdicts
-    if family_names:
-        filters['family_names'] = family_names
-    if response_statuses:
-        filters['response_statuses'] = response_statuses
-    if hostnames:
-        filters['hostnames'] = hostnames
-    if free_text:
-        filters['free_text'] = free_text
-    if site_name:
-        filters['site_name'] = site_name
-    if account_name:
-        filters['account_name'] = account_name
-    if exclude_alert_ids:
-        filters['exclude_alert_ids'] = exclude_alert_ids
-    if usernames:
-        filters['usernames'] = usernames
-    if file_hashes:
-        filters['file_hashes'] = file_hashes
-    if process_commandlines:
-        filters['process_commandlines'] = process_commandlines
-    if sort_by:
-        filters['sort_by'] = sort_by
-    if is_mitigated:
-        filters['is_mitigated'] = is_mitigated
-    if email_sender:
-        filters['email_sender'] = email_sender
-    if email_recipient:
-        filters['email_recipient'] = email_recipient
-    if email_subject:
-        filters['email_subject'] = email_subject
-    if email_cc:
-        filters['email_cc'] = email_cc
-    if email_bcc:
-        filters['email_bcc'] = email_bcc
-    if email_message_id:
-        filters['email_message_id'] = email_message_id
-    if email_reported_by:
-        filters['email_reported_by'] = email_reported_by
-    if device_private_ips:
-        filters['device_private_ips'] = device_private_ips
-    if device_external_ips:
-        filters['device_external_ips'] = device_external_ips
-    if device_ids:
-        filters['device_ids'] = device_ids
-    if time_filter_type:
-        filters['time_filter_type'] = time_filter_type
-    if sort_order:
-        filters['sort_order'] = sort_order
+    add_filter(filters, 'environments', environments)
+    add_filter(filters, 'offset', offset)
+    add_filter(filters, 'limit', limit)
+    add_filter(filters, 'sources', sources)
+    add_filter(filters, 'risk_categories', risk_categories)
+    add_filter(filters, 'alert_verdicts', alert_verdicts)
+    add_filter(filters, 'family_names', family_names)
+    add_filter(filters, 'response_statuses', response_statuses)
+    add_filter(filters, 'hostnames', hostnames)
+    add_filter(filters, 'free_text', free_text)
+    add_filter(filters, 'site_name', site_name)
+    add_filter(filters, 'account_name', account_name)
+    add_filter(filters, 'exclude_alert_ids', exclude_alert_ids)
+    add_filter(filters, 'usernames', usernames)
+    add_filter(filters, 'file_hashes', file_hashes)
+    add_filter(filters, 'process_commandlines', process_commandlines)
+    add_filter(filters, 'sort_by', sort_by)
+    add_filter(filters, 'is_mitigated', is_mitigated)
+    add_filter(filters, 'email_sender', email_sender)
+    add_filter(filters, 'email_recipient', email_recipient)
+    add_filter(filters, 'email_subject', email_subject)
+    add_filter(filters, 'email_cc', email_cc)
+    add_filter(filters, 'email_bcc', email_bcc)
+    add_filter(filters, 'email_message_id', email_message_id)
+    add_filter(filters, 'email_reported_by', email_reported_by)
+    add_filter(filters, 'device_private_ips', device_private_ips)
+    add_filter(filters, 'device_external_ips', device_external_ips)
+    add_filter(filters, 'device_ids', device_ids)
+    add_filter(filters, 'time_filter_type', time_filter_type)
+    add_filter(filters, 'sort_order', sort_order)
 
     return filters
 
@@ -191,7 +162,7 @@ def query_alerts_history(*,
     :param start_time: Query alerts that were created after this timestamp (in UTC).
     :param end_time: Query alerts that were created before this timestamp (in UTC).
     :param api: Instance of Intezer API for request server.
-    :param sources: Query alerts only with these sources (Valid source can be taken from AlertSource).
+    :param sources: Query alerts only with these sources.
     :param risk_categories: Query alerts only with these risk categories.
     :param alert_verdicts: Query alerts only with these alert verdicts.
     :param family_names: Query alerts only with these family names.
@@ -204,20 +175,20 @@ def query_alerts_history(*,
     :param usernames: Query alerts only with these usernames.
     :param file_hashes: Query alerts only with these file hashes.
     :param process_commandlines: Query alerts only with these process commandlines.
-    :param sort_by: Sort alerts only with this sort_by_key value.
     :param is_mitigated: Query alerts only with this is_mitigated value.
     :param email_sender: Query alerts only with these email sender.
     :param email_recipient: Query alerts only with these email recipient.
     :param email_subject: Query alerts only with this email subject.
-    :param email_cc: Sort alerts only with this email cc.
-    :param email_bcc: Sort alerts only with this email bcc.
-    :param email_message_id: Sort alerts only with this email message id.
-    :param email_reported_by: Sort alerts only with this email reported by.
+    :param email_cc: Query alerts only with this email cc.
+    :param email_bcc: Query alerts only with this email bcc.
+    :param email_message_id: Query alerts only with this email message id.
+    :param email_reported_by: Query alerts only with this email reported by.
     :param device_private_ips: Query alerts only with these private ips.
     :param device_external_ips: Query alerts only with these external ips.
     :param device_ids: Query alerts only with these device ids.
-    :param time_filter_type: The time value to filter alerts by.
-    :param sort_order: The order to sort the alerts by.
+    :param time_filter_type: The time value to filter alerts by (creation_time / triage_time / triage_change_time / triage_or_triage_change_time).
+    :param sort_order: The order to sort the alerts by (asc / desc).
+    :param sort_by: Sort alerts only with this sort_by_key value (CREATION_TIME / TRIAGE_TIME / TRIAGE_CHANGE_TIME ).
 
     :return: Alert query result from server as Results iterator.
     """
