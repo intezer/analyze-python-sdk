@@ -15,8 +15,7 @@ class AlertsHistoryResult(HistoryResult):
         """
         super().__init__(request_url_path, api, filters)
 
-    def _fetch_history(self, url_path: str, data: Dict
-                       ) -> Tuple[int, List]:
+    def _fetch_history(self, url_path: str, data: Dict) -> Tuple[int, List]:
         """
         Request from server filtered alerts history.
         :param url_path: Url to request new data from.
