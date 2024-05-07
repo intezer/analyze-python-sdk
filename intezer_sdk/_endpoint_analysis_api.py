@@ -15,7 +15,7 @@ class EndpointScanApi:
         if not scan_id:
             raise ValueError('scan_id must be provided')
         self.scan_id = scan_id
-        self.base_url = f"{api.base_url.replace('/api/','')}/scans/scans/{scan_id}"
+        self.base_url = f"{api.base_url.replace('/api/', '')}/scans/scans/{scan_id}"
         self.max_upload_retries = max_upload_retries
 
     def request_with_refresh_expired_access_token(self, *args, **kwargs):
@@ -105,7 +105,6 @@ class EndpointScanApi:
                 logger.warning(f'Failed to upload {file_path}, retrying')
             except Exception:
                 raise
-
 
     def end_scan(self, scan_summary: dict):
         response = self.request_with_refresh_expired_access_token(path='/end',

@@ -1,3 +1,8 @@
+1.21
+_______
+- Add download endpoint scan
+- Fix: downloaded file to stream seek to the start of the stream
+
 1.20
 _______
 - Support getting alerts history with filters from server.
@@ -5,6 +10,10 @@ _______
 1.19.17
 _______
 - Add sandbox_machine_type to FileAnalysis
+
+1.19.16
+_______
+- Add timeout in seconds to IntezerApi
 
 1.19.15
 _______
