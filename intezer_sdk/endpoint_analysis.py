@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import pathlib
+from typing import IO
 from typing import List
 from typing import Optional
 
@@ -281,3 +282,18 @@ class EndpointAnalysis(Analysis):
                         logger.warning(f'Endpoint analysis: {self.analysis_id}, file {file_to_upload}.sample does not exist')
                 for future in concurrent.futures.as_completed(futures):
                     future.result()
+
+
+def download_endpoint_scanner(platform: str = None,
+                              path: str = None,
+                              output_stream: IO = None,
+                              api: IntezerApiClient = None):
+    """
+    Download the endpoint scanner to a file or stream.
+    :param platform: The platform to download the scanner for.
+    :param path: The path to save the scanner to.
+    :param output_stream: The stream to write the scanner to.
+    :param api: The API connection to Intezer.
+    """
+    api = api or get_global_api()
+    return IntezerApi(api).download_endpoint_scanner(platform, path, output_stream)

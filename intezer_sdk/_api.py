@@ -583,7 +583,7 @@ class IntezerApi:
         raise_for_status(response)
 
         if password_protected:
-            output_location = output_stream if output_stream else os.path.join(path,'{sha256}.zip')
+            output_location = output_stream if output_stream else os.path.join(path, '{sha256}.zip')
             with open(output_location, 'wb') as output:
                 for chunk in response.iter_content(chunk_size=8192):
                     output.write(chunk)
@@ -592,6 +592,7 @@ class IntezerApi:
         else:
             if output_stream:
                 output_stream.write(response.content)
+                output_stream.seek(0, 0)
             else:
                 if should_extract_name_from_request:
                     try:
@@ -604,6 +605,34 @@ class IntezerApi:
                 with open(path, 'wb') as file:
                     for chunk in response.iter_content(chunk_size=8192):
                         file.write(chunk)
+
+    def download_endpoint_scanner(self, platform: str = None, path: str = None, output_stream: IO = None):
+        if not path and not output_stream:
+            raise ValueError('You must provide either path or output_stream')
+        elif path and output_stream:
+            raise ValueError('You must provide either path or output_stream, not both')
+
+        json_data = {'platform': platform} if platform else None
+        response = self.api.request_with_refresh_expired_access_token(path=f'/endpoint-scanner/download',
+                                                                      method='GET',
+                                                                      data=json_data,
+                                                                      stream=True)
+        raise_for_status(response)
+        if output_stream:
+            output_stream.write(response.content)
+            output_stream.seek(0, 0)
+        else:
+            if os.path.isdir(path):
+                try:
+                    filename = response.headers['content-disposition'].split('filename=')[1]
+                except Exception:
+                    filename = 'IntezerScanner.exe' if platform == 'windows' else 'IntezerScanner'
+
+                path = os.path.join(path, filename)
+
+            with open(path, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
 
     def index_by_sha256(self, sha256: str, index_as: IndexType, family_name: str = None) -> Response:
         """
