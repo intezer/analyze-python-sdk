@@ -1,3 +1,7 @@
+1.21.1
+_______
+- Add raw_alert to Alert object
+
 1.21
 _______
 - Add download endpoint scan

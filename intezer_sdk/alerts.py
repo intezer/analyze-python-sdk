@@ -248,6 +248,8 @@ class Alert:
     :vartype sender: str
     :ivar intezer_alert_url: URL for the alert in Intezer's website.
     :vartype intezer_alert_url: str
+    :ivar raw_alert: The raw alert as received by the alert source.
+    :vartype raw_alert: dict
     :ivar scans: Relevant scans for the alert.
     :vartype scans: list
     """
@@ -286,6 +288,7 @@ class Alert:
         self.family_name: Optional[str] = None
         self.sender: Optional[str] = None
         self.intezer_alert_url: Optional[str] = None
+        self.raw_alert: Optional[dict] = None
         self.status: Optional[AlertStatusCode] = None
         self.scans: List[Union[UrlAnalysis, FileAnalysis, EndpointAnalysis]] = []
 
@@ -320,6 +323,7 @@ class Alert:
         self.family_name = alert.get('triage_result', {}).get('family_name')
         self.sender = alert.get('sender')
         self.intezer_alert_url = alert.get('intezer_alert_url')
+        self.raw_alert = alert.get('raw_alert')
         self.status = AlertStatusCode.FINISHED
         return self.status
 
