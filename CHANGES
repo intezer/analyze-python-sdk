@@ -1,3 +1,7 @@
+1.21.1
+_______
+- Fix handling of large offline endpoint scan info files
+
 1.21
 _______
 - Add download endpoint scan

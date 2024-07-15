@@ -34,10 +34,15 @@ class EndpointScanApi:
         raise_for_status(response)
 
     def send_all_loaded_modules_info(self, all_loaded_modules_info: dict):
-        response = self.request_with_refresh_expired_access_token(path=f'/processes/loaded-modules-info',
-                                                                  data=all_loaded_modules_info,
-                                                                  method='POST')
-        raise_for_status(response)
+        processes = all_loaded_modules_info.get('processes')
+        # Analyze schema limits to 2000 items per request
+        if processes:
+            for i in range(0, len(processes), 2000):
+                data = {'processes': processes[i:i+2000]}
+                response = self.request_with_refresh_expired_access_token(path=f'/processes/loaded-modules-info',
+                                                                          data=data,
+                                                                          method='POST')
+                raise_for_status(response)
 
     def send_loaded_modules_info(self, pid, loaded_modules_info: dict):
         response = self.request_with_refresh_expired_access_token(path=f'/processes/{pid}/loaded-modules-info',
@@ -68,11 +73,19 @@ class EndpointScanApi:
         :param files_info: endpoint scan files info
         :return: list of file hashes to upload
         """
-        response = self.request_with_refresh_expired_access_token(path='/files-info',
-                                                                  data=files_info,
-                                                                  method='POST')
-        raise_for_status(response)
-        return response.json()['result']
+        # Analyze schema limits to 2000 items per request
+        files_to_upload = []
+        files_info = files_info.get('files_info')
+        if files_info:
+            for i in range(0, len(files_info), 2000):
+                data = {'files_info': files_info[i:i+2000]}
+                response = self.request_with_refresh_expired_access_token(path='/files-info',
+                                                                          data=data,
+                                                                          method='POST')
+                raise_for_status(response)
+                files_to_upload.extend(response.json()['result'])
+
+        return files_to_upload
 
     def send_memory_module_dump_info(self, memory_modules_info: dict) -> List[str]:
         """

@@ -18,7 +18,6 @@ from intezer_sdk.base_analysis import Analysis
 from intezer_sdk.consts import EndpointAnalysisEndReason
 from intezer_sdk.consts import SCAN_DEFAULT_MAX_WORKERS
 from intezer_sdk.sub_analysis import SubAnalysis
-
 logger = logging.getLogger(__name__)
 
 
@@ -218,24 +217,25 @@ class EndpointAnalysis(Analysis):
 
     def _send_files_info_and_upload_required(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading files info and uploading required files')
+        tasks = []
         for files_info_file in glob.glob(os.path.join(self._offline_scan_directory, 'files_info_*.json')):
             logger.debug(f'Endpoint analysis: {self.analysis_id}, uploading {files_info_file}')
             with open(files_info_file, encoding='utf-8') as f:
                 files_info = json.load(f)
             files_to_upload = self._scan_api.send_files_info(files_info)
 
-            futures = []
             with concurrent.futures.ThreadPoolExecutor(self.max_workers) as executor:
                 for file_to_upload in files_to_upload:
                     file_path = os.path.join(self._files_dir, f'{file_to_upload}.sample')
                     if os.path.isfile(file_path):
-                        futures.append(executor.submit(self._scan_api.upload_collected_binary,
+                        tasks.append(executor.submit(self._scan_api.upload_collected_binary,
                                                        file_path,
                                                        'file-system'))
                     else:
                         logger.warning(f'Endpoint analysis: {self.analysis_id}, file {file_path} does not exist')
-                for future in concurrent.futures.as_completed(futures):
-                    future.result()
+
+        for future in concurrent.futures.as_completed(tasks):
+            future.result()
 
     def _send_module_differences(self):
         file_module_differences_file_path = os.path.join(self._offline_scan_directory, 'file_module_differences.json')
