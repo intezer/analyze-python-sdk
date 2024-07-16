@@ -45,9 +45,13 @@ def raise_for_status(response: requests.Response,
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise errors.InvalidApiKeyError(response)
         elif response.status_code == HTTPStatus.CONFLICT:
-            is_skipped_by_rule = response.json().get('result', {}).get('is_skipped_by_rule')
-            if is_skipped_by_rule:
-                raise errors.AnalysisSkippedByRuleError(response)
+            try:
+                is_skipped_by_rule = response.json().get('result', {}).get('is_skipped_by_rule')
+                if is_skipped_by_rule:
+                    raise errors.AnalysisSkippedByRuleError(response)
+            except Exception:
+                pass
+            http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
         elif response.status_code == HTTPStatus.FORBIDDEN:
             try:
                 error_message = response.json()['error']
