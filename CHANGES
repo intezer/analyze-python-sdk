@@ -1,6 +1,10 @@
-1.21.1
+1.21.2
 _______
 - Fix handling of large offline endpoint scan info files
+
+1.21.1
+_______
+- Add download scan, stream seek to start after download
 
 1.21
 _______
