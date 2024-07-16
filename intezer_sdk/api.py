@@ -1,7 +1,6 @@
 import datetime
 import logging
 import os
-import typing
 from http import HTTPStatus
 from typing import Any
 from typing import BinaryIO
@@ -25,12 +24,16 @@ _global_api: Optional['IntezerApi'] = None
 
 logger = logging.getLogger(__name__)
 
-
 def raise_for_status(response: requests.Response,
                      statuses_to_ignore: List[Union[HTTPStatus, int]] = None,
                      allowed_statuses: List[Union[HTTPStatus, int]] = None):
     """Raises stored :class:`HTTPError`, if one occurred."""
+    try:
+        response_json = response.json()
+    except Exception:
+        response_json = {}
 
+    should_raise = False
     http_error_msg = ''
     if isinstance(response.reason, bytes):
         reason = response.reason.decode('utf-8', 'ignore')
@@ -40,42 +43,26 @@ def raise_for_status(response: requests.Response,
     if statuses_to_ignore and response.status_code in statuses_to_ignore:
         return
     elif allowed_statuses and response.status_code not in allowed_statuses:
-        http_error_msg = f'{response.status_code} Custom Error: {reason} for url: {response.url}'
-    elif 400 <= response.status_code < 500:
+        should_raise = True
+    elif 400 <= response.status_code < 600:
+        should_raise = True
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             raise errors.InvalidApiKeyError(response)
         elif response.status_code == HTTPStatus.CONFLICT:
-            is_skipped_by_rule = response.json().get('result', {}).get('is_skipped_by_rule')
-            if is_skipped_by_rule:
+            if response_json.get('result', {}).get('is_skipped_by_rule'):
                 raise errors.AnalysisSkippedByRuleError(response)
         elif response.status_code == HTTPStatus.FORBIDDEN:
-            try:
-                error_message = response.json()['error']
-            except Exception:
-                http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
-            else:
-                if error_message == 'Insufficient Permissions':
-                    raise errors.InsufficientPermissionsError(response)
-        elif response.status_code != HTTPStatus.BAD_REQUEST:
+            if response_json.get('error') == 'Insufficient Permissions':
+                raise errors.InsufficientPermissionsError(response)
+        elif response.status_code == HTTPStatus.BAD_REQUEST:
+            http_error_msg = '\n'.join([f'{key}:{value}.' for key, value in response_json.get('message', {}).items()])
+
+
+    if should_raise:
+        if not http_error_msg:
             http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
         else:
-            # noinspection PyBroadException
-            try:
-                error = response.json()
-                http_error_msg = '\n'.join([f'{key}:{value}.' for key, value in error['message'].items()])
-            except Exception:
-                http_error_msg = f'{response.status_code} Client Error: {reason} for url: {response.url}'
-    elif 500 <= response.status_code < 600:
-        http_error_msg = f'{response.status_code} Server Error: {reason} for url: {response.url}'
-
-    if http_error_msg:
-        # noinspection PyBroadException
-        try:
-            data = response.json()
-            http_error_msg = f'{http_error_msg}, server returns {data["error"]}, details: {data.get("details")}'
-        except Exception:
-            pass
-
+            http_error_msg = f'{http_error_msg}, server returns {response_json.get("error")}, details: {response_json.get("details")}'
         raise requests.HTTPError(http_error_msg, response=response)
 
 
