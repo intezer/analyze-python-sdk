@@ -163,7 +163,7 @@ class IntezerApiClient:
                 self._refresh_token_if_needed()
                 response = self._request(method, path, data, headers, files, stream, base_url, timeout_in_seconds)
 
-                if response.status_code == HTTPStatus.UNAUTHORIZED and not self._token_expiration:
+                if response.status_code == HTTPStatus.UNAUTHORIZED:
                     self._set_access_token()
                     response = self._request(method, path, data, headers, files, stream, base_url, timeout_in_seconds)
 
