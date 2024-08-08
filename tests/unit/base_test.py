@@ -90,6 +90,10 @@ class ApiSpec(unittest.TestCase):
 
         with responses.RequestsMock() as mock:
             mock.add('GET', f'{self.full_url}/some-route', status=HTTPStatus.UNAUTHORIZED)
+            mock.add('POST',
+                     url=f'{self.full_url}/get-access-token',
+                     status=HTTPStatus.OK,
+                     json={'result': 'access-token', 'expire_at': 2166920067})
             response = api.request_with_refresh_expired_access_token('GET', '/some-route')
 
             with self.assertRaises(errors.InvalidApiKeyError):
