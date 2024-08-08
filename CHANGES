@@ -1,3 +1,7 @@
+1.21.4
+_______
+- Always refresh access token on 'unauthorized' http status
+
 1.21.3
 _______
 - Refactor: simplified raise for status
