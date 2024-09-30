@@ -190,7 +190,7 @@ class ResultsSpec(BaseTest):
                 verdicts=['malicious'],
                 sub_verdicts=['phishing'],
                 did_download_file=True,
-                submitted_url='https://example_trusted.com'
+                url='https://example_trusted.com'
             )
             for result in results:
                 assert result

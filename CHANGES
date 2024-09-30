@@ -1,3 +1,7 @@
+1.21.5
+_______
+- Add url and scanned_url to url analyses history filters
+
 1.21.4
 _______
 - Always refresh access token on 'unauthorized' http status

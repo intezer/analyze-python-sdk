@@ -1,4 +1,4 @@
 # This is not used by the project, but is used by the CI/CD pipeline to install dependencies, update setup.py for package dependencies.
 requests>=2.29.0,<3
 responses==0.25.0
-pytest==8.0.1
+pytest==8.1.1
