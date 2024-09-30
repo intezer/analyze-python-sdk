@@ -407,9 +407,7 @@ class UrlAnalysis(Analysis):
                                                                  url=url,
                                                                  aggregated_view=True,
                                                                  api=api)
-        all_analyses_reports = analysis_history_url_result.all()
-
-        analyses_ids = [report['analysis_id'] for report in all_analyses_reports]
+        analyses_ids = [report['analysis_id'] for report in analysis_history_url_result.all()]
 
         if not analyses_ids:
             return None
