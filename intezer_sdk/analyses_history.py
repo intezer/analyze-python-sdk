@@ -112,6 +112,8 @@ def query_url_analyses_history(*,
                                sub_verdicts: List[str] = None,
                                did_download_file: bool = None,
                                submitted_url: str = None,
+                               scanned_url: str = None,
+                               url: str = None,
                                aggregated_view: bool = False,
                                limit: int = DEFAULT_LIMIT,
                                offset: int = DEFAULT_OFFSET
@@ -127,6 +129,8 @@ def query_url_analyses_history(*,
     :param sub_verdicts: Filter by the analysis's verdict
     :param did_download_file: Should the result be aggregated by latest url.
     :param submitted_url: Filter by specific url
+    :param scanned_url: Filter by specific scanned_url
+    :param url: Filter by submitted url or scanned url
     :param aggregated_view: Should the result be aggregated by latest url.
     :param limit: Number of analyses returned by the query.
     :param offset: Number of analyses to skips the before beginning to return the analyses.
@@ -148,6 +152,10 @@ def query_url_analyses_history(*,
         filters['did_download_file'] = did_download_file
     if submitted_url:
         filters['submitted_url'] = submitted_url
+    if scanned_url:
+        filters['scanned_url'] = scanned_url
+    if url:
+        filters['url'] = url
     if sub_verdicts:
         filters['sub_verdicts'] = sub_verdicts
 
