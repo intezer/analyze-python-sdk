@@ -121,7 +121,7 @@ class IntezerApiClient:
                 stream=stream,
                 timeout=timeout_in_seconds or self.timeout_in_seconds
             )
-        elif isinstance(data, bytes):
+        elif isinstance(data, (bytes, str)):
             response = self._session.request(
                 method,
                 url,

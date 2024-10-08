@@ -1,3 +1,7 @@
+1.21.6
+_______
+- Fix sending data in the body of the request
+
 1.21.5
 _______
 - Add url and scanned_url to url analyses history filters
