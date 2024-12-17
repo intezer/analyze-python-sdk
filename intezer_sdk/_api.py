@@ -801,6 +801,8 @@ class IntezerApi:
             raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
         elif response.status_code == HTTPStatus.FORBIDDEN:
             raise errors.InsufficientQuotaError(response)
+        elif response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+            raise errors.AnalysisRateLimitError(response)
         elif response.status_code == HTTPStatus.BAD_REQUEST:
             data = response.json()
             error = data.get('error', '')
