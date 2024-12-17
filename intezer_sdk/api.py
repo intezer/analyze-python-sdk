@@ -51,12 +51,13 @@ def raise_for_status(response: requests.Response,
         elif response.status_code == HTTPStatus.CONFLICT:
             if response_json.get('result', {}).get('is_skipped_by_rule'):
                 raise errors.AnalysisSkippedByRuleError(response)
+        elif response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+            raise errors.AnalysisRateLimitError(response)
         elif response.status_code == HTTPStatus.FORBIDDEN:
             if response_json.get('error') == 'Insufficient Permissions':
                 raise errors.InsufficientPermissionsError(response)
         elif response.status_code == HTTPStatus.BAD_REQUEST:
             http_error_msg = '\n'.join([f'{key}:{value}.' for key, value in response_json.get('message', {}).items()])
-
 
     if should_raise:
         if not http_error_msg:
