@@ -177,3 +177,11 @@ class InvalidUrlError(ServerError):
 class AnalysisSkippedByRuleError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Analysis skipped by rule', response)
+
+class AnalysisRateLimitError(ServerError):
+    def __init__(self, response: requests.Response):
+        super().__init__('Analysis rate limit reached', response)
+        self.limit = response.headers.get('X-RateLimit-Limit')
+        self.remaining = response.headers.get('X-RateLimit-Remaining')
+        self.reset_time_in_sec = response.headers.get('X-RateLimit-Reset')
+        self.retry_after = response.headers.get('Retry-After')
