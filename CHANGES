@@ -1,3 +1,7 @@
+1.21.8
+_______
+- Raise AnalysisRateLimitError for all endpoints when rate limit exceeded error returning from server
+
 1.21.7
 _______
 - Raise AnalysisRateLimitError when analysis rejected due to rate limit exceeded error returning from server

@@ -151,7 +151,9 @@ class InvalidAlertMappingError(AlertError):
 
 class AlertInProgressError(AlertError):
     def __init__(self, alert_id: str):
-        super().__init__(f'The alert {alert_id} is being processed at the moment, please try again later')
+        super().__init__(
+            f'The alert {alert_id} is being processed at the moment, please try again later'
+        )
 
 
 class AlertNotFoundError(AlertError):
@@ -177,6 +179,7 @@ class InvalidUrlError(ServerError):
 class AnalysisSkippedByRuleError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Analysis skipped by rule', response)
+
 
 class AnalysisRateLimitError(ServerError):
     def __init__(self, response: requests.Response):
