@@ -62,6 +62,12 @@ class EndpointScanApi:
                                                                   method='POST')
         raise_for_status(response)
 
+    def send_autoruns_info(self, autoruns_info: dict):
+        response = self.request_with_refresh_expired_access_token(path='/autoruns-info',
+                                                                  data=autoruns_info,
+                                                                  method='POST')
+        raise_for_status(response)
+
     def send_file_module_differences(self, file_module_differences: dict):
         response = self.request_with_refresh_expired_access_token(path='/file-module-differences',
                                                                   data=file_module_differences,
