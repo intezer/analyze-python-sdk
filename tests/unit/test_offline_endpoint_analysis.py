@@ -43,21 +43,26 @@ class TestEndpointAnalysis(BaseTest):
         analysis = EndpointAnalysis(offline_scan_directory=offline_scan_directory)
 
         # Arrange
-        with responses.RequestsMock() as mock:
-
-            self.add_mock_requests_without_scheduled_tasks(mock, scan_id, analysis_id)
+        with responses.RequestsMock(assert_all_requests_are_fired=True) as mock:
+            self.add_mock_requests_without_scheduled_tasks_and_autoruns(mock, scan_id, analysis_id)
             mock.add('POST',
                      url=f'{consts.ANALYZE_URL}/scans/scans/{scan_id}/scheduled-tasks-info',
+                     status=HTTPStatus.OK,
+                     json={'result': {'status': 'success'}})
+            mock.add('POST',
+                     url=f'{consts.ANALYZE_URL}/scans/scans/{scan_id}/autoruns-info',
                      status=HTTPStatus.OK,
                      json={'result': {'status': 'success'}})
             # Act
             analysis.send()
 
+
         # Assert
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
 
+
         # Act 2
-        with responses.RequestsMock() as mock:
+        with responses.RequestsMock(assert_all_requests_are_fired=True) as mock:
             mock.add('GET',
                      url=f'{consts.BASE_URL}{consts.API_VERSION}/endpoint-analyses/{analysis_id}',
                      status=HTTPStatus.ACCEPTED,
@@ -114,7 +119,7 @@ class TestEndpointAnalysis(BaseTest):
         # Arrange
         with responses.RequestsMock() as mock:
 
-            self.add_mock_requests_without_scheduled_tasks(mock, scan_id, analysis_id)
+            self.add_mock_requests_without_scheduled_tasks_and_autoruns(mock, scan_id, analysis_id)
 
             # Act
             analysis.send()
@@ -123,7 +128,7 @@ class TestEndpointAnalysis(BaseTest):
         self.assertEqual(analysis.status, consts.AnalysisStatusCode.CREATED)
 
     @staticmethod
-    def add_mock_requests_without_scheduled_tasks(mock: responses.RequestsMock, scan_id: str, analysis_id: str):
+    def add_mock_requests_without_scheduled_tasks_and_autoruns(mock: responses.RequestsMock, scan_id: str, analysis_id: str):
         mock.add('POST',
                  url=consts.BASE_URL + 'scans',
                  status=HTTPStatus.CREATED,

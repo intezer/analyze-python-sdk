@@ -137,6 +137,7 @@ class EndpointAnalysis(Analysis):
 
             self._send_host_info()
             self._send_scheduled_tasks_info()
+            self._send_autoruns_info()
             self._send_processes_info()
             self._send_loaded_modules_info()
             self._send_files_info_and_upload_required()
@@ -195,8 +196,21 @@ class EndpointAnalysis(Analysis):
             with open(scheduled_tasks_info_path, encoding='utf-8') as f:
                 scheduled_tasks_info = json.load(f)
             self._scan_api.send_scheduled_tasks_info(scheduled_tasks_info)
-        except BaseException:
+        except Exception:
             logger.warning(f'Endpoint analysis: {self.analysis_id}, failed to upload scheduled tasks info')
+
+    def _send_autoruns_info(self):
+        autoruns_info_path = os.path.join(self._offline_scan_directory, 'autoruns_info.json')
+        if not os.path.isfile(autoruns_info_path):
+            return
+        logger.info(f'Endpoint analysis: {self.analysis_id}, uploading autoruns info')
+        try:
+            with open(autoruns_info_path, encoding='utf-8') as f:
+                autoruns_info = json.load(f)
+            self._scan_api.send_autoruns_info(autoruns_info)
+        except Exception:
+            logger.warning(f'Endpoint analysis: {self.analysis_id}, failed to upload autoruns info')
+
 
     def _send_loaded_modules_info(self):
         logger.info(f'Endpoint analysis: {self.analysis_id}, uploading loaded modules info')
