@@ -361,12 +361,12 @@ class Alert:
         """
         new_alert = cls(alert_id=alert_id, api=api)
         status = new_alert.check_status()
-        if status == AlertStatusCode.IN_PROGRESS:
+        if status == AlertStatusCode.IN_PROGRESS and not wait:
             raise errors.AlertInProgressError(alert_id)
-        if fetch_scans:
-            new_alert.fetch_scans()
         if wait:
             new_alert.wait_for_completion(timeout=timeout)
+        if fetch_scans:
+            new_alert.fetch_scans()
         return new_alert
 
     @classmethod
