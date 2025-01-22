@@ -87,7 +87,7 @@ class AlertsSpec(BaseTest):
             # Assert
             self.assertEqual(alert.alert_id, alert_id)
 
-    def test_get_alert_with_alert_object(self):
+    def test_alert_from_id(self):
         # Arrange
         with responses.RequestsMock() as mock:
             mock.add('GET',
@@ -96,6 +96,22 @@ class AlertsSpec(BaseTest):
                      json={'result': {}, 'status': 'success'})
             # Act
             alert = Alert.from_id('alert_id')
+
+            # Assert
+            self.assertEqual(alert.alert_id, 'alert_id')
+
+
+    def test_alert_from_id_waits_from_completion(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.get(url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {}, 'status': 'in_progress'})
+            mock.get(url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {}, 'status': 'success'})
+            # Act
+            alert = Alert.from_id('alert_id', wait=True)
 
             # Assert
             self.assertEqual(alert.alert_id, 'alert_id')

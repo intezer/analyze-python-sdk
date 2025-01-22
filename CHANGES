@@ -1,3 +1,11 @@
+1.21.10
+------
+- Fix `Alert.from_id` wait flag
+
+1.21.9
+------
+- Send autoruns info from offline scan
+
 1.21.8
 _______
 - Raise AnalysisRateLimitError for all endpoints when rate limit exceeded error returning from server
