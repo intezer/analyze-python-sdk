@@ -401,7 +401,7 @@ class UrlAnalysis(Analysis):
         now = datetime.datetime.now()
         yesterday = now - datetime.timedelta(days=days_threshold_for_latest_analysis)
 
-        url = _clean_url(url) if exact_match else url
+        url = url if exact_match else _clean_url(url)
         analysis_history_url_result = query_url_analyses_history(start_date=yesterday,
                                                                  end_date=now,
                                                                  url=url,
