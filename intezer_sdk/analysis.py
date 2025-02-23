@@ -8,6 +8,7 @@ from typing import IO
 from typing import Optional
 from typing import Union
 from typing import List
+from urllib.parse import urlparse
 
 import requests
 from requests import Response
@@ -335,6 +336,17 @@ def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optiona
 def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[FileAnalysis]:
     return get_file_analysis_by_id(analysis_id, api)
 
+
+def _get_domain(url: str) -> str:
+    if not url.startswith(('http://', 'https://')):
+        url = 'http://' + url
+    return urlparse(url).netloc
+
+
+def _domain_contains(url: str, search_domain: str) -> bool:
+    return search_domain in _get_domain(url)
+
+
 def _clean_url(url: str) -> str:
     """
     Remove http:// or https:// or www. from the beginning of the URL,
@@ -407,7 +419,12 @@ class UrlAnalysis(Analysis):
                                                                  url=url,
                                                                  aggregated_view=True,
                                                                  api=api)
-        analyses_ids = [report['analysis_id'] for report in analysis_history_url_result.all()]
+
+        analyses_ids = [
+            report['analysis_id'] for report in analysis_history_url_result.all()
+            if _domain_contains(report['submitted_url'], url)
+               or _domain_contains(report['scanned_url'], url)
+        ]
 
         if not analyses_ids:
             return None

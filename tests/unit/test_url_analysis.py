@@ -6,6 +6,7 @@ import responses
 from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.analysis import UrlAnalysis
+from intezer_sdk.analysis import _domain_contains
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import OnPremiseVersion
 from tests.unit.base_test import BaseTest
@@ -262,3 +263,19 @@ class UrlAnalysisSpec(BaseTest):
 
             # Assert
             self.assertIsNone(analysis)
+
+
+    def test_domain_contains_util(self):
+        # Arrange
+        url1 = 'http://google.com/scans?email=orenk@intezer.com'
+        url2 = 'http://intezer.com/scans?email=someone@example.com'
+        url3 = 'https://www.intezer.com/scans?email=someone@example.com'
+        url4 = 'https://www.analyze.intezer.com/scans?email=someone@example.com'
+
+        url_to_search = 'intezer.com'
+
+        # Act + Assert
+        self.assertFalse(_domain_contains(url1, url_to_search))
+        self.assertTrue(_domain_contains(url2, url_to_search))
+        self.assertTrue(_domain_contains(url3, url_to_search))
+        self.assertTrue(_domain_contains(url4, url_to_search))
