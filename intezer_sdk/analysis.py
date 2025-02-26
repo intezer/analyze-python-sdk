@@ -392,7 +392,8 @@ class UrlAnalysis(Analysis):
                              exact_match: bool = False) -> Optional['UrlAnalysis']:
         """
         Returns a UrlAnalysis instance with the latest analysis of the given URL.
-        :param url: The URL to retrieve the latest analysis for.
+        Note: For more control over the query (beyond the submitted URL), use the 'query_url_analyses_history' method.
+        :param url: The 'submitted URL' to retrieve the latest analysis for.
         :param days_threshold_for_latest_analysis: The number of days to look back for the latest analysis.
         :param api: The API connection to Intezer.
         :param exact_match: If True, the URL must match exactly. Otherwise, try to find similar URLs which were analyzed.
@@ -404,7 +405,7 @@ class UrlAnalysis(Analysis):
         url = url if exact_match else _clean_url(url)
         analysis_history_url_result = query_url_analyses_history(start_date=yesterday,
                                                                  end_date=now,
-                                                                 url=url,
+                                                                 submitted_url=url,
                                                                  aggregated_view=True,
                                                                  api=api)
         analyses_ids = [report['analysis_id'] for report in analysis_history_url_result.all()]
