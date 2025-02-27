@@ -407,7 +407,8 @@ class UrlAnalysis(Analysis):
                                                                  end_date=now,
                                                                  submitted_url=url,
                                                                  aggregated_view=True,
-                                                                 api=api)
+                                                                 api=api,
+                                                                 exact_match=exact_match)
         analyses_ids = [report['analysis_id'] for report in analysis_history_url_result.all()]
 
         if not analyses_ids:
