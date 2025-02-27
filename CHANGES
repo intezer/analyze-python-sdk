@@ -1,3 +1,15 @@
+1.21.13
+-------
+- Send `exact_match` parameter of `UrlAnalysis.from_latest_analysis` to the backend
+
+1.21.12
+-------
+- `url` parameter of `UrlAnalysis.from_latest_analysis` refers to the submitted URL.
+
+1.21.11
+-------
+- Fix `exact_match` to ensure exact URL search when set to `True`, instead of the cleaned URL.
+
 1.21.10
 ------
 - Fix `Alert.from_id` wait flag
