@@ -116,7 +116,8 @@ def query_url_analyses_history(*,
                                url: str = None,
                                aggregated_view: bool = False,
                                limit: int = DEFAULT_LIMIT,
-                               offset: int = DEFAULT_OFFSET
+                               offset: int = DEFAULT_OFFSET,
+                               exact_match: bool = False,
                                ) -> AnalysesHistoryResult:
     """
     Query for url analyses history.
@@ -134,6 +135,7 @@ def query_url_analyses_history(*,
     :param aggregated_view: Should the result be aggregated by latest url.
     :param limit: Number of analyses returned by the query.
     :param offset: Number of analyses to skips the before beginning to return the analyses.
+    :param exact_match: Filters results to return only exact matches of the URL.
     :return: URL query result from server as Results iterator.
     """
     api = api or get_global_api()
@@ -145,7 +147,7 @@ def query_url_analyses_history(*,
         sources=sources,
         verdicts=verdicts,
         limit=limit,
-        offset=offset
+        offset=offset,
     )
 
     if did_download_file:
@@ -158,6 +160,8 @@ def query_url_analyses_history(*,
         filters['url'] = url
     if sub_verdicts:
         filters['sub_verdicts'] = sub_verdicts
+
+    filters['exact_match'] = exact_match
 
     return AnalysesHistoryResult(URL_ANALYSES_REQUEST, api, filters)
 
