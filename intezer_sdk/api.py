@@ -235,7 +235,8 @@ class IntezerApi(IntezerApiClient):
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None,
                  proxies: Dict[str, str] = None,
-                 timeout_in_seconds: Optional[int] = None):
+                 timeout_in_seconds: Optional[int] = None,
+                 max_retry:int = 3):
         super().__init__(api_key=api_key,
                          base_url=base_url,
                          verify_ssl=verify_ssl,
@@ -243,6 +244,7 @@ class IntezerApi(IntezerApiClient):
                          api_version=api_version,
                          on_premise_version=on_premise_version,
                          proxies=proxies,
+                         max_retry=max_retry,
                          timeout_in_seconds=timeout_in_seconds)
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
