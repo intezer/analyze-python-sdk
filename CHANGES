@@ -1,3 +1,7 @@
+1.21.14
+-------
+- Add max retry
+
 1.21.13
 -------
 - Send `exact_match` parameter of `UrlAnalysis.from_latest_analysis` to the backend
