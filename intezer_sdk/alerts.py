@@ -428,7 +428,8 @@ class Alert:
                             wait: bool = False,
                             timeout: Optional[int] = None,
                             email_path: Optional[str] = None,
-                            additional_info: Optional[dict] = None):
+                            additional_info: Optional[dict] = None,
+                            zip_password: Optional[str] = None):
         """
         Send an alert for further investigation using the Intezer Analyze API.
         Should pass either raw_email or email_path.
@@ -442,6 +443,7 @@ class Alert:
         :param timeout: The timeout for the wait operation.
         :param email_path: The path to the email file.
         :param additional_info: Additional information to send with the alert.
+        :param zip_password: ZIP password to extract the email.
         :raises: :class:`requests.HTTPError` if the request failed for any reason.
         :return: The Alert instance, initialized with the alert id. when the `wait` parameter is set to True, the
                  resulting alert object will be initialized with the alert triage data.
@@ -464,6 +466,7 @@ class Alert:
             default_verdict=default_verdict,
             alert_sender=alert_sender,
             additional_info=json.dumps(additional_info) if additional_info else None,
+            zip_password=zip_password
         )
 
         send_alert_params = {key: value for key, value in send_alert_params.items() if value is not None}
