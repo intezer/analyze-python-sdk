@@ -1,3 +1,7 @@
+1.21.15
+-------
+- Added support for submitting phishing email alert embedded in a ZIP
+
 1.21.14
 -------
 - Add max retry
