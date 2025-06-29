@@ -187,7 +187,7 @@ class FileAnalysis(Analysis):
                 sandbox_machine_type=self._sandbox_machine_type,
                 **additional_parameters)
         else:
-            return self._api.analyze_by_file(self._file_path,
+            analysis_id = self._api.analyze_by_file(self._file_path,
                                              self._file_stream,
                                              disable_dynamic_unpacking=self._disable_dynamic_unpacking,
                                              disable_static_unpacking=self._disable_static_unpacking,
@@ -197,6 +197,8 @@ class FileAnalysis(Analysis):
                                              sandbox_command_line_arguments=self._sandbox_command_line_arguments,
                                              sandbox_machine_type=self._sandbox_machine_type,
                                              **additional_parameters)
+            self._file_stream = None
+            return analysis_id
 
     def get_sub_analyses(self) -> List[SubAnalysis]:
         """
