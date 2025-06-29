@@ -1,3 +1,7 @@
+1.21.16
+-------
+- Free file analysis file stream after submission to free up memory
+
 1.21.15
 -------
 - Added support for submitting phishing email alert embedded in a ZIP
