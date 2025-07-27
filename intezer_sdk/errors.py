@@ -188,3 +188,13 @@ class AnalysisRateLimitError(ServerError):
         self.remaining = response.headers.get('X-RateLimit-Remaining')
         self.reset_time_in_sec = response.headers.get('X-RateLimit-Reset')
         self.retry_after = response.headers.get('Retry-After')
+
+
+class IncidentNotFoundError(IntezerError):
+    def __init__(self, incident_id: str):
+        super().__init__(f'Incident not found: {incident_id}')
+
+
+class DeviceNotFoundError(IntezerError):
+    def __init__(self, incident_id: str):
+        super().__init__(f'Device not found: {incident_id}')

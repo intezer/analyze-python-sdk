@@ -726,6 +726,26 @@ class IntezerApi:
 
         return data_response['result'], data_response['status']
 
+    def get_incident_by_id(self, incident_id: str) -> dict:
+        data = dict(incident_id=incident_id)
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path='/incidents/get-by-id',
+                                                                      data=data)
+        raise_for_status(response)
+        data_response = response.json()
+
+        return data_response['result']
+
+    def get_device_by_id(self, device_id: str) -> dict:
+        data = dict(device_id=device_id)
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path='/devices/get-by-id',
+                                                                      data=data)
+        raise_for_status(response)
+        data_response = response.json()
+
+        return data_response['result']
+
     def get_index_response(self, index_id: str) -> Response:
         """
         Get the index response by its id.
