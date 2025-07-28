@@ -1,29 +1,29 @@
+import datetime
 import hashlib
 import json
 import time
-import datetime
 from io import BytesIO
 from typing import Any
 from typing import BinaryIO
-
-import requests
 from typing import Dict
 from typing import List
-from typing import Tuple
-from typing import Union
-from typing import Type
 from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import Union
 
+import requests
+
+from intezer_sdk import consts
+from intezer_sdk import errors
 from intezer_sdk._api import IntezerApi
+from intezer_sdk._api import IntezerApiClient
 from intezer_sdk.alerts_results import AlertsHistoryResult
 from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.analysis import UrlAnalysis
-from intezer_sdk.endpoint_analysis import EndpointAnalysis
-from intezer_sdk.consts import AlertStatusCode
-from intezer_sdk._api import IntezerApiClient
 from intezer_sdk.api import get_global_api
-from intezer_sdk import errors
-from intezer_sdk import consts
+from intezer_sdk.consts import AlertStatusCode
+from intezer_sdk.endpoint_analysis import EndpointAnalysis
 from intezer_sdk.util import add_filter
 
 DEFAULT_LIMIT = 100
@@ -79,7 +79,10 @@ def generate_alerts_history_search_filters(*,
                                            device_external_ips: List[str] = None,
                                            device_ids: List[str] = None,
                                            time_filter_type: List[str] = None,
-                                           sort_order: str = None) -> Dict[str, Any]:
+                                           sort_order: str = None,
+                                           ips: List[str] = None,
+                                           domains: List[str] = None,
+                                           incident_ids: List[str] = None) -> Dict[str, Any]:
     filters = {}
     if start_time:
         filters['start_time'] = start_time.timestamp()
@@ -115,6 +118,9 @@ def generate_alerts_history_search_filters(*,
     add_filter(filters, 'device_ids', device_ids)
     add_filter(filters, 'time_filter_type', time_filter_type)
     add_filter(filters, 'sort_order', sort_order)
+    add_filter(filters, 'ips', ips)
+    add_filter(filters, 'domains', domains)
+    add_filter(filters, 'incident_ids', incident_ids)
 
     return filters
 
@@ -152,7 +158,10 @@ def query_alerts_history(*,
                          device_external_ips: List[str] = None,
                          device_ids: List[str] = None,
                          time_filter_type: List[str] = None,
-                         sort_order: str = None) -> AlertsHistoryResult:
+                         sort_order: str = None,
+                         ips: List[str] = None,
+                         domains: List[str] = None,
+                         incident_ids: List[str] = None) -> AlertsHistoryResult:
     """
     Query for alerts history with query param.
 
@@ -174,6 +183,9 @@ def query_alerts_history(*,
     :param exclude_alert_ids: Query alerts that do not have these alert ids.
     :param usernames: Query alerts only with these usernames.
     :param file_hashes: Query alerts only with these file hashes.
+    :param ips: Query alerts only with these IPs.
+    :param domains: Query alerts only with these domains.
+    :param incident_ids: Query alerts only with these incident ids.
     :param process_commandlines: Query alerts only with these process commandlines.
     :param is_mitigated: Query alerts only with this is_mitigated value.
     :param email_sender: Query alerts only with these email sender.
@@ -212,6 +224,9 @@ def query_alerts_history(*,
         exclude_alert_ids=exclude_alert_ids,
         usernames=usernames,
         file_hashes=file_hashes,
+        ips=ips,
+        domains=domains,
+        incident_ids=incident_ids,
         process_commandlines=process_commandlines,
         sort_by=sort_by,
         is_mitigated=is_mitigated,
