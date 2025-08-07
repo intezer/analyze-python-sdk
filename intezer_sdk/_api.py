@@ -510,6 +510,15 @@ class IntezerApi:
 
         return response.json()['result_url']
 
+    def get_code_reuse_by_code_block(self, sha256: str):
+        response = self.api.request_with_refresh_expired_access_token(
+            'POST', f'/files/{sha256}/code-reuse-by-code-block'
+        )
+
+        raise_for_status(response)
+
+        return response.json()['result_url']
+
     def get_url_result(self, url: str) -> dict:
         """
         Send  GET request to an url.
