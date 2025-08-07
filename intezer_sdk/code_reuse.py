@@ -1,5 +1,5 @@
 from time import sleep
-from typing import Optional
+from typing import Optional, List
 
 from intezer_sdk import api
 from intezer_sdk.api import IntezerApiClient
@@ -7,7 +7,7 @@ from intezer_sdk._api import IntezerApi
 
 
 class Block:
-    def __init__(self, address: int, software_type: str, families: list[str]):
+    def __init__(self, address: int, software_type: str, families: List[str]):
         self.address = address
         self.software_type = software_type
         self.families = families
@@ -36,7 +36,7 @@ class CodeReuse:
         response.raise_for_status()
         return response.json()['result']
 
-    def get_code_blocks(self, sha256: str) -> list[Block]:
+    def get_code_blocks(self, sha256: str) -> List[Block]:
         """
         Retrieves a report containing information about reused code blocks for the given SHA-256 hash.
 
@@ -44,7 +44,7 @@ class CodeReuse:
             sha256_hash (str): The SHA-256 hash of the file to analyze.
 
         Returns:
-            list[Block]: A sorted list of Block objects representing the code blocks found in the analysis.
+            List[Block]: A sorted list of Block objects representing the code blocks found in the analysis.
         """
         result_url = self._api.get_code_reuse_by_code_block(sha256)
         # This endpoint acts different. We don't get a status and instead have to use
