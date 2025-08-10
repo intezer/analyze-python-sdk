@@ -1,11 +1,11 @@
 import hashlib
-from http import HTTPStatus
 import uuid
+from http import HTTPStatus
 
 import responses
 
-from intezer_sdk.alerts import get_alerts_by_alert_ids
 from intezer_sdk.alerts import Alert
+from intezer_sdk.alerts import get_alerts_by_alert_ids
 from tests.unit.base_test import BaseTest
 from tests.utils import load_binary_file_from_resources
 
@@ -132,3 +132,26 @@ class AlertsSpec(BaseTest):
 
             # Assert
             self.assertEqual(alert.alert_id, alert_id)
+
+    def test_get_raw_alert_data(self):
+        # Arrange
+        alert_id = 'test-alert-id'
+        environment = 'test-env'
+        expected_raw_data = {
+            'result_url': 'https://example.com/download/alert-data',
+            'metadata': {'environment': environment, 'raw_data_type': 'raw_alert'}
+        }
+        
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/{alert_id}/raw-data',
+                     json=expected_raw_data,
+                     status=HTTPStatus.OK)
+            
+            alert = Alert(alert_id=alert_id)
+            
+            # Act
+            result_data = alert.get_raw_data(environment=environment)
+            
+            # Assert
+            self.assertEqual(result_data, expected_raw_data)

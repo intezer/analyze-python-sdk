@@ -26,6 +26,7 @@ from intezer_sdk.consts import AlertStatusCode
 from intezer_sdk.endpoint_analysis import EndpointAnalysis
 from intezer_sdk.util import add_filter
 
+
 DEFAULT_LIMIT = 100
 DEFAULT_OFFSET = 0
 ALERTS_SEARCH_REQUEST = '/alerts/search'
@@ -547,3 +548,19 @@ class Alert:
                 _fetch_scan(scan, 'endpoint_analysis', EndpointAnalysis)
             elif scan_type == 'url':
                 _fetch_scan(scan, 'url_analysis', UrlAnalysis)
+
+    def get_raw_data(self, 
+                     environment: str, 
+                     raw_data_type: str = 'raw_alert') -> dict:
+        """
+        Get raw alert data.
+
+        :param environment: The environment to get raw data from.
+        :param raw_data_type: The type of raw data to retrieve. Defaults to 'raw_alert'.
+        :return: The raw alert data.
+        """
+        return self._api.get_raw_alert_data(
+            alert_id=self.alert_id,
+            environment=environment,
+            raw_data_type=raw_data_type
+        )
