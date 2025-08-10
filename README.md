@@ -19,6 +19,8 @@ Currently, the following options are available in the SDK:
 - Search a family
 - Ingest an alert from any source
 - Ingest a raw email alert (.msg or .eml file)
+- Get raw alert data  
+- Get raw incident data
 
 ## Installation
 
@@ -250,6 +252,20 @@ alert = Alert.from_id(alert_id=alert_id,
                       wait=False)
 ```
 
+#### Get raw alert data
+Get raw alert data (original alert data sent to Intezer):
+
+```python
+from intezer_sdk import api
+from intezer_sdk.alerts import Alert
+
+api.set_global_api('<api_key>')
+alert = Alert(alert_id="your-alert-id")
+raw_data = alert.get_raw_data(
+    environment="your-environment"
+)
+```
+
 #### Alerts History
 
 ```python
@@ -259,6 +275,28 @@ history_results = query_file_analyses_history(
 )
 for analyse in history_results:
     print(analyse)
+```
+
+### Incidents
+#### Get incident by id
+```python
+from intezer_sdk.incidents import Incident
+
+incident = Incident.from_id(incident_id="your-incident-id")
+```
+
+#### Get raw incident data
+Get raw incident data (original incident data sent to Intezer):
+
+```python
+from intezer_sdk import api
+from intezer_sdk.incidents import Incident
+
+api.set_global_api('<api_key>')
+incident = Incident(incident_id="your-incident-id")
+raw_data = incident.get_raw_data(
+    environment="your-environment",
+)`
 ```
 
 ## Code examples

@@ -1,10 +1,10 @@
 import io
 import os
 from http import HTTPStatus
+from typing import IO
 from typing import Any
 from typing import BinaryIO
 from typing import Dict
-from typing import IO
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -773,6 +773,49 @@ class IntezerApi:
         self._assert_analysis_response_status_code(response)
 
         return self._get_analysis_id_from_response(response)
+
+    def get_raw_alert_data(
+        self,
+        alert_id: str,
+        environment: str,
+        raw_data_type: str = 'raw_alert',
+    ) -> dict:
+        """
+        Get raw alert data.
+
+        :param alert_id: The alert ID to get raw data for.
+        :param environment: The environment to get raw data from.
+        :param raw_data_type: The type of raw data to retrieve. Defaults to 'raw_alert'.
+        :return: The raw alert data.
+        """
+
+        data = {"environment": environment, "raw_data_type": raw_data_type}
+
+        response = self.api.request_with_refresh_expired_access_token(
+            method='GET',
+            path=f'/alerts/{alert_id}/raw-data',
+            data=data
+        )
+        raise_for_status(response)
+        return response.json()
+
+    def get_raw_incident_data(
+        self, incident_id: str, environment: str, raw_data_type: str = 'raw_incident'
+    ) -> dict:
+        """
+        Get raw incident data.
+
+        :param incident_id: The incident ID to get raw data for.
+        :param environment: The environment to get raw data from.
+        :param raw_data_type: The type of raw data to retrieve. Defaults to 'raw_incident'.
+        :return: The raw incident data.
+        """
+        data = {'environment': environment, 'raw_data_type': raw_data_type}
+        response = self.api.request_with_refresh_expired_access_token(
+            method='GET', path=f'/incidents/{incident_id}/raw-data', data=data
+        )
+        raise_for_status(response)
+        return response.json()
 
     @staticmethod
     def _assert_result_response(ignore_not_found: bool, response: Response):

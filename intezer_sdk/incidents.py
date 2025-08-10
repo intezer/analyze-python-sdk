@@ -13,6 +13,7 @@ from intezer_sdk.api import get_global_api
 from intezer_sdk.incidents_results import IncidentsHistoryResult
 from intezer_sdk.util import add_filter
 
+
 DEFAULT_LIMIT = 100
 DEFAULT_OFFSET = 0
 INCIDENTS_SEARCH_REQUEST = '/incidents/search'
@@ -226,3 +227,22 @@ class Incident:
         new_incident = cls(incident_id, api=api)
         new_incident.fetch_info()
         return new_incident
+
+    def get_raw_data(self, 
+                     environment: str, 
+                     raw_data_type: str = 'raw_incident') -> dict:
+        """
+        Get raw incident data.
+
+        :param environment: The environment to get raw data from.
+        :param raw_data_type: The type of raw data to retrieve. Defaults to 'raw_incident'.
+        :return: The raw incident data.
+        """
+        if not self.incident_id:
+            raise ValueError('Incident ID is required to get raw data.')
+        
+        return self._api.get_raw_incident_data(
+            incident_id=self.incident_id,
+            environment=environment,
+            raw_data_type=raw_data_type
+        )

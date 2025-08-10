@@ -245,6 +245,29 @@ class IncidentsSpec(BaseTest):
             self.assertEqual(incident.risk_category, 'malware')
             self.assertEqual(incident.risk_level, 'high')
 
+    def test_get_raw_incident_data(self):
+        # Arrange
+        incident_id = "test-incident-id"
+        environment = "test-env"
+        expected_raw_data = {
+            "result_url": "https://example.com/download/incident-data",
+            "metadata": {"environment": environment, "raw_data_type": "raw_incident"}
+        }
+        
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/incidents/{incident_id}/raw-data',
+                     json=expected_raw_data,
+                     status=HTTPStatus.OK)
+            
+            incident = Incident(incident_id=incident_id)
+            
+            # Act
+            result_data = incident.get_raw_data(environment=environment)
+            
+            # Assert
+            self.assertEqual(result_data, expected_raw_data)
+
 
 class IncidentsHistoryResultSpec(BaseTest):
     def test_incidents_history_result_init(self):

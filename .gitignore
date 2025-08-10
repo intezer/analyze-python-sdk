@@ -52,3 +52,4 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+.vscode/bookmarks.json
