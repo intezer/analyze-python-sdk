@@ -726,8 +726,10 @@ class IntezerApi:
 
         return data_response['result'], data_response['status']
 
-    def get_incident_by_id(self, incident_id: str) -> dict:
+    def get_incident_by_id(self, incident_id: str, environment: Optional[str] = None) -> dict:
         data = dict(incident_id=incident_id)
+        if environment:
+            data['environment'] = environment
         response = self.api.request_with_refresh_expired_access_token(method='GET',
                                                                       path='/incidents/get-by-id',
                                                                       data=data)

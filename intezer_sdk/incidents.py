@@ -159,7 +159,12 @@ class Incident:
     :vartype intezer_incident_url: str
     """
 
-    def __init__(self, incident_id: Optional[str] = None, api: IntezerApiClient = None):
+    def __init__(
+        self,
+        incident_id: Optional[str] = None,
+        environment: Optional[str] = None,
+        api: IntezerApiClient = None,
+    ):
         """
         Create a new Incident instance with the given incident id.
         Please note that this does not query the Intezer Analyze API for the incident data, but rather creates an Incident
@@ -168,10 +173,11 @@ class Incident:
         If you wish to fetch the incident data from the Intezer Analyze API, use the `from_id` class method.
 
         :param incident_id: The incident id.
+        :param environment: The environment of the incident.
         :param api: The API connection to Intezer.
         """
         self.incident_id = incident_id
-
+        self.environment = environment
         self._intezer_api_client = api
         self._api = IntezerApi(api or get_global_api())
         self._result: Optional[Dict] = None
@@ -192,12 +198,17 @@ class Incident:
             raise ValueError("Incident ID is required to fetch incident info.")
 
         try:
-            self._result = self._api.get_incident_by_id(self.incident_id)
+            self._result = self._api.get_incident_by_id(
+                self.incident_id, self.environment
+            )
         except HTTPError as e:
             if e.response.status_code == 404:
                 raise errors.IncidentNotFoundError(self.incident_id)
             raise
-
+        
+        if not self.environment:
+            self.environment = self._result['environment']
+        
         self.source = self._result.get('source')
         self.sender = self._result.get('sender')
         self.name = self._result.get('incident', {}).get('name')
@@ -215,34 +226,35 @@ class Incident:
         return self._result
 
     @classmethod
-    def from_id(cls, incident_id: str, api: IntezerApiClient = None) -> 'Incident':
+    def from_id(cls, incident_id: str, environment: Optional[str] = None, api: IntezerApiClient = None) -> 'Incident':
         """
         Create a new Incident instance, and fetch the incident data from the Intezer Analyze API.
 
         :param incident_id: The incident id.
+        :param environment: The environment of the incident.
         :param api: The API connection to Intezer.
         :raises intezer_sdk.errors.IncidentNotFound: If the incident was not found.
         :return: The Incident instance, with the updated incident data.
         """
-        new_incident = cls(incident_id, api=api)
+        new_incident = cls(incident_id, environment=environment, api=api)
         new_incident.fetch_info()
         return new_incident
 
-    def get_raw_data(self, 
-                     environment: str, 
-                     raw_data_type: str = 'raw_incident') -> dict:
+    def get_raw_data(
+        self, environment: Optional[str] = None, raw_data_type: str = 'raw_incident'
+    ) -> dict:
         """
         Get raw incident data.
 
-        :param environment: The environment to get raw data from.
+        :param environment: The environment to get raw data from. If not provided, the environment will be taken from the incident.
         :param raw_data_type: The type of raw data to retrieve. Defaults to 'raw_incident'.
         :return: The raw incident data.
         """
-        if not self.incident_id:
-            raise ValueError('Incident ID is required to get raw data.')
-        
+        if not self.incident_id and not (self.environment or environment):
+            raise ValueError('Incident ID and environment are required to get raw data.')
+
         return self._api.get_raw_incident_data(
             incident_id=self.incident_id,
-            environment=environment,
-            raw_data_type=raw_data_type
+            environment=environment or self.environment,
+            raw_data_type=raw_data_type,
         )

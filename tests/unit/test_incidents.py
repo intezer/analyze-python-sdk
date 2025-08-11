@@ -142,7 +142,7 @@ class IncidentsSpec(BaseTest):
                          }
                      })
 
-            incident = Incident(incident_id)
+            incident = Incident(incident_id, environment='test_environment')
 
             # Act
             incident.fetch_info()
@@ -195,7 +195,7 @@ class IncidentsSpec(BaseTest):
                      status=HTTPStatus.OK,
                      json={'result': expected_result})
 
-            incident = Incident(incident_id)
+            incident = Incident(incident_id, environment='test_environment')
             incident.fetch_info()
 
             # Act
@@ -206,7 +206,7 @@ class IncidentsSpec(BaseTest):
 
     def test_incident_result_returns_none_when_no_data_fetched(self):
         # Arrange
-        incident = Incident('test_incident_id')
+        incident = Incident('test_incident_id', environment='test_environment')
 
         # Act
         result = incident.result()
@@ -235,7 +235,7 @@ class IncidentsSpec(BaseTest):
                      })
 
             # Act
-            incident = Incident.from_id(incident_id)
+            incident = Incident.from_id(incident_id, environment='test_environment')
 
             # Assert
             self.assertEqual(incident.incident_id, incident_id)
@@ -260,7 +260,7 @@ class IncidentsSpec(BaseTest):
                      json=expected_raw_data,
                      status=HTTPStatus.OK)
             
-            incident = Incident(incident_id=incident_id)
+            incident = Incident(incident_id=incident_id, environment=environment)
             
             # Act
             result_data = incident.get_raw_data(environment=environment)

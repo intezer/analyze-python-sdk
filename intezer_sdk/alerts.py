@@ -270,6 +270,7 @@ class Alert:
 
     def __init__(self,
                  alert_id: Optional[str] = None,
+                 environment: Optional[str] = None,
                  alert_stream: Optional[BinaryIO] = None,
                  api: IntezerApiClient = None):
         """
@@ -278,6 +279,7 @@ class Alert:
         instance with the given alert id.
 
         :param alert_id: The alert id.
+        :param environment: The environment of the alert.
         :param api: The API connection to Intezer.
         """
         if alert_stream and alert_id:
@@ -294,6 +296,7 @@ class Alert:
         else:
             self.alert_id: str = alert_id
 
+        self.environment = environment
         self._intezer_api_client = api
         self._api = IntezerApi(api or get_global_api())
         self._report: Optional[Dict] = None
@@ -320,12 +323,14 @@ class Alert:
 
         """
         try:
-            alert, status = self._api.get_alert_by_alert_id(alert_id=self.alert_id)
+            alert, status = self._api.get_alert_by_alert_id(alert_id=self.alert_id, environment=self.environment)
         except requests.HTTPError:
             self.status = AlertStatusCode.NOT_FOUND
             raise errors.AlertNotFoundError(self.alert_id)
 
         self._report = alert
+        if not self.environment:
+            self.environment = alert['environment']
 
         if status in (AlertStatusCode.IN_PROGRESS.value, AlertStatusCode.QUEUED.value):
             self.status = AlertStatusCode.IN_PROGRESS
@@ -359,6 +364,7 @@ class Alert:
     @classmethod
     def from_id(cls,
                 alert_id: str,
+                environment: Optional[str] = None,
                 api: IntezerApiClient = None,
                 fetch_scans: bool = False,
                 wait: bool = False,
@@ -367,6 +373,7 @@ class Alert:
         Create a new Alert instance, and fetch the alert data from the Intezer Analyze API.
 
         :param alert_id: The alert id.
+        :param environment: The environment of the alert.
         :param api: The API connection to Intezer.
         :param fetch_scans: Whether to fetch the scans for the alert - this could take some time.
         :param wait: Wait for the alert to finish processing before returning.
@@ -375,7 +382,7 @@ class Alert:
         :raises intezer_sdk.errors.AlertInProgressError: If the alert is still being processed.
         :return: The Alert instance, with the updated alert data.
         """
-        new_alert = cls(alert_id=alert_id, api=api)
+        new_alert = cls(alert_id=alert_id, environment=environment or None, api=api)
         status = new_alert.check_status()
         if status == AlertStatusCode.IN_PROGRESS and not wait:
             raise errors.AlertInProgressError(alert_id)
@@ -488,7 +495,7 @@ class Alert:
         send_alert_params = {key: value for key, value in send_alert_params.items() if value is not None}
         alert_id = _api.send_binary_alert(**send_alert_params)
 
-        alert = cls(alert_id=alert_id, api=api)
+        alert = cls(alert_id=alert_id, environment=environment, api=api)
         if wait:
             alert.wait_for_completion(timeout=timeout)
         return alert
@@ -550,17 +557,20 @@ class Alert:
                 _fetch_scan(scan, 'url_analysis', UrlAnalysis)
 
     def get_raw_data(self, 
-                     environment: str, 
+                     environment: Optional[str] = None, 
                      raw_data_type: str = 'raw_alert') -> dict:
         """
         Get raw alert data.
 
-        :param environment: The environment to get raw data from.
+        :param environment: The environment to get raw data from. If not provided, the environment will be taken from the alert.
         :param raw_data_type: The type of raw data to retrieve. Defaults to 'raw_alert'.
         :return: The raw alert data.
         """
+        if not environment and not self.environment:
+            raise ValueError('Environment is required to get raw data.')
+        
         return self._api.get_raw_alert_data(
             alert_id=self.alert_id,
-            environment=environment,
+            environment=environment or self.environment,
             raw_data_type=raw_data_type
         )
