@@ -95,7 +95,7 @@ class AlertsSpec(BaseTest):
                      status=HTTPStatus.OK,
                      json={'result': {}, 'status': 'success'})
             # Act
-            alert = Alert.from_id('alert_id')
+            alert = Alert.from_id('alert_id', environment='environment')
 
             # Assert
             self.assertEqual(alert.alert_id, 'alert_id')
@@ -111,7 +111,7 @@ class AlertsSpec(BaseTest):
                      status=HTTPStatus.OK,
                      json={'result': {}, 'status': 'success'})
             # Act
-            alert = Alert.from_id('alert_id', wait=True)
+            alert = Alert.from_id('alert_id', environment='environment', wait=True)
 
             # Assert
             self.assertEqual(alert.alert_id, 'alert_id')
