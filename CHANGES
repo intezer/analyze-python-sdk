@@ -1,3 +1,7 @@
+1.22.3
+-------
+- Add notify to Alert class that returns notified channels
+
 1.22.2
 -------
 - enforce providing an environemnt for alerts and incidents

@@ -28,6 +28,9 @@ class IntezerApi:
     def on_premise_version(self) -> Optional[OnPremiseVersion]:
         return self.api.on_premise_version
 
+    def _get_tenant_id(self) -> Optional[str]:
+        return os.environ.get('INTEZER_TENANT_ID')
+
     def analyze_by_hash(self,
                         file_hash: str,
                         disable_dynamic_unpacking: Optional[bool],
@@ -699,6 +702,11 @@ class IntezerApi:
         data = dict(alert_ids=alert_ids)
         if environments:
             data['environments'] = environments
+        
+        tenant_id = self._get_tenant_id()
+        if tenant_id:
+            data['tenant_id'] = tenant_id
+            
         response = self.api.request_with_refresh_expired_access_token(method='GET',
                                                                       path='/alerts/search',
                                                                       data=data)
@@ -718,6 +726,11 @@ class IntezerApi:
         data = dict(alert_id=alert_id)
         if environment:
             data['environment'] = environment
+            
+        tenant_id = self._get_tenant_id()
+        if tenant_id:
+            data['tenant_id'] = tenant_id
+            
         response = self.api.request_with_refresh_expired_access_token(method='GET',
                                                                       path='/alerts/get-by-id',
                                                                       data=data)
@@ -747,6 +760,33 @@ class IntezerApi:
         data_response = response.json()
 
         return data_response['result']
+
+    def notify_alert(self, alert_id: str, environment: Optional[str] = None) -> dict:
+        """
+        Send a notification for an alert.
+
+        :param alert_id: The alert id to notify.
+        :param environment: The environment of the alert.
+        :raises: :class:`requests.HTTPError` if the request failed for any reason.
+        :return: The notification response containing notified_channels.
+        """
+        self.assert_any_on_premise('notify-alert')
+        
+        data = {}
+        if environment:
+            data['environment'] = environment
+            
+        tenant_id = self._get_tenant_id()
+        if tenant_id:
+            data['tenant_id'] = tenant_id
+            
+        response = self.api.request_with_refresh_expired_access_token(
+            method='POST',
+            path=f'/alerts/{alert_id}/notify',
+            data=data if data else None
+        )
+        raise_for_status(response)
+        return response.json()
 
     def get_index_response(self, index_id: str) -> Response:
         """
@@ -791,7 +831,11 @@ class IntezerApi:
         :return: The raw alert data.
         """
 
-        data = {"environment": environment, "raw_data_type": raw_data_type}
+        data = {'environment': environment, 'raw_data_type': raw_data_type}
+        
+        tenant_id = self._get_tenant_id()
+        if tenant_id:
+            data['tenant_id'] = tenant_id
 
         response = self.api.request_with_refresh_expired_access_token(
             method='GET',
