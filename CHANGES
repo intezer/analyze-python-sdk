@@ -1,7 +1,8 @@
-1.22.3
+1.23.0
 -------
 - Add notify to Alert class that returns notified channels
 - Add support for Python 3.13
+- Drop support for Python 3.8
 
 1.22.2
 -------

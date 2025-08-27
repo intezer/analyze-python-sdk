@@ -703,8 +703,7 @@ class IntezerApi:
         if environments:
             data['environments'] = environments
         
-        tenant_id = self._get_tenant_id()
-        if tenant_id:
+        if tenant_id := self._get_tenant_id():
             data['tenant_id'] = tenant_id
             
         response = self.api.request_with_refresh_expired_access_token(method='GET',
@@ -727,8 +726,7 @@ class IntezerApi:
         if environment:
             data['environment'] = environment
             
-        tenant_id = self._get_tenant_id()
-        if tenant_id:
+        if tenant_id := self._get_tenant_id():
             data['tenant_id'] = tenant_id
             
         response = self.api.request_with_refresh_expired_access_token(method='GET',
@@ -776,8 +774,7 @@ class IntezerApi:
         if environment:
             data['environment'] = environment
             
-        tenant_id = self._get_tenant_id()
-        if tenant_id:
+        if tenant_id := self._get_tenant_id():
             data['tenant_id'] = tenant_id
             
         response = self.api.request_with_refresh_expired_access_token(
@@ -833,8 +830,7 @@ class IntezerApi:
 
         data = {'environment': environment, 'raw_data_type': raw_data_type}
         
-        tenant_id = self._get_tenant_id()
-        if tenant_id:
+        if tenant_id := self._get_tenant_id():
             data['tenant_id'] = tenant_id
 
         response = self.api.request_with_refresh_expired_access_token(
