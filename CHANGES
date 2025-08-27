@@ -1,6 +1,12 @@
+1.23.0
+-------
+- Add notify to Alert class that returns notified channels
+- Add support for Python 3.13
+- Drop support for Python 3.8
+
 1.22.2
 -------
-- enforce providing an environemnt for alerts and incidents
+- enforce providing an environment for alerts and incidents
 
 1.22.1
 -------

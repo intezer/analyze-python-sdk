@@ -36,15 +36,16 @@ setup(
     ],
     keywords='intezer',
     tests_requires=[
-        'responses == 0.25.0',
-        'pytest == 8.0.1'
+        'responses == 0.25.8',
+        'pytest == 8.1.1'
     ],
-    python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*',
+    python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,!=3.8.*',
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12']
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+    ]
 )

@@ -26,7 +26,6 @@ from intezer_sdk.consts import AlertStatusCode
 from intezer_sdk.endpoint_analysis import EndpointAnalysis
 from intezer_sdk.util import add_filter
 
-
 DEFAULT_LIMIT = 100
 DEFAULT_OFFSET = 0
 ALERTS_SEARCH_REQUEST = '/alerts/search'
@@ -556,8 +555,8 @@ class Alert:
             elif scan_type == 'url':
                 _fetch_scan(scan, 'url_analysis', UrlAnalysis)
 
-    def get_raw_data(self, 
-                     environment: Optional[str] = None, 
+    def get_raw_data(self,
+                     environment: Optional[str] = None,
                      raw_data_type: str = 'raw_alert') -> dict:
         """
         Get raw alert data.
@@ -568,9 +567,26 @@ class Alert:
         """
         if not environment and not self.environment:
             raise ValueError('Environment is required to get raw data.')
-        
+
         return self._api.get_raw_alert_data(
             alert_id=self.alert_id,
             environment=environment or self.environment,
             raw_data_type=raw_data_type
         )
+
+    def notify(self) -> List[str]:
+        """
+        Send a notification for this alert.
+
+        :raises intezer_sdk.errors.AlertNotFoundError: If the alert was not found.
+        :raises intezer_sdk.errors.AlertInProgressError: If the alert is still being processed.
+        :raises: :class:`requests.HTTPError` if the request failed for any reason.
+        :return: List of notified channels.
+        """
+        if self.status == AlertStatusCode.NOT_FOUND:
+            raise errors.AlertNotFoundError(self.alert_id)
+        elif self.status == AlertStatusCode.IN_PROGRESS:
+            raise errors.AlertInProgressError(self.alert_id)
+
+        response = self._api.notify_alert(self.alert_id, self.environment)
+        return response.get('notified_channels', [])

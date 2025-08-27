@@ -4,8 +4,10 @@ from http import HTTPStatus
 
 import responses
 
+from intezer_sdk import errors
 from intezer_sdk.alerts import Alert
 from intezer_sdk.alerts import get_alerts_by_alert_ids
+from intezer_sdk.consts import AlertStatusCode
 from tests.unit.base_test import BaseTest
 from tests.utils import load_binary_file_from_resources
 
@@ -141,17 +143,76 @@ class AlertsSpec(BaseTest):
             'result_url': 'https://example.com/download/alert-data',
             'metadata': {'environment': environment, 'raw_data_type': 'raw_alert'}
         }
-        
+
         with responses.RequestsMock() as mock:
             mock.add('GET',
                      url=f'{self.full_url}/alerts/{alert_id}/raw-data',
                      json=expected_raw_data,
                      status=HTTPStatus.OK)
-            
+
             alert = Alert(alert_id=alert_id)
-            
+
             # Act
             result_data = alert.get_raw_data(environment=environment)
-            
+
             # Assert
             self.assertEqual(result_data, expected_raw_data)
+
+    def test_alert_notify_success(self):
+        # Arrange
+        alert_id = 'test_alert_id'
+        expected_channels = ['channel-123-456', 'channel-789-012']
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment'}, 'status': 'success'})
+            mock.add('POST',
+                     url=f'{self.full_url}/alerts/{alert_id}/notify',
+                     status=HTTPStatus.OK,
+                     json={'notified_channels': expected_channels})
+
+            # Act
+            alert = Alert.from_id(alert_id)
+            notified_channels = alert.notify()
+
+            # Assert
+            self.assertEqual(notified_channels, expected_channels)
+
+    def test_alert_notify_returns_empty_list_when_no_channels_in_response(self):
+        # Arrange
+        alert_id = 'test_alert_id'
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment'}, 'status': 'success'})
+            mock.add('POST',
+                     url=f'{self.full_url}/alerts/{alert_id}/notify',
+                     status=HTTPStatus.OK,
+                     json={'result': True})
+
+            # Act
+            alert = Alert.from_id(alert_id)
+            notified_channels = alert.notify()
+
+            # Assert
+            self.assertEqual(notified_channels, [])
+
+    def test_alert_notify_raises_alert_not_found_error_when_alert_not_found(self):
+        # Arrange
+        alert = Alert(alert_id='test_alert_id')
+        alert.status = AlertStatusCode.NOT_FOUND
+
+        # Act & Assert
+        with self.assertRaises(errors.AlertNotFoundError):
+            alert.notify()
+
+    def test_alert_notify_raises_alert_in_progress_error_when_alert_in_progress(self):
+        # Arrange
+        alert = Alert(alert_id='test_alert_id')
+        alert.status = AlertStatusCode.IN_PROGRESS
+
+        # Act & Assert
+        with self.assertRaises(errors.AlertInProgressError):
+            alert.notify()
