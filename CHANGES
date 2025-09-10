@@ -1,3 +1,7 @@
+1.24.0 (Unreleased)
+-------
+- Introduce File class
+
 1.23.0
 -------
 - Add notify to Alert class that returns notified channels
