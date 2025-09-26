@@ -282,30 +282,28 @@ class FileSpec(BaseTest):
                 mock_file().write.assert_called_with(b'file_content')
     
     def test_code_reuse_by_block(self):
-        TEST_HASH = "73c677dd3b264e7eb80e26e78ac9df1dba30915b5ce3b1bc1c83db52b9c6b30e"
+        TEST_HASH = '73c677dd3b264e7eb80e26e78ac9df1dba30915b5ce3b1bc1c83db52b9c6b30e'
         
         def load_response_json(file_name: str) -> dict:
-            path_to_file = os.path.join(os.path.dirname(__file__), "..", "resources", file_name)
+            path_to_file = os.path.join(os.path.dirname(__file__), '..', 'resources', file_name)
             with open(path_to_file, 'rb') as file:
                 return json.load(file)
     
         with responses.RequestsMock() as mock:
-            mock.add("POST",
+            mock.post(
                      url=consts.ANALYZE_URL +
                      f'/api/v2-0/files/{TEST_HASH}/code-reuse-by-code-block',
                      status=HTTPStatus.OK,
-                     json=load_response_json("code_reuse_block_response.json"))
-            mock.add("GET",
+                     json=load_response_json('code_reuse_block_response.json'))
+            mock.get(
                      url=consts.ANALYZE_URL +
-                     "/api/v2-0/analyses/51ea282b-0542-4578-a44a-e60fdfb0d3ec/code-reuse-by-code-block",
+                     '/api/v2-0/analyses/51ea282b-0542-4578-a44a-e60fdfb0d3ec/code-reuse-by-code-block',
                      status=HTTPStatus.OK,
-                     json=load_response_json("code_reuse_block_report.json"))
+                     json=load_response_json('code_reuse_block_report.json'))
 
             file_object = File(sha256=TEST_HASH)
             report = file_object.get_code_blocks()
 
             self.assertEqual(len(report), 2527)
-            self.assertEqual(
-                len(list(filter(lambda x: x.is_common, report))), 1371)
-            self.assertEqual(
-                len(list(filter(lambda x: x.software_type == "malware", report))), 171)
+            self.assertEqual(len([x for x in report if x.is_common]), 1371)
+            self.assertEqual(len([x for x in report if x.software_type == 'malware']), 171)
