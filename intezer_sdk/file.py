@@ -6,7 +6,7 @@ from typing import Optional
 from typing import List
 from typing import Union
 
-from intezer_sdk import consts
+from intezer_sdk import consts, errors
 from intezer_sdk._api import IntezerApi
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
@@ -155,6 +155,12 @@ class File:
     def _get_result_from_task(self, result_url: str):
         response = self._api.api.request_with_refresh_expired_access_token(
             'GET', result_url)
+
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        if response.status_code == HTTPStatus.CONFLICT:
+            raise ValueError('sha256 is not a code item')
+
         while response.status_code == HTTPStatus.ACCEPTED:
             sleep(2)
             response = self._api.api.request_with_refresh_expired_access_token(
