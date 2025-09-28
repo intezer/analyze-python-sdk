@@ -266,30 +266,6 @@ class IntezerApi:
         raise_for_status(response)
         return response.json()['result']
 
-    def send_alert(self,
-                   alert: dict,
-                   definition_mapping: dict,
-                   **additional_parameters) -> str:
-        """
-        Send an alert for further investigation.
-
-        :param alert: The alert to send.
-        :param definition_mapping: The definition mapping that is used to extract relevant information from the alert.
-        :param additional_parameters: Additional parameters to pass to the API.
-
-        :raises: :class:`requests.HTTPError` if the request failed for any reason.
-        :return: The alert id of the submitted alert.
-        """
-        self.assert_any_on_premise('send-alert')
-        response = self.api.request_with_refresh_expired_access_token(method='POST',
-                                                                      path='/alerts/ingest',
-                                                                      data=dict(alert=alert,
-                                                                                definition_mapping=definition_mapping,
-                                                                                **additional_parameters))
-        raise_for_status(response, statuses_to_ignore=[HTTPStatus.BAD_REQUEST])
-        self._assert_alert_response_status_code(response)
-        return response.json()['alert_id']
-
     def send_binary_alert(self,
                           alert: io.BytesIO,
                           file_name: str,

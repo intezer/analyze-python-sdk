@@ -2,6 +2,11 @@
 -------
 - Introduce File class
 
+
+1.23.1
+-------
+- Remove deprecated ingest alert method
+
 1.23.0
 -------
 - Add notify to Alert class that returns notified channels

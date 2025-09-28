@@ -69,26 +69,6 @@ class AlertsSpec(BaseTest):
             self.assertEqual(alerts_amount, 0)
             self.assertEqual(alerts_details, [])
 
-    def test_ingest_alert_success(self):
-        # Arrange
-        alert_id = str(uuid.uuid4())
-        with responses.RequestsMock() as mock:
-            mock.add('POST',
-                     url=f'{self.full_url}/alerts/ingest',
-                     status=HTTPStatus.OK,
-                     json={'result': True, 'alert_id': alert_id})
-            # Act
-            alert = Alert.send(raw_alert={'alert_id': 'alert_id'},
-                               alert_mapping={'some': 'mapping'},
-                               source='source',
-                               environment='environment',
-                               display_fields=['display_fields'],
-                               alert_sender='alert_sender',
-                               )
-
-            # Assert
-            self.assertEqual(alert.alert_id, alert_id)
-
     def test_alert_from_id(self):
         # Arrange
         with responses.RequestsMock() as mock:
