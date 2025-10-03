@@ -6,10 +6,12 @@ from typing import Optional
 from typing import List
 from typing import Union
 
-from intezer_sdk import consts, errors
+from intezer_sdk import consts
+from intezer_sdk import errors
 from intezer_sdk._api import IntezerApi
-from intezer_sdk.api import IntezerApiClient
+from intezer_sdk._api import raise_for_status
 from intezer_sdk.api import get_global_api
+from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.index import Index
 
 
@@ -152,7 +154,7 @@ class File:
 
         self._api.download_file_by_sha256(self._sha256, path, output_stream, password_protection)
 
-    def _get_result_from_task(self, result_url: str):
+    def _get_result_from_task(self, result_url: str, sleep_time: int):
         response = self._api.api.request_with_refresh_expired_access_token(
             'GET', result_url)
 
@@ -162,26 +164,28 @@ class File:
             raise ValueError('sha256 is not a code item')
 
         while response.status_code == HTTPStatus.ACCEPTED:
-            sleep(2)
+            sleep(sleep_time)
             response = self._api.api.request_with_refresh_expired_access_token(
                 'GET', result_url)
-        response.raise_for_status()
+        raise_for_status(response)
         return response.json()['result']
 
-    def get_code_blocks(self) -> List[Block]:
+    def get_code_blocks(self, interval: int = consts.CHECK_STATUS_INTERVAL) -> List[Block]:
         '''
         Retrieves a report containing information about reused code blocks for the given SHA-256 hash.
+
+        :param interval: The interval to wait between checks.
 
         Returns:
             List[Block]: A sorted list of Block objects representing the code blocks found in the analysis.
         '''
         if not self._sha256:
-            raise ValueError('Download is only supported for sha256-based files')
+            raise ValueError('Code block report is only supported for sha256-based files')
         
         result_url = self._api.get_code_reuse_by_code_block(self._sha256)
         # This endpoint acts different. We don't get a status and instead have to use
         # the HTTP status code to wait for the report.
-        result = self._get_result_from_task(result_url)
+        result = self._get_result_from_task(result_url, interval)
         blocks: list[Block] = []
         for address, block in result['blocks'].items():
             blocks.append(
