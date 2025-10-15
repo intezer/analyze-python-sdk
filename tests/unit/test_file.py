@@ -1,8 +1,6 @@
 import datetime
 import io
 from http import HTTPStatus
-import json
-import os
 from unittest.mock import mock_open
 from unittest.mock import patch
 
@@ -281,29 +279,104 @@ class FileSpec(BaseTest):
                 mock_file.assert_called_once()
                 mock_file().write.assert_called_with(b'file_content')
     
-    def test_code_reuse_by_block(self):
-        TEST_HASH = '73c677dd3b264e7eb80e26e78ac9df1dba30915b5ce3b1bc1c83db52b9c6b30e'
-        
-        def load_response_json(file_name: str) -> dict:
-            path_to_file = os.path.join(os.path.dirname(__file__), '..', 'resources', file_name)
-            with open(path_to_file, 'rb') as file:
-                return json.load(file)
-    
+    def test_get_code_blocks_returns_operation_when_wait_is_true(self):
+        # Arrange
+        test_hash = '73c677dd3b264e7eb80e26e78ac9df1dba30915b5ce3b1bc1c83db52b9c6b30e'
+        result_url = f'/analyses/51ea282b-0542-4578-a44a-e60fdfb0d3ec/code-reuse-by-code-block'
+        result = {
+            'blocks': {
+                '101220': {
+                    'code_reuse': ['Common'],
+                    'software_type': 'common'
+                },
+                '101244': {
+                    'code_reuse': ['WannaCry'],
+                    'software_type': 'malware'
+                }
+            }
+        }
+
         with responses.RequestsMock() as mock:
             mock.post(
-                     url=consts.ANALYZE_URL +
-                     f'/api/v2-0/files/{TEST_HASH}/code-reuse-by-code-block',
-                     status=HTTPStatus.OK,
-                     json=load_response_json('code_reuse_block_response.json'))
+                url=f'{self.full_url}/files/{test_hash}/code-reuse-by-code-block',
+                status=HTTPStatus.OK,
+                json={'result_url': result_url})
             mock.get(
-                     url=consts.ANALYZE_URL +
-                     '/api/v2-0/analyses/51ea282b-0542-4578-a44a-e60fdfb0d3ec/code-reuse-by-code-block',
-                     status=HTTPStatus.OK,
-                     json=load_response_json('code_reuse_block_report.json'))
+                url=f'{self.full_url}{result_url}',
+                status=HTTPStatus.OK,
+                json={'status': 'succeeded', 'result': result})
 
-            file_object = File(sha256=TEST_HASH)
-            report = file_object.get_code_blocks()
+            file_object = File(sha256=test_hash)
 
-            self.assertEqual(len(report), 2527)
-            self.assertEqual(len([x for x in report if x.is_common]), 1371)
-            self.assertEqual(len([x for x in report if x.software_type == 'malware']), 171)
+            # Act
+            operation = file_object.get_code_blocks(wait=True)
+
+        # Assert
+        self.assertEqual(operation.status, consts.AnalysisStatusCode.FINISHED)
+        self.assertIsNotNone(operation.result)
+        self.assertIn('blocks', operation.result)
+        self.assertEqual(len(operation.result['blocks']), 2)
+        self.assertEqual(operation.result['blocks']['101220']['software_type'], 'common')
+        self.assertEqual(operation.result['blocks']['101244']['software_type'], 'malware')
+
+    def test_get_code_blocks_for_file_path_raises_value_error(self):
+        # Arrange
+        file_obj = File(file_path='/path/to/file')
+
+        # Act + Assert
+        with self.assertRaises(ValueError):
+            file_obj.get_code_blocks()
+
+    def test_get_code_blocks_without_wait_returns_operation_in_progress(self):
+        # Arrange
+        test_hash = 'a' * 64
+        result_url = f'/analyses/test-id/code-reuse-by-code-block'
+
+        with responses.RequestsMock() as mock:
+            mock.post(
+                url=f'{self.full_url}/files/{test_hash}/code-reuse-by-code-block',
+                status=HTTPStatus.OK,
+                json={'result_url': result_url})
+
+            file_object = File(sha256=test_hash)
+
+            # Act
+            operation = file_object.get_code_blocks()
+
+        # Assert
+        self.assertEqual(operation.status, consts.AnalysisStatusCode.IN_PROGRESS)
+        self.assertIsNone(operation.result)
+
+    def test_get_code_blocks_raises_hash_does_not_exist_error_when_file_not_found(self):
+        # Arrange
+        test_hash = 'a' * 64
+
+        with responses.RequestsMock() as mock:
+            mock.post(
+                url=f'{self.full_url}/files/{test_hash}/code-reuse-by-code-block',
+                status=HTTPStatus.NOT_FOUND,
+                json={'error': 'File not found'})
+
+            file_object = File(sha256=test_hash)
+
+            # Act + Assert
+            with self.assertRaises(errors.HashDoesNotExistError):
+                file_object.get_code_blocks()
+
+    def test_get_code_blocks_raises_value_error_when_file_is_not_code_item(self):
+        # Arrange
+        test_hash = 'a' * 64
+
+        with responses.RequestsMock() as mock:
+            mock.post(
+                url=f'{self.full_url}/files/{test_hash}/code-reuse-by-code-block',
+                status=HTTPStatus.CONFLICT,
+                json={'error': 'Not a code item'})
+
+            file_object = File(sha256=test_hash)
+
+            # Act + Assert
+            with self.assertRaises(ValueError) as context:
+                file_object.get_code_blocks()
+            
+            self.assertEqual(str(context.exception), 'sha256 is not a code item')

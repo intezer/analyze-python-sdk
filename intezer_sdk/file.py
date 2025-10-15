@@ -1,17 +1,16 @@
+import datetime
 from dataclasses import dataclass
-from http import HTTPStatus
-from time import sleep
 from typing import IO
-from typing import Optional
 from typing import List
+from typing import Optional
 from typing import Union
 
+from intezer_sdk import _operation
 from intezer_sdk import consts
-from intezer_sdk import errors
+from intezer_sdk import operation
 from intezer_sdk._api import IntezerApi
-from intezer_sdk._api import raise_for_status
-from intezer_sdk.api import get_global_api
 from intezer_sdk.api import IntezerApiClient
+from intezer_sdk.api import get_global_api
 from intezer_sdk.index import Index
 
 
@@ -24,6 +23,7 @@ class Block:
     @property
     def is_common(self):
         return self.software_type == 'common'
+
 
 class File:
     """
@@ -49,6 +49,7 @@ class File:
         self._sha256 = sha256
         self._api = IntezerApi(api or get_global_api())
         self._index: Optional[Index] = None
+        self._operations = {}
 
     @property
     def sha256(self) -> str:
@@ -154,40 +155,25 @@ class File:
 
         self._api.download_file_by_sha256(self._sha256, path, output_stream, password_protection)
 
-    def _get_result_from_task(self, result_url: str, sleep_time: int):
-        response = self._api.api.request_with_refresh_expired_access_token(
-            'GET', result_url)
-
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError(response)
-        if response.status_code == HTTPStatus.CONFLICT:
-            raise ValueError('sha256 is not a code item')
-
-        while response.status_code == HTTPStatus.ACCEPTED:
-            sleep(sleep_time)
-            response = self._api.api.request_with_refresh_expired_access_token(
-                'GET', result_url)
-        raise_for_status(response)
-        return response.json()['result']
-
-    def get_code_blocks(self, interval: int = consts.CHECK_STATUS_INTERVAL) -> List[Block]:
-        '''
+    def get_code_blocks(self,
+                        wait: Union[bool, int] = False,
+                        wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
+        """
         Retrieves a report containing information about reused code blocks for the given SHA-256 hash.
 
-        :param interval: The interval to wait between checks.
+        :param wait: Should wait until the operation completes.
+        :param wait_timeout: Maximum duration to wait for operation completion.
 
         Returns:
-            List[Block]: A sorted list of Block objects representing the code blocks found in the analysis.
-        '''
+            operation.Operation: An operation object that will contain the code blocks result.
+        """
         if not self._sha256:
             raise ValueError('Code block report is only supported for sha256-based files')
-        
+
         result_url = self._api.get_code_reuse_by_code_block(self._sha256)
-        # This endpoint acts different. We don't get a status and instead have to use
-        # the HTTP status code to wait for the report.
-        result = self._get_result_from_task(result_url, interval)
-        blocks: list[Block] = []
-        for address, block in result['blocks'].items():
-            blocks.append(
-                Block(int(address), block['software_type'], block['code_reuse']))
-        return sorted(blocks, key=lambda b: b.address)
+        return _operation.handle_operation(self._operations,
+                                           self._api,
+                                           'Code blocks',
+                                           result_url,
+                                           wait,
+                                           wait_timeout)

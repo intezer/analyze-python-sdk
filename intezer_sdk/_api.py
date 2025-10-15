@@ -515,6 +515,11 @@ class IntezerApi:
             'POST', f'/files/{sha256}/code-reuse-by-code-block'
         )
 
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            raise errors.HashDoesNotExistError(response)
+        if response.status_code == HTTPStatus.CONFLICT:
+            raise ValueError('sha256 is not a code item')
+
         raise_for_status(response)
 
         return response.json()['result_url']
