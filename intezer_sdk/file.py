@@ -1,12 +1,28 @@
+import datetime
+from dataclasses import dataclass
 from typing import IO
+from typing import List
 from typing import Optional
 from typing import Union
 
+from intezer_sdk import _operation
 from intezer_sdk import consts
+from intezer_sdk import operation
 from intezer_sdk._api import IntezerApi
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import get_global_api
 from intezer_sdk.index import Index
+
+
+@dataclass
+class Block:
+    address: int
+    software_type: str
+    families: List[str]
+
+    @property
+    def is_common(self):
+        return self.software_type == 'common'
 
 
 class File:
@@ -33,6 +49,7 @@ class File:
         self._sha256 = sha256
         self._api = IntezerApi(api or get_global_api())
         self._index: Optional[Index] = None
+        self._operations = {}
 
     @property
     def sha256(self) -> str:
@@ -137,3 +154,26 @@ class File:
             raise ValueError('Download is only supported for sha256-based files')
 
         self._api.download_file_by_sha256(self._sha256, path, output_stream, password_protection)
+
+    def get_code_blocks(self,
+                        wait: Union[bool, int] = False,
+                        wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
+        """
+        Retrieves a report containing information about reused code blocks for the given SHA-256 hash.
+
+        :param wait: Should wait until the operation completes.
+        :param wait_timeout: Maximum duration to wait for operation completion.
+
+        Returns:
+            operation.Operation: An operation object that will contain the code blocks result.
+        """
+        if not self._sha256:
+            raise ValueError('Code block report is only supported for sha256-based files')
+
+        result_url = self._api.get_code_reuse_by_code_block(self._sha256)
+        return _operation.handle_operation(self._operations,
+                                           self._api,
+                                           'Code blocks',
+                                           result_url,
+                                           wait,
+                                           wait_timeout)
