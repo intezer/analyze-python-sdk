@@ -1,5 +1,5 @@
 from typing import Optional
-
+import datetime
 import requests
 
 
@@ -151,9 +151,7 @@ class InvalidAlertMappingError(AlertError):
 
 class AlertInProgressError(AlertError):
     def __init__(self, alert_id: str):
-        super().__init__(
-            f'The alert {alert_id} is being processed at the moment, please try again later'
-        )
+        super().__init__(f'The alert {alert_id} is being processed at the moment, please try again later')
 
 
 class AlertNotFoundError(AlertError):
@@ -182,12 +180,33 @@ class AnalysisSkippedByRuleError(ServerError):
 
 
 class AnalysisRateLimitError(ServerError):
-    def __init__(self, response: requests.Response):
-        super().__init__('Analysis rate limit reached', response)
-        self.limit = response.headers.get('X-RateLimit-Limit')
-        self.remaining = response.headers.get('X-RateLimit-Remaining')
-        self.reset_time_in_sec = response.headers.get('X-RateLimit-Reset')
-        self.retry_after = response.headers.get('Retry-After')
+    def __init__(self, response: requests.Response, message: str = 'Analysis rate limit reached'):
+        super().__init__(message, response)
+
+        self.limit: Optional[int] = self._parse_header(response.headers, 'X-RateLimit-Limit', int)
+        self.remaining: Optional[int] = self._parse_header(response.headers, 'X-RateLimit-Remaining', int)
+        self.reset_time_in_sec: Optional[float] = self._parse_header(response.headers, 'X-RateLimit-Reset', float)
+        self.retry_after: Optional[float] = self._parse_header(response.headers, 'Retry-After', float)
+
+        now = datetime.datetime.utcnow().timestamp()
+        if self.retry_after is not None:
+            remaining_time = self.retry_after
+        elif self.reset_time_in_sec is not None:
+            remaining_time = max(1.0, self.reset_time_in_sec - now)
+        else:
+            remaining_time = None
+
+        self.rate_limit_remaining_time_in_seconds = remaining_time
+
+    @staticmethod
+    def _parse_header(headers, name: str, cast_type):
+        value = headers.get(name)
+        if not value:
+            return None
+        try:
+            return cast_type(value)
+        except (ValueError, TypeError):
+            return value
 
 
 class IncidentNotFoundError(IntezerError):
