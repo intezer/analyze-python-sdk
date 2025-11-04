@@ -1,5 +1,5 @@
 from typing import Optional
-
+import datetime
 import requests
 
 
@@ -151,9 +151,7 @@ class InvalidAlertMappingError(AlertError):
 
 class AlertInProgressError(AlertError):
     def __init__(self, alert_id: str):
-        super().__init__(
-            f'The alert {alert_id} is being processed at the moment, please try again later'
-        )
+        super().__init__(f'The alert {alert_id} is being processed at the moment, please try again later')
 
 
 class AlertNotFoundError(AlertError):
@@ -182,12 +180,32 @@ class AnalysisSkippedByRuleError(ServerError):
 
 
 class AnalysisRateLimitError(ServerError):
-    def __init__(self, response: requests.Response):
-        super().__init__('Analysis rate limit reached', response)
+    def __init__(self, response: requests.Response, message: str = 'Analysis rate limit reached'):
+        super().__init__(message, response)
         self.limit = response.headers.get('X-RateLimit-Limit')
         self.remaining = response.headers.get('X-RateLimit-Remaining')
-        self.reset_time_in_sec = response.headers.get('X-RateLimit-Reset')
+        self.reset_time_in_sec = response.headers.get(
+            'X-RateLimit-Reset'
+        )  # Timestamp at which this rate limit will be reset
         self.retry_after = response.headers.get('Retry-After')
+
+        # Compute rate_limit_remaining_time_in_seconds (seconds to sleep)
+        now = datetime.datetime.utcnow().timestamp()
+        sleep_for = None
+
+        if self.retry_after:
+            try:
+                sleep_for = float(self.retry_after)
+            except (ValueError, TypeError):
+                pass
+        elif self.reset_time_in_sec:
+            try:
+                reset_time = float(self.reset_time_in_sec)
+                sleep_for = max(1, reset_time - now)
+            except (ValueError, TypeError):
+                pass
+
+        self.rate_limit_remaining_time_in_seconds = sleep_for
 
 
 class IncidentNotFoundError(IntezerError):
