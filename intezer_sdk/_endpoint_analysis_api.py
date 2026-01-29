@@ -105,7 +105,8 @@ class EndpointScanApi:
         return response.json()['result']
 
     def upload_collected_binary(self, file_path: str, collected_from: str):
-        file_data = open(file_path, 'rb').read()
+        with open(file_path, 'rb') as f:
+            file_data = f.read()
         compressed_data = gzip.compress(file_data, compresslevel=9)
         logger = logging.getLogger(__name__)
         # we have builtin retry for connection errors, but we want to retry on 500 errors as well
