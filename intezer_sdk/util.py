@@ -3,12 +3,8 @@ import email
 import email.parser
 import itertools
 import os
-from typing import BinaryIO
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
 from typing import Any
+from typing import BinaryIO
 
 from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.consts import ANALYZE_URL
@@ -36,7 +32,7 @@ def _get_title(short: bool) -> str:
 def get_analysis_summary_metadata(analysis: FileAnalysis,
                                   use_hash_link: bool = False,
                                   should_use_largest_families: bool = True,
-                                  should_include_related_samples: bool = True) -> Dict[str, any]:
+                                  should_include_related_samples: bool = True) -> dict[str, any]:
     result = analysis.result()
     verdict = result['verdict'].lower()
     sub_verdict = result['sub_verdict'].lower()
@@ -166,8 +162,8 @@ def get_analysis_summary(analysis: FileAnalysis,
 
 
 def get_analysis_family(analysis: FileAnalysis,
-                        software_type_priorities: List[str],
-                        should_use_largest_families: bool = True) -> Tuple[Optional[str], Optional[int]]:
+                        software_type_priorities: list[str],
+                        should_use_largest_families: bool = True) -> tuple[str | None, int | None]:
     result = analysis.result()
     family_name = result.get('family_name')
     if family_name:

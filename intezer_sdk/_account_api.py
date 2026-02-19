@@ -1,6 +1,4 @@
 from http import HTTPStatus
-from typing import List
-from typing import Optional
 
 from intezer_sdk import errors
 from intezer_sdk.api import IntezerApiClient
@@ -9,7 +7,7 @@ from intezer_sdk.api import raise_for_status
 
 
 class AccountApi:
-    def __init__(self, api: Optional[IntezerApiClient]):
+    def __init__(self, api: IntezerApiClient | None):
         self.api = api or get_global_api()
 
     def get_my_quota(self, raise_on_no_file_quota=False, raise_on_no_endpoint_quota=False) -> dict:
@@ -27,7 +25,7 @@ class AccountApi:
         raise_for_status(response)
         return response.json()['result']
 
-    def get_account(self, account_id: str) -> Optional[dict]:
+    def get_account(self, account_id: str) -> dict | None:
         response = self.api.request_with_refresh_expired_access_token('GET', f'/accounts/{account_id}')
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -35,7 +33,7 @@ class AccountApi:
         raise_for_status(response)
         return response.json()['result']
 
-    def get_organization_accounts(self) -> List[dict]:
+    def get_organization_accounts(self) -> list[dict]:
         response = self.api.request_with_refresh_expired_access_token('GET', f'/accounts')
         raise_for_status(response)
         return response.json()['result']

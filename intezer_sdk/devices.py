@@ -1,9 +1,6 @@
 import datetime
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Literal
-from typing import Optional
 
 from requests import HTTPError
 
@@ -20,25 +17,25 @@ INCIDENTS_SEARCH_REQUEST = '/devices/search'
 
 
 def generate_devices_history_search_filters(*,
-                                            device_ids: List[str] = None,
-                                            environments: List[str] = None,
+                                            device_ids: list[str] = None,
+                                            environments: list[str] = None,
                                             offset: int = None,
                                             limit: int = None,
                                             time_range_start: datetime.datetime = None,
                                             time_range_end: datetime.datetime = None,
-                                            external_ips: List[str] = None,
-                                            host_groups: List[str] = None,
-                                            host_tags: List[str] = None,
-                                            hostnames: List[str] = None,
-                                            managed_by: List[str] = None,
-                                            os_names: List[str] = None,
-                                            os_versions: List[str] = None,
-                                            private_ips: List[str] = None,
-                                            cloud_providers: List[str] = None,
-                                            host_types: List[str] = None,
-                                            last_login_users: List[str] = None,
-                                            site_names: List[str] = None,
-                                            include_raw_device: bool = None) -> Dict[str, Any]:
+                                            external_ips: list[str] = None,
+                                            host_groups: list[str] = None,
+                                            host_tags: list[str] = None,
+                                            hostnames: list[str] = None,
+                                            managed_by: list[str] = None,
+                                            os_names: list[str] = None,
+                                            os_versions: list[str] = None,
+                                            private_ips: list[str] = None,
+                                            cloud_providers: list[str] = None,
+                                            host_types: list[str] = None,
+                                            last_login_users: list[str] = None,
+                                            site_names: list[str] = None,
+                                            include_raw_device: bool = None) -> dict[str, Any]:
     filters = {}
     time_range_start_timestamp = int(time_range_start.timestamp()) if time_range_start else None
     time_range_end_timestamp = int(time_range_end.timestamp()) if time_range_end else None
@@ -69,24 +66,24 @@ def generate_devices_history_search_filters(*,
 def query_devices_history(*,
                           api: IntezerApiClient = None,
                           search_mode: Literal['and', 'or'] = 'and',
-                          device_ids: List[str] = None,
-                          environments: List[str] = None,
+                          device_ids: list[str] = None,
+                          environments: list[str] = None,
                           offset: int = None,
                           limit: int = None,
                           time_range_start: datetime.datetime = None,
                           time_range_end: datetime.datetime = None,
-                          external_ips: List[str] = None,
-                          host_groups: List[str] = None,
-                          host_tags: List[str] = None,
-                          hostnames: List[str] = None,
-                          managed_by: List[str] = None,
-                          os_names: List[str] = None,
-                          os_versions: List[str] = None,
-                          private_ips: List[str] = None,
-                          cloud_providers: List[str] = None,
-                          host_types: List[str] = None,
-                          last_login_users: List[str] = None,
-                          site_names: List[str] = None,
+                          external_ips: list[str] = None,
+                          host_groups: list[str] = None,
+                          host_tags: list[str] = None,
+                          hostnames: list[str] = None,
+                          managed_by: list[str] = None,
+                          os_names: list[str] = None,
+                          os_versions: list[str] = None,
+                          private_ips: list[str] = None,
+                          cloud_providers: list[str] = None,
+                          host_types: list[str] = None,
+                          last_login_users: list[str] = None,
+                          site_names: list[str] = None,
                           include_raw_device: bool = None) -> DevicesHistoryResult:
     """
     Query devices history with query param.
@@ -158,13 +155,13 @@ class Device:
     :vartype os_version: str
     """
 
-    def __init__(self, device_id: Optional[str] = None, api: IntezerApiClient = None):
+    def __init__(self, device_id: str | None = None, api: IntezerApiClient = None):
         """
         Create a new Device instance with the given device_id.
-        Please note that this does not query the Intezer Analyze API for the device data, but rather creates a Device
+        Please note that this does not query the Intezer Platform API for the device data, but rather creates a Device
         instance with the given device id.
 
-        If you wish to fetch the device data from the Intezer Analyze API, use the `from_id` class method.
+        If you wish to fetch the device data from the Intezer Platform API, use the `from_id` class method.
 
         :param device_id: The device id.
         :param api: The API connection to Intezer.
@@ -173,15 +170,15 @@ class Device:
 
         self._intezer_api_client = api
         self._api = IntezerApi(api or get_global_api())
-        self._result: Optional[Dict] = None
-        self.hostname: Optional[str] = None
-        self.host_type: Optional[str] = None
-        self.os_type: Optional[str] = None
-        self.os_version: Optional[str] = None
+        self._result: dict | None = None
+        self.hostname: str | None = None
+        self.host_type: str | None = None
+        self.os_type: str | None = None
+        self.os_version: str | None = None
 
     def fetch_info(self):
         """
-        Fetch the device data from the Intezer Analyze API.
+        Fetch the device data from the Intezer Platform API.
 
         :raises intezer_sdk.errors.DeviceNotFound: If the device was not found.
         """
@@ -200,9 +197,9 @@ class Device:
         self.os_type = self._result.get('os_type')
         self.os_version = self._result.get('os_version')
 
-    def result(self) -> Optional[dict]:
+    def result(self) -> dict | None:
         """
-        Get the raw device result, as received from Intezer Analyze API.
+        Get the raw device result, as received from Intezer Platform API.
 
         :raises intezer_sdk.errors.IncidentNotFound: If the device was not found.
         :return: The raw device dictionary.
@@ -212,7 +209,7 @@ class Device:
     @classmethod
     def from_id(cls, device_id: str, api: IntezerApiClient = None) -> 'Device':
         """
-        Create a new Device instance, and fetch the device data from the Intezer Analyze API.
+        Create a new Device instance, and fetch the device data from the Intezer Platform API.
 
         :param device_id: The device id.
         :param api: The API connection to Intezer.

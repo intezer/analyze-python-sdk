@@ -5,12 +5,6 @@ import time
 from io import BytesIO
 from typing import Any
 from typing import BinaryIO
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Type
-from typing import Union
 
 import requests
 
@@ -24,6 +18,7 @@ from intezer_sdk.analysis import UrlAnalysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import AlertStatusCode
 from intezer_sdk.endpoint_analysis import EndpointAnalysis
+from intezer_sdk.operation import Operation
 from intezer_sdk.util import add_filter
 
 DEFAULT_LIMIT = 100
@@ -31,9 +26,9 @@ DEFAULT_OFFSET = 0
 ALERTS_SEARCH_REQUEST = '/alerts/search'
 
 
-def get_alerts_by_alert_ids(alert_ids: List[str],
-                            environments: List[str] = None,
-                            api: IntezerApi = None) -> Tuple[int, List[dict]]:
+def get_alerts_by_alert_ids(alert_ids: list[str],
+                            environments: list[str] = None,
+                            api: IntezerApi = None) -> tuple[int, list[dict]]:
     """
     Get alerts by alert ids.
 
@@ -50,23 +45,23 @@ def get_alerts_by_alert_ids(alert_ids: List[str],
 def generate_alerts_history_search_filters(*,
                                            start_time: datetime.datetime = None,
                                            end_time: datetime.datetime = None,
-                                           environments: List[str] = None,
+                                           environments: list[str] = None,
                                            offset: int = None,
                                            limit: int = None,
-                                           sources: List[str] = None,
-                                           risk_categories: List[str] = None,
-                                           alert_verdicts: List[str] = None,
-                                           family_names: List[str] = None,
-                                           response_statuses: List[str] = None,
-                                           hostnames: List[str] = None,
+                                           sources: list[str] = None,
+                                           risk_categories: list[str] = None,
+                                           alert_verdicts: list[str] = None,
+                                           family_names: list[str] = None,
+                                           response_statuses: list[str] = None,
+                                           hostnames: list[str] = None,
                                            free_text: str = None,
                                            site_name: str = None,
                                            account_name: str = None,
-                                           exclude_alert_ids: List[str] = None,
-                                           usernames: List[str] = None,
-                                           file_hashes: List[str] = None,
-                                           process_commandlines: List[str] = None,
-                                           sort_by: List[str] = None,
+                                           exclude_alert_ids: list[str] = None,
+                                           usernames: list[str] = None,
+                                           file_hashes: list[str] = None,
+                                           process_commandlines: list[str] = None,
+                                           sort_by: list[str] = None,
                                            is_mitigated: bool = None,
                                            email_sender: str = None,
                                            email_recipient: str = None,
@@ -75,14 +70,14 @@ def generate_alerts_history_search_filters(*,
                                            email_bcc: str = None,
                                            email_message_id: str = None,
                                            email_reported_by: str = None,
-                                           device_private_ips: List[str] = None,
-                                           device_external_ips: List[str] = None,
-                                           device_ids: List[str] = None,
-                                           time_filter_type: List[str] = None,
+                                           device_private_ips: list[str] = None,
+                                           device_external_ips: list[str] = None,
+                                           device_ids: list[str] = None,
+                                           time_filter_type: list[str] = None,
                                            sort_order: str = None,
-                                           ips: List[str] = None,
-                                           domains: List[str] = None,
-                                           incident_ids: List[str] = None) -> Dict[str, Any]:
+                                           ips: list[str] = None,
+                                           domains: list[str] = None,
+                                           incident_ids: list[str] = None) -> dict[str, Any]:
     filters = {}
     if start_time:
         filters['start_time'] = start_time.timestamp()
@@ -129,23 +124,23 @@ def query_alerts_history(*,
                          start_time: datetime.datetime = None,
                          end_time: datetime.datetime = None,
                          api: IntezerApiClient = None,
-                         environments: List[str] = None,
+                         environments: list[str] = None,
                          offset: int = DEFAULT_OFFSET,
                          limit: int = DEFAULT_LIMIT,
-                         sources: List[str] = None,
-                         risk_categories: List[str] = None,
-                         alert_verdicts: List[str] = None,
-                         family_names: List[str] = None,
-                         response_statuses: List[str] = None,
-                         hostnames: List[str] = None,
+                         sources: list[str] = None,
+                         risk_categories: list[str] = None,
+                         alert_verdicts: list[str] = None,
+                         family_names: list[str] = None,
+                         response_statuses: list[str] = None,
+                         hostnames: list[str] = None,
                          free_text: str = None,
                          site_name: str = None,
                          account_name: str = None,
-                         exclude_alert_ids: List[str] = None,
-                         usernames: List[str] = None,
-                         file_hashes: List[str] = None,
-                         process_commandlines: List[str] = None,
-                         sort_by: List[str] = None,
+                         exclude_alert_ids: list[str] = None,
+                         usernames: list[str] = None,
+                         file_hashes: list[str] = None,
+                         process_commandlines: list[str] = None,
+                         sort_by: list[str] = None,
                          is_mitigated: bool = None,
                          email_sender: str = None,
                          email_recipient: str = None,
@@ -154,14 +149,14 @@ def query_alerts_history(*,
                          email_bcc: str = None,
                          email_message_id: str = None,
                          email_reported_by: str = None,
-                         device_private_ips: List[str] = None,
-                         device_external_ips: List[str] = None,
-                         device_ids: List[str] = None,
-                         time_filter_type: List[str] = None,
+                         device_private_ips: list[str] = None,
+                         device_external_ips: list[str] = None,
+                         device_ids: list[str] = None,
+                         time_filter_type: list[str] = None,
                          sort_order: str = None,
-                         ips: List[str] = None,
-                         domains: List[str] = None,
-                         incident_ids: List[str] = None) -> AlertsHistoryResult:
+                         ips: list[str] = None,
+                         domains: list[str] = None,
+                         incident_ids: list[str] = None) -> AlertsHistoryResult:
     """
     Query for alerts history with query param.
 
@@ -249,7 +244,7 @@ def query_alerts_history(*,
 
 class Alert:
     """
-    The Alert class is used to represent an alert from the Intezer Analyze API.
+    The Alert class is used to represent an alert from the Intezer Platform API.
 
     :ivar alert_id: The alert id.
     :vartype alert_id: str
@@ -268,13 +263,13 @@ class Alert:
     """
 
     def __init__(self,
-                 alert_id: Optional[str] = None,
-                 environment: Optional[str] = None,
-                 alert_stream: Optional[BinaryIO] = None,
+                 alert_id: str | None = None,
+                 environment: str | None = None,
+                 alert_stream: BinaryIO | None = None,
                  api: IntezerApiClient = None):
         """
         Create a new Alert instance with the given alert id.
-        Please note that this does not query the Intezer Analyze API for the alert data, but rather creates an Alert
+        Please note that this does not query the Intezer Platform API for the alert data, but rather creates an Alert
         instance with the given alert id.
 
         :param alert_id: The alert id.
@@ -298,14 +293,14 @@ class Alert:
         self.environment = environment
         self._intezer_api_client = api
         self._api = IntezerApi(api or get_global_api())
-        self._report: Optional[Dict] = None
-        self.source: Optional[str] = None
-        self.verdict: Optional[str] = None
-        self.family_name: Optional[str] = None
-        self.sender: Optional[str] = None
-        self.intezer_alert_url: Optional[str] = None
-        self.status: Optional[AlertStatusCode] = None
-        self.scans: List[Union[UrlAnalysis, FileAnalysis, EndpointAnalysis]] = []
+        self._report: dict | None = None
+        self.source: str | None = None
+        self.verdict: str | None = None
+        self.family_name: str | None = None
+        self.sender: str | None = None
+        self.intezer_alert_url: str | None = None
+        self.status: AlertStatusCode | None = None
+        self.scans: list[UrlAnalysis | FileAnalysis | EndpointAnalysis] = []
 
     @classmethod
     def _parse_alert_id_from_alert_stream(cls, alert_stream: BinaryIO) -> str:
@@ -316,7 +311,7 @@ class Alert:
 
     def check_status(self) -> AlertStatusCode:
         """
-        Refresh the alert data from the Intezer Analyze API - overrides current data (if exists) with the new data.
+        Refresh the alert data from the Intezer Platform API - overrides current data (if exists) with the new data.
 
         :return: The updated status of the alert.
 
@@ -348,7 +343,7 @@ class Alert:
 
     def result(self) -> dict:
         """
-        Get the raw alert result, as received from Intezer Analyze API.
+        Get the raw alert result, as received from Intezer Platform API.
 
         :raises intezer_sdk.errors.AlertNotFound: If the alert was not found.
         :raises intezer_sdk.errors.AlertInProgressError: If the alert is in progress
@@ -363,13 +358,13 @@ class Alert:
     @classmethod
     def from_id(cls,
                 alert_id: str,
-                environment: Optional[str] = None,
+                environment: str | None = None,
                 api: IntezerApiClient = None,
                 fetch_scans: bool = False,
                 wait: bool = False,
-                timeout: Optional[int] = None):
+                timeout: int | None = None):
         """
-        Create a new Alert instance, and fetch the alert data from the Intezer Analyze API.
+        Create a new Alert instance, and fetch the alert data from the Intezer Platform API.
 
         :param alert_id: The alert id.
         :param environment: The environment of the alert.
@@ -397,15 +392,15 @@ class Alert:
              alert_mapping: dict,
              source: str,
              api: IntezerApiClient = None,
-             environment: Optional[str] = None,
-             display_fields: Optional[List[str]] = None,
-             default_verdict: Optional[str] = None,
-             alert_sender: Optional[str] = None,
+             environment: str | None = None,
+             display_fields: list[str] | None = None,
+             default_verdict: str | None = None,
+             alert_sender: str | None = None,
              wait: bool = False,
-             timeout: Optional[int] = None,
+             timeout: int | None = None,
              ):
         """
-        Send an alert for further investigation using the Intezer Analyze API.
+        Send an alert for further investigation using the Intezer Platform API.
 
         :param raw_alert: The raw alert data.
         :param alert_mapping: The alert mapping - defines how to map the raw alert to get relevant information.
@@ -442,18 +437,18 @@ class Alert:
 
     @classmethod
     def send_phishing_email(cls,
-                            raw_email: Optional[BinaryIO] = None,
-                            api: Optional[IntezerApiClient] = None,
-                            environment: Optional[str] = None,
-                            default_verdict: Optional[str] = None,
-                            alert_sender: Optional[str] = None,
+                            raw_email: BinaryIO | None = None,
+                            api: IntezerApiClient | None = None,
+                            environment: str | None = None,
+                            default_verdict: str | None = None,
+                            alert_sender: str | None = None,
                             wait: bool = False,
-                            timeout: Optional[int] = None,
-                            email_path: Optional[str] = None,
-                            additional_info: Optional[dict] = None,
-                            zip_password: Optional[str] = None):
+                            timeout: int | None = None,
+                            email_path: str | None = None,
+                            additional_info: dict | None = None,
+                            zip_password: str | None = None):
         """
-        Send an alert for further investigation using the Intezer Analyze API.
+        Send an alert for further investigation using the Intezer Platform API.
         Should pass either raw_email or email_path.
 
         :param raw_email: The raw alert data.
@@ -502,7 +497,7 @@ class Alert:
     def wait_for_completion(self,
                             interval: int = None,
                             sleep_before_first_check=False,
-                            timeout: Optional[datetime.timedelta] = None):
+                            timeout: datetime.timedelta | None = None):
         """
         Blocks until the alert is finished processing, or until the timeout is reached.
 
@@ -539,7 +534,7 @@ class Alert:
 
         def _fetch_scan(scan_: dict,
                         scan_key: str,
-                        scan_object: Union[Type[FileAnalysis], Type[EndpointAnalysis], Type[UrlAnalysis]]):
+                        scan_object: type[FileAnalysis] | type[EndpointAnalysis] | type[UrlAnalysis]):
             current_analysis_id = scan_.get(scan_key, {}).get('analysis_id')
             if current_analysis_id:
                 self.scans.append(scan_object.from_analysis_id(analysis_id=current_analysis_id,
@@ -556,7 +551,7 @@ class Alert:
                 _fetch_scan(scan, 'url_analysis', UrlAnalysis)
 
     def get_raw_data(self,
-                     environment: Optional[str] = None,
+                     environment: str | None = None,
                      raw_data_type: str = 'raw_alert') -> dict:
         """
         Get raw alert data.
@@ -574,7 +569,7 @@ class Alert:
             raw_data_type=raw_data_type
         )
 
-    def notify(self) -> List[str]:
+    def notify(self) -> list[str]:
         """
         Send a notification for this alert.
 
@@ -590,3 +585,11 @@ class Alert:
 
         response = self._api.notify_alert(self.alert_id, self.environment)
         return response.get('notified_channels', [])
+
+    def delete(self, wait_for_completion: bool = False) -> Operation:
+        result = self._api.delete_alert(self.alert_id, self.environment)
+        operation = Operation(result['result_url'], 'Delete Alert', self._intezer_api_client)
+        if wait_for_completion:
+            operation.wait_for_completion()
+
+        return operation

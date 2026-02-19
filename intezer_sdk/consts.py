@@ -79,12 +79,13 @@ class IndexType(AutoName):
 
     @staticmethod
     def from_str(label):
-        if label in ('TRUSTED', 'trusted'):
-            return IndexType.TRUSTED
-        elif label in ('MALICIOUS', 'malicious'):
-            return IndexType.MALICIOUS
-        else:
-            raise NotImplementedError
+        match label:
+            case 'TRUSTED' | 'trusted':
+                return IndexType.TRUSTED
+            case 'MALICIOUS' | 'malicious':
+                return IndexType.MALICIOUS
+            case _:
+                raise NotImplementedError
 
 
 class CodeItemType(AutoName):

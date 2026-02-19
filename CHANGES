@@ -1,3 +1,10 @@
+1.25.0
+-------
+- Add support for Python 3.14
+- Drop support for Python 3.9
+- Modernize type annotations to use PEP 604 union syntax (X | Y)
+- Use structural pattern matching in status code handling
+
 1.24.1
 -------
 - Rate limit exception improvements

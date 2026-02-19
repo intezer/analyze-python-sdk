@@ -1,6 +1,3 @@
-from typing import List
-from typing import Dict
-from typing import Tuple
 
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
@@ -8,13 +5,13 @@ from intezer_sdk.history_results import HistoryResult
 
 
 class AnalysesHistoryResult(HistoryResult):
-    def __init__(self, request_url_path: str, api: IntezerApiClient, filters: Dict):
+    def __init__(self, request_url_path: str, api: IntezerApiClient, filters: dict):
         """
         Fetch all analyses history results from server.
         """
         super().__init__(request_url_path, api, filters)
 
-    def _fetch_history(self, url_path: str, data: Dict) -> Tuple[int, List]:
+    def _fetch_history(self, url_path: str, data: dict) -> tuple[int, list]:
         """
         Request from server filtered analyses history.
         :param url_path: Url to request new data from.

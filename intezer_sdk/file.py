@@ -1,9 +1,6 @@
 import datetime
 from dataclasses import dataclass
 from typing import IO
-from typing import List
-from typing import Optional
-from typing import Union
 
 from intezer_sdk import _operation
 from intezer_sdk import consts
@@ -18,7 +15,7 @@ from intezer_sdk.index import Index
 class Block:
     address: int
     software_type: str
-    families: List[str]
+    families: list[str]
 
     @property
     def is_common(self):
@@ -48,7 +45,7 @@ class File:
         self._file_path = file_path
         self._sha256 = sha256
         self._api = IntezerApi(api or get_global_api())
-        self._index: Optional[Index] = None
+        self._index: Index | None = None
         self._operations = {}
 
     @property
@@ -64,7 +61,7 @@ class File:
     def index(self,
               index_as: consts.IndexType,
               family_name: str = None,
-              wait: Union[bool, int] = False):
+              wait: bool | int = False):
         """
         Index the file.
 
@@ -85,7 +82,7 @@ class File:
 
         self._index.send(wait=wait)
 
-    def unset_indexing(self, wait: Union[bool, int] = False):
+    def unset_indexing(self, wait: bool | int = False):
         """
         Unset the indexing request (only works for sha256-based files).
 
@@ -156,8 +153,8 @@ class File:
         self._api.download_file_by_sha256(self._sha256, path, output_stream, password_protection)
 
     def get_code_blocks(self,
-                        wait: Union[bool, int] = False,
-                        wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
+                        wait: bool | int = False,
+                        wait_timeout: datetime.timedelta | None = None) -> operation.Operation:
         """
         Retrieves a report containing information about reused code blocks for the given SHA-256 hash.
 

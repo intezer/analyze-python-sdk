@@ -1,7 +1,5 @@
 import datetime
 from typing import Any
-from typing import Dict
-from typing import List
 
 from intezer_sdk.analyses_results import AnalysesHistoryResult
 from intezer_sdk.api import IntezerApiClient
@@ -19,10 +17,10 @@ def query_file_analyses_history(*,
                                 end_date: datetime.datetime,
                                 api: IntezerApiClient = None,
                                 aggregated_view: bool = None,
-                                sources: List[str] = None,
-                                verdicts: List[str] = None,
+                                sources: list[str] = None,
+                                verdicts: list[str] = None,
                                 file_hash: str = None,
-                                family_names: List[str] = None,
+                                family_names: list[str] = None,
                                 file_name: str = None,
                                 limit: int = DEFAULT_LIMIT,
                                 offset: int = DEFAULT_OFFSET
@@ -68,9 +66,9 @@ def query_endpoint_analyses_history(*,
                                     end_date: datetime.datetime,
                                     api: IntezerApiClient = None,
                                     aggregated_view: bool = None,
-                                    sources: List[str] = None,
-                                    verdicts: List[str] = None,
-                                    computer_names: List[str] = None,
+                                    sources: list[str] = None,
+                                    verdicts: list[str] = None,
+                                    computer_names: list[str] = None,
                                     limit: int = DEFAULT_LIMIT,
                                     offset: int = DEFAULT_OFFSET
                                     ) -> AnalysesHistoryResult:
@@ -107,9 +105,9 @@ def query_url_analyses_history(*,
                                start_date: datetime.datetime,
                                end_date: datetime.datetime,
                                api: IntezerApiClient = None,
-                               sources: List[str] = None,
-                               verdicts: List[str] = None,
-                               sub_verdicts: List[str] = None,
+                               sources: list[str] = None,
+                               verdicts: list[str] = None,
+                               sub_verdicts: list[str] = None,
                                did_download_file: bool = None,
                                submitted_url: str = None,
                                scanned_url: str = None,
@@ -170,12 +168,12 @@ def generate_analyses_history_filter(*,
                                      start_date: datetime.datetime,
                                      end_date: datetime.datetime,
                                      aggregated_view: bool = None,
-                                     sources: List[str] = None,
-                                     verdicts: List[str] = None,
-                                     computer_names: List[str] = None,
+                                     sources: list[str] = None,
+                                     verdicts: list[str] = None,
+                                     computer_names: list[str] = None,
                                      limit: int = DEFAULT_LIMIT,
                                      offset: int = DEFAULT_OFFSET
-                                     ) -> Dict[str, Any]:
+                                     ) -> dict[str, Any]:
     base_filter = {
         'start_date': int(start_date.timestamp()),
         'end_date': int(end_date.timestamp()),

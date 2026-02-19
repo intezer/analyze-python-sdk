@@ -1,13 +1,9 @@
 import io
 import os
 from http import HTTPStatus
-from typing import IO
 from typing import Any
 from typing import BinaryIO
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import IO
 
 from requests import Response
 
@@ -25,16 +21,16 @@ class IntezerApi:
         self.api = api
 
     @property
-    def on_premise_version(self) -> Optional[OnPremiseVersion]:
+    def on_premise_version(self) -> OnPremiseVersion | None:
         return self.api.on_premise_version
 
-    def _get_tenant_id(self) -> Optional[str]:
+    def _get_tenant_id(self) -> str | None:
         return os.environ.get('INTEZER_TENANT_ID')
 
     def analyze_by_hash(self,
                         file_hash: str,
-                        disable_dynamic_unpacking: Optional[bool],
-                        disable_static_unpacking: Optional[bool],
+                        disable_dynamic_unpacking: bool | None,
+                        disable_static_unpacking: bool | None,
                         sandbox_command_line_arguments: str = None,
                         sandbox_machine_type: str = None,
                         file_name: str = None,
@@ -126,7 +122,7 @@ class IntezerApi:
                         zip_password: str = None,
                         sandbox_command_line_arguments: str = None,
                         sandbox_machine_type: str = None,
-                        **additional_parameters) -> Optional[str]:
+                        **additional_parameters) -> str | None:
         """
         Analyze a file by its path or stream.
 
@@ -160,7 +156,7 @@ class IntezerApi:
                             file_hash: str,
                             private_only: bool = False,
                             composed_only: bool = None,
-                            **additional_parameters) -> Optional[dict]:
+                            **additional_parameters) -> dict | None:
         """
         Get the latest analysis of a file.
 
@@ -231,7 +227,7 @@ class IntezerApi:
 
         return response
 
-    def get_endpoint_sub_analyses(self, analyses_id: str, verdicts: Optional[List[str]]) -> List[dict]:
+    def get_endpoint_sub_analyses(self, analyses_id: str, verdicts: list[str] | None) -> list[dict]:
         """
         Get the sub analyses of an endpoint.
 
@@ -249,7 +245,7 @@ class IntezerApi:
 
         return response.json()['sub_analyses']
 
-    def create_endpoint_scan(self, scanner_info: dict) -> Dict[str, str]:
+    def create_endpoint_scan(self, scanner_info: dict) -> dict[str, str]:
         """
         Create an endpoint scan.
 
@@ -291,7 +287,7 @@ class IntezerApi:
         self._assert_alert_response_status_code(response)
         return response.json()['alert_id']
 
-    def get_iocs(self, analyses_id: str) -> Optional[dict]:
+    def get_iocs(self, analyses_id: str) -> dict | None:
         """
         Get the IOCs of an analysis.
 
@@ -303,7 +299,7 @@ class IntezerApi:
 
         return response.json()['result']
 
-    def get_detection_result_url(self, analyses_id: str) -> Optional[str]:
+    def get_detection_result_url(self, analyses_id: str) -> str | None:
         """
         Get the detection result url of an analysis.
 
@@ -317,7 +313,7 @@ class IntezerApi:
 
         return response.json()['result_url']
 
-    def get_dynamic_ttps(self, analyses_id: str) -> Optional[dict]:
+    def get_dynamic_ttps(self, analyses_id: str) -> dict | None:
         """
         Get the dynamic TTPs of an analysis.
 
@@ -331,7 +327,7 @@ class IntezerApi:
 
         return response.json()['result']
 
-    def get_family_info(self, family_id: str) -> Optional[dict]:
+    def get_family_info(self, family_id: str) -> dict | None:
         """
         Get the family info of a family.
 
@@ -345,7 +341,7 @@ class IntezerApi:
         raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
         return response.json()['result']
 
-    def get_family_by_name(self, family_name: str) -> Optional[Dict[str, Any]]:
+    def get_family_by_name(self, family_name: str) -> dict[str, Any] | None:
         """
         Get the family by name.
 
@@ -361,7 +357,7 @@ class IntezerApi:
         raise_for_status(response, allowed_statuses=[HTTPStatus.OK])
         return response.json()['result']
 
-    def get_sub_analyses_by_id(self, analysis_id: str) -> Optional[List[dict]]:
+    def get_sub_analyses_by_id(self, analysis_id: str) -> list[dict] | None:
         """
         Get the sub analyses of an analysis.
 
@@ -377,7 +373,7 @@ class IntezerApi:
 
     def get_sub_analysis_code_reuse_by_id(self,
                                           composed_analysis_id: str,
-                                          sub_analysis_id: str) -> Optional[dict]:
+                                          sub_analysis_id: str) -> dict | None:
         """
         Get the code reuse of a sub analysis.
 
@@ -680,7 +676,7 @@ class IntezerApi:
 
         return self._get_index_id_from_response(response)
 
-    def get_alerts_by_alert_ids(self, alert_ids: List[str], environments: List[str] = None) -> Dict:
+    def get_alerts_by_alert_ids(self, alert_ids: list[str], environments: list[str] = None) -> dict:
         """
         Get alerts by alert ids.
 
@@ -692,10 +688,10 @@ class IntezerApi:
         data = dict(alert_ids=alert_ids)
         if environments:
             data['environments'] = environments
-        
+
         if tenant_id := self._get_tenant_id():
             data['tenant_id'] = tenant_id
-            
+
         response = self.api.request_with_refresh_expired_access_token(method='GET',
                                                                       path='/alerts/search',
                                                                       data=data)
@@ -704,7 +700,7 @@ class IntezerApi:
 
         return data_response['result']
 
-    def get_alert_by_alert_id(self, alert_id: str, environment: Optional[str] = None) -> Tuple[Dict, str]:
+    def get_alert_by_alert_id(self, alert_id: str, environment: str | None = None) -> tuple[dict, str]:
         """
         Get alert by alert id.
 
@@ -715,10 +711,10 @@ class IntezerApi:
         data = dict(alert_id=alert_id)
         if environment:
             data['environment'] = environment
-            
+
         if tenant_id := self._get_tenant_id():
             data['tenant_id'] = tenant_id
-            
+
         response = self.api.request_with_refresh_expired_access_token(method='GET',
                                                                       path='/alerts/get-by-id',
                                                                       data=data)
@@ -727,7 +723,7 @@ class IntezerApi:
 
         return data_response['result'], data_response['status']
 
-    def get_incident_by_id(self, incident_id: str, environment: Optional[str] = None) -> dict:
+    def get_incident_by_id(self, incident_id: str, environment: str | None = None) -> dict:
         data = dict(incident_id=incident_id)
         if environment:
             data['environment'] = environment
@@ -749,7 +745,7 @@ class IntezerApi:
 
         return data_response['result']
 
-    def notify_alert(self, alert_id: str, environment: Optional[str] = None) -> dict:
+    def notify_alert(self, alert_id: str, environment: str | None = None) -> dict:
         """
         Send a notification for an alert.
 
@@ -759,14 +755,14 @@ class IntezerApi:
         :return: The notification response containing notified_channels.
         """
         self.assert_any_on_premise('notify-alert')
-        
+
         data = {}
         if environment:
             data['environment'] = environment
-            
+
         if tenant_id := self._get_tenant_id():
             data['tenant_id'] = tenant_id
-            
+
         response = self.api.request_with_refresh_expired_access_token(
             method='POST',
             path=f'/alerts/{alert_id}/notify',
@@ -787,7 +783,7 @@ class IntezerApi:
 
         return response
 
-    def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
+    def analyze_url(self, url: str, **additional_parameters) -> str | None:
         """
         Analyze a url.
 
@@ -819,7 +815,7 @@ class IntezerApi:
         """
 
         data = {'environment': environment, 'raw_data_type': raw_data_type}
-        
+
         if tenant_id := self._get_tenant_id():
             data['tenant_id'] = tenant_id
 
@@ -845,6 +841,14 @@ class IntezerApi:
         data = {'environment': environment, 'raw_data_type': raw_data_type}
         response = self.api.request_with_refresh_expired_access_token(
             method='GET', path=f'/incidents/{incident_id}/raw-data', data=data
+        )
+        raise_for_status(response)
+        return response.json()
+
+    def delete_alert(self, alert_id: str, environment:str) -> dict:
+        data = {'environment': environment}
+        response = self.api.request_with_refresh_expired_access_token(
+            method='DELETE', path=f'/alerts/{alert_id}', data=data
         )
         raise_for_status(response)
         return response.json()
@@ -883,35 +887,38 @@ class IntezerApi:
 
     @staticmethod
     def _assert_analysis_response_status_code(response: Response):
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise errors.HashDoesNotExistError(response)
-        elif response.status_code == HTTPStatus.REQUEST_ENTITY_TOO_LARGE:
-            raise errors.FileTooLargeError(response)
-        elif response.status_code == HTTPStatus.CONFLICT:
-            is_skipped_by_rule = response.json().get('result', {}).get('is_skipped_by_rule')
-            if is_skipped_by_rule:
-                raise errors.AnalysisSkippedByRuleError(response)
+        match response.status_code:
+            case HTTPStatus.NOT_FOUND:
+                raise errors.HashDoesNotExistError(response)
+            case HTTPStatus.REQUEST_ENTITY_TOO_LARGE:
+                raise errors.FileTooLargeError(response)
+            case HTTPStatus.CONFLICT:
+                is_skipped_by_rule = response.json().get('result', {}).get('is_skipped_by_rule')
+                if is_skipped_by_rule:
+                    raise errors.AnalysisSkippedByRuleError(response)
 
-            running_analysis_id = response.json().get('result', {}).get('analysis_id')
-            raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
-        elif response.status_code == HTTPStatus.FORBIDDEN:
-            raise errors.InsufficientQuotaError(response)
-        elif response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-            raise errors.AnalysisRateLimitError(response)
-        elif response.status_code == HTTPStatus.BAD_REQUEST:
-            data = response.json()
-            error = data.get('error', '')
-            details = data.get('details', '')
-            result = data.get('result', {})
-            if result.get('is_url_offline'):
-                raise errors.UrlOfflineError(response)
+                running_analysis_id = response.json().get('result', {}).get('analysis_id')
+                raise errors.AnalysisIsAlreadyRunningError(response, running_analysis_id)
+            case HTTPStatus.FORBIDDEN:
+                raise errors.InsufficientQuotaError(response)
+            case HTTPStatus.TOO_MANY_REQUESTS:
+                raise errors.AnalysisRateLimitError(response)
+            case HTTPStatus.BAD_REQUEST:
+                data = response.json()
+                error = data.get('error', '')
+                details = data.get('details', '')
+                result = data.get('result', {})
+                if result.get('is_url_offline'):
+                    raise errors.UrlOfflineError(response)
 
-            if error == 'Invalid url':
-                raise errors.InvalidUrlError(response)
+                if error == 'Invalid url':
+                    raise errors.InvalidUrlError(response)
 
-            raise errors.ServerError(f'Server returned bad request error: {error}, details: {details}', response)
-        elif response.status_code != HTTPStatus.CREATED:
-            raise errors.ServerError(f'Error in response status code:{response.status_code}', response)
+                raise errors.ServerError(f'Server returned bad request error: {error}, details: {details}', response)
+            case HTTPStatus.CREATED:
+                pass
+            case _:
+                raise errors.ServerError(f'Error in response status code:{response.status_code}', response)
 
     @staticmethod
     def _assert_index_response_status_code(response: Response):

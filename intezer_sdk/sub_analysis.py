@@ -1,8 +1,5 @@
 import datetime
 from typing import IO
-from typing import List
-from typing import Optional
-from typing import Union
 
 from intezer_sdk import _operation
 from intezer_sdk import errors
@@ -21,7 +18,7 @@ class SubAnalysis:
                  composed_analysis_id: str,
                  sha256: str,
                  source: str,
-                 extraction_info: Optional[dict],
+                 extraction_info: dict | None,
                  api: IntezerApiClient = None,
                  verdict=None):
         self.composed_analysis_id = composed_analysis_id
@@ -41,7 +38,7 @@ class SubAnalysis:
                          analysis_id: str,
                          composed_analysis_id: str,
                          lazy_load=True,
-                         api: IntezerApiClient = None) -> Optional['SubAnalysis']:
+                         api: IntezerApiClient = None) -> 'SubAnalysis | None':
         """
         class method that creates a new instance of the class by fetching the details of the sub-analysis from the Intezer API.
         If lazy_load is set to True, the details of the sub-analysis are not fetched immediately.
@@ -76,7 +73,7 @@ class SubAnalysis:
         return self._source
 
     @property
-    def extraction_info(self) -> Optional[dict]:
+    def extraction_info(self) -> dict | None:
         # Since extraction_info could be none, we check if the sha256 was provided, signaling we already fetch it
         if not self._sha256:
             self._init_sub_analysis_from_parent()
@@ -102,7 +99,7 @@ class SubAnalysis:
         return self._verdict
 
     @property
-    def indicators(self) -> List[dict]:
+    def indicators(self) -> list[dict]:
         if self._indicators is None:
             self._indicators = self.metadata.get('indicators', [])
 
@@ -122,8 +119,8 @@ class SubAnalysis:
 
     def find_related_files(self,
                            family_id: str,
-                           wait: Union[bool, int] = False,
-                           wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
+                           wait: bool | int = False,
+                           wait_timeout: datetime.timedelta | None = None) -> operation.Operation:
         result_url = self._api.get_sub_analysis_related_files_by_family_id(self.composed_analysis_id,
                                                                            self.analysis_id,
                                                                            family_id)
@@ -135,8 +132,8 @@ class SubAnalysis:
                                           wait_timeout)
 
     def get_account_related_samples(self,
-                                    wait: Union[bool, int] = False,
-                                    wait_timeout: Optional[datetime.timedelta] = None) -> Optional[operation.Operation]:
+                                    wait: bool | int = False,
+                                    wait_timeout: datetime.timedelta | None = None) -> operation.Operation | None:
         try:
             result_url = self._api.get_sub_analysis_account_related_samples_by_id(self.composed_analysis_id,
                                                                                   self.analysis_id)
@@ -151,20 +148,20 @@ class SubAnalysis:
                                           wait_timeout)
 
     def generate_vaccine(self,
-                         wait: Union[bool, int] = False,
-                         wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
+                         wait: bool | int = False,
+                         wait_timeout: datetime.timedelta | None = None) -> operation.Operation:
         result_url = self._api.generate_sub_analysis_vaccine_by_id(self.composed_analysis_id, self.analysis_id)
         return _operation.handle_operation(self._operations, self._api, 'Vaccine', result_url, wait, wait_timeout)
 
     def get_capabilities(self,
-                         wait: Union[bool, int] = False,
-                         wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
+                         wait: bool | int = False,
+                         wait_timeout: datetime.timedelta | None = None) -> operation.Operation:
         result_url = self._api.get_sub_analysis_capabilities_by_id(self.composed_analysis_id, self.analysis_id)
         return _operation.handle_operation(self._operations, self._api, 'Capabilities', result_url, wait, wait_timeout)
 
     def get_strings(self,
-                    wait: Union[bool, int] = False,
-                    wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
+                    wait: bool | int = False,
+                    wait_timeout: datetime.timedelta | None = None) -> operation.Operation:
         result = self._api.get_strings_by_id(self.composed_analysis_id, self.analysis_id)
         return _operation.handle_operation(self._operations,
                                           self._api,
@@ -174,8 +171,8 @@ class SubAnalysis:
 
     def get_string_related_samples(self,
                                    string_value: str,
-                                   wait: Union[bool, int] = False,
-                                   wait_timeout: Optional[datetime.timedelta] = None) -> operation.Operation:
+                                   wait: bool | int = False,
+                                   wait_timeout: datetime.timedelta | None = None) -> operation.Operation:
         result_url = self._api.get_string_related_samples_by_id(self.composed_analysis_id,
                                                                 self.analysis_id,
                                                                 string_value)

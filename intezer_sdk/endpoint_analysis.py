@@ -6,8 +6,6 @@ import logging
 import os
 import pathlib
 from typing import IO
-from typing import List
-from typing import Optional
 
 from intezer_sdk import consts
 from intezer_sdk._api import IntezerApi
@@ -58,10 +56,10 @@ class EndpointAnalysis(Analysis):
             self._fileless_dir = pathlib.Path(fileless_dir)
             self._memory_modules_dir = pathlib.Path(memory_modules_dir)
 
-        self._sub_analyses: List[SubAnalysis] = []
+        self._sub_analyses: list[SubAnalysis] = []
         self._scan_id = None
-        self.scan_start_time: Optional[datetime.datetime] = None
-        self.scan_end_time: Optional[datetime.datetime] = None
+        self.scan_start_time: datetime.datetime | None = None
+        self.scan_end_time: datetime.datetime | None = None
 
     @classmethod
     def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None):
@@ -94,7 +92,7 @@ class EndpointAnalysis(Analysis):
     def _query_status_from_api(self):
         return self._api.get_endpoint_analysis_response(self.analysis_id, False)
 
-    def get_sub_analyses(self, verdicts: List[str] = None) -> List[SubAnalysis]:
+    def get_sub_analyses(self, verdicts: list[str] = None) -> list[SubAnalysis]:
         """
         Get the sub_analyses of the current analysis.
         :param verdicts: A list of the verdicts to filter by.

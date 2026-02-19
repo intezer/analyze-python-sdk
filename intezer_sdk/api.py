@@ -4,11 +4,8 @@ import os
 from http import HTTPStatus
 from typing import Any
 from typing import BinaryIO
-from typing import Dict
 from typing import IO
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import TypeAlias
 
 import requests
 import requests.adapters
@@ -20,13 +17,13 @@ from intezer_sdk._util import deprecated
 from intezer_sdk.consts import IndexType
 from intezer_sdk.consts import OnPremiseVersion
 
-_global_api: Optional['IntezerApi'] = None
+_global_api: 'IntezerApi | None' = None
 
 logger = logging.getLogger(__name__)
 
 def raise_for_status(response: requests.Response,
-                     statuses_to_ignore: List[Union[HTTPStatus, int]] = None,
-                     allowed_statuses: List[Union[HTTPStatus, int]] = None):
+                     statuses_to_ignore: list[HTTPStatus | int] = None,
+                     allowed_statuses: list[HTTPStatus | int] = None):
     """Raises stored :class:`HTTPError`, if one occurred."""
     try:
         response_json = response.json()
@@ -74,19 +71,19 @@ class IntezerApiClient:
                  api_key: str = None,
                  base_url: str = None,
                  verify_ssl: bool = True,
-                 proxies: Dict[str, str] = None,
+                 proxies: dict[str, str] = None,
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None,
                  renew_token_window=20,
                  max_retry=3,
-                 timeout_in_seconds: Optional[int] = None):
+                 timeout_in_seconds: int | None = None):
         self.full_url = base_url + api_version
         self.base_url = base_url
         self._proxies = proxies
         self.api_key = api_key
         self._access_token = None
         self._renew_token_window = renew_token_window
-        self._token_expiration: Optional[int] = None
+        self._token_expiration: int | None = None
         self._session = None
         self.verify_ssl = verify_ssl
         self.on_premise_version = on_premise_version
@@ -106,7 +103,7 @@ class IntezerApiClient:
                  files: dict = None,
                  stream: bool = None,
                  base_url: str = None,
-                 timeout_in_seconds: Optional[int] = None) -> Response:
+                 timeout_in_seconds: int | None = None) -> Response:
         if not self._session:
             self._set_session()
 
@@ -122,7 +119,7 @@ class IntezerApiClient:
                 stream=stream,
                 timeout=timeout_in_seconds or self.timeout_in_seconds
             )
-        elif isinstance(data, (bytes, str)):
+        elif isinstance(data, bytes | str):
             response = self._session.request(
                 method,
                 url,
@@ -158,7 +155,7 @@ class IntezerApiClient:
                                                   files: dict = None,
                                                   stream: bool = None,
                                                   base_url: str = None,
-                                                  timeout_in_seconds: Optional[int] = None) -> Response:
+                                                  timeout_in_seconds: int | None = None) -> Response:
         for retry_count in range(self.max_retry):
             try:
                 self._refresh_token_if_needed()
@@ -234,8 +231,8 @@ class IntezerApi(IntezerApiClient):
                  verify_ssl: bool = True,
                  on_premise_version: OnPremiseVersion = None,
                  user_agent: str = None,
-                 proxies: Dict[str, str] = None,
-                 timeout_in_seconds: Optional[int] = None,
+                 proxies: dict[str, str] = None,
+                 timeout_in_seconds: int | None = None,
                  max_retry:int = 3):
         super().__init__(api_key=api_key,
                          base_url=base_url,
@@ -250,8 +247,8 @@ class IntezerApi(IntezerApiClient):
     @deprecated('IntezerApi is deprecated and will be removed in the future')
     def analyze_by_hash(self,
                         file_hash: str,
-                        disable_dynamic_unpacking: Optional[bool],
-                        disable_static_unpacking: Optional[bool],
+                        disable_dynamic_unpacking: bool | None,
+                        disable_static_unpacking: bool | None,
                         sandbox_command_line_arguments: str = None,
                         sandbox_machine_type: str = None,
                         **additional_parameters) -> str:
@@ -314,7 +311,7 @@ class IntezerApi(IntezerApiClient):
                         zip_password: str = None,
                         sandbox_command_line_arguments: str = None,
                         sandbox_machine_type: str = None,
-                        **additional_parameters) -> Optional[str]:
+                        **additional_parameters) -> str | None:
         options = self._param_initialize(disable_dynamic_unpacking=disable_dynamic_unpacking,
                                          disable_static_unpacking=disable_static_unpacking,
                                          code_item_type=code_item_type,
@@ -333,7 +330,7 @@ class IntezerApi(IntezerApiClient):
     def get_latest_analysis(self,
                             file_hash: str,
                             private_only: bool = False,
-                            **additional_parameters) -> Optional[dict]:
+                            **additional_parameters) -> dict | None:
 
         if not self.on_premise_version or self.on_premise_version > OnPremiseVersion.V21_11:
             options = {'should_get_only_private_analysis': private_only, **additional_parameters}
@@ -380,7 +377,7 @@ class IntezerApi(IntezerApiClient):
         return response
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def get_endpoint_sub_analyses(self, analyses_id: str, verdicts: Optional[List[str]]) -> List[dict]:
+    def get_endpoint_sub_analyses(self, analyses_id: str, verdicts: list[str] | None) -> list[dict]:
         data = dict(verdicts=verdicts) if verdicts is not None else None
         response = self.request_with_refresh_expired_access_token(path=f'/endpoint-analyses/{analyses_id}/sub-analyses',
                                                                   method='GET',
@@ -390,7 +387,7 @@ class IntezerApi(IntezerApiClient):
         return response.json()['sub_analyses']
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def create_endpoint_scan(self, scanner_info: dict) -> Dict[str, str]:
+    def create_endpoint_scan(self, scanner_info: dict) -> dict[str, str]:
         if not self.on_premise_version or self.on_premise_version > OnPremiseVersion.V22_10:
             scanner_info['scan_type'] = consts.SCAN_TYPE_OFFLINE_ENDPOINT_SCAN
         response = self.request_with_refresh_expired_access_token(path='scans',
@@ -402,7 +399,7 @@ class IntezerApi(IntezerApiClient):
         return response.json()['result']
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def get_iocs(self, analyses_id: str) -> Optional[dict]:
+    def get_iocs(self, analyses_id: str) -> dict | None:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/iocs'.format(analyses_id),
                                                                   method='GET')
         raise_for_status(response)
@@ -410,7 +407,7 @@ class IntezerApi(IntezerApiClient):
         return response.json()['result']
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def get_detection_result_url(self, analyses_id: str) -> Optional[str]:
+    def get_detection_result_url(self, analyses_id: str) -> str | None:
         response = self.request_with_refresh_expired_access_token(path=f'/analyses/{analyses_id}/detect',
                                                                   method='GET')
         if response.status_code == HTTPStatus.CONFLICT:
@@ -420,7 +417,7 @@ class IntezerApi(IntezerApiClient):
         return response.json()['result_url']
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def get_dynamic_ttps(self, analyses_id: str) -> Optional[dict]:
+    def get_dynamic_ttps(self, analyses_id: str) -> dict | None:
         self.assert_on_premise_above_v21_11()
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/dynamic-ttps'.format(analyses_id),
                                                                   method='GET')
@@ -429,7 +426,7 @@ class IntezerApi(IntezerApiClient):
         return response.json()['result']
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def get_family_info(self, family_id: str) -> Optional[dict]:
+    def get_family_info(self, family_id: str) -> dict | None:
         response = self.request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -438,7 +435,7 @@ class IntezerApi(IntezerApiClient):
         return response.json()['result']
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def get_family_by_name(self, family_name: str) -> Optional[Dict[str, Any]]:
+    def get_family_by_name(self, family_name: str) -> dict[str, Any] | None:
         response = self.request_with_refresh_expired_access_token('GET', '/families', {'family_name': family_name})
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -447,7 +444,7 @@ class IntezerApi(IntezerApiClient):
         return response.json()['result']
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def get_sub_analyses_by_id(self, analysis_id: str) -> Optional[List[dict]]:
+    def get_sub_analyses_by_id(self, analysis_id: str) -> list[dict] | None:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses'.format(analysis_id),
                                                                   method='GET')
         raise_for_status(response)
@@ -457,7 +454,7 @@ class IntezerApi(IntezerApiClient):
     @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_sub_analysis_code_reuse_by_id(self,
                                           composed_analysis_id: str,
-                                          sub_analysis_id: str) -> Optional[dict]:
+                                          sub_analysis_id: str) -> dict | None:
         response = self.request_with_refresh_expired_access_token(path='/analyses/{}/sub-analyses/{}/code-reuse'
                                                                   .format(composed_analysis_id, sub_analysis_id),
                                                                   method='GET')
@@ -631,7 +628,7 @@ class IntezerApi(IntezerApiClient):
         return response
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
-    def analyze_url(self, url: str, **additional_parameters) -> Optional[str]:
+    def analyze_url(self, url: str, **additional_parameters) -> str | None:
         self.assert_any_on_premise()
         response = self.request_with_refresh_expired_access_token(method='POST',
                                                                   path='/url',
@@ -728,7 +725,7 @@ def set_global_api(api_key: str = None,
                    base_url: str = None,
                    verify_ssl: bool = True,
                    on_premise_version: OnPremiseVersion = None,
-                   proxies: Dict[str, str] = None) -> IntezerApiClient:
+                   proxies: dict[str, str] = None) -> IntezerApiClient:
     """
     Configure the global api
 
@@ -763,4 +760,4 @@ def set_global_api_custom_instance(api: IntezerApiClient) -> IntezerApiClient:
     return _global_api
 
 
-IntezerProxy = IntezerApiClient
+IntezerProxy: TypeAlias = IntezerApiClient

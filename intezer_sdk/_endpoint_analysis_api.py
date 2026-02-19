@@ -1,6 +1,5 @@
 import gzip
 import logging
-from typing import List
 
 import requests
 
@@ -74,7 +73,7 @@ class EndpointScanApi:
                                                                   method='POST')
         raise_for_status(response)
 
-    def send_files_info(self, files_info: dict) -> List[str]:
+    def send_files_info(self, files_info: dict) -> list[str]:
         """
         :param files_info: endpoint scan files info
         :return: list of file hashes to upload
@@ -93,7 +92,7 @@ class EndpointScanApi:
 
         return files_to_upload
 
-    def send_memory_module_dump_info(self, memory_modules_info: dict) -> List[str]:
+    def send_memory_module_dump_info(self, memory_modules_info: dict) -> list[str]:
         """
         :param memory_modules_info: endpoint scan memory modules info
         :return: list of file hashes to upload

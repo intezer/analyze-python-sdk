@@ -1,14 +1,11 @@
 import abc
-from typing import List
 from typing import Any
-from typing import Dict
-from typing import Tuple
 
 from intezer_sdk.api import IntezerApiClient
 
 
 class HistoryResult:
-    def __init__(self, request_url_path: str, api: IntezerApiClient, filters: Dict):
+    def __init__(self, request_url_path: str, api: IntezerApiClient, filters: dict):
         """
         Fetch all history results from server.
 
@@ -17,9 +14,9 @@ class HistoryResult:
         :param filters: Filters requested from server.
         """
         self._api = api
-        self.filters: Dict = filters
-        self._pages: List[Any] = []
-        self._current_page: List[Any] = []
+        self.filters: dict = filters
+        self._pages: list[Any] = []
+        self._current_page: list[Any] = []
         self._request_url_path: str = request_url_path
         self._total_count: int = 0
         self._current_offset: int = 0
@@ -68,7 +65,7 @@ class HistoryResult:
 
 
     @abc.abstractmethod
-    def _fetch_history(self, url_path: str, data: Dict) -> Tuple[int, List]:
+    def _fetch_history(self, url_path: str, data: dict) -> tuple[int, list]:
         """
         Request from server filtered history results.
         :param url_path: Url to request new data from.

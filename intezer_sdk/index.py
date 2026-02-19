@@ -1,5 +1,4 @@
 import time
-import typing
 from http import HTTPStatus
 
 from intezer_sdk import consts
@@ -39,7 +38,7 @@ class Index:
         self._index_as = index_as
         self._family_name = family_name
 
-    def send(self, wait: typing.Union[bool, int] = False):
+    def send(self, wait: bool | int = False):
         """
         Send the index request.
 
@@ -61,7 +60,7 @@ class Index:
             else:
                 self.wait_for_completion(wait, sleep_before_first_check=True)
 
-    def unset_indexing(self, wait: typing.Union[bool, int] = False):
+    def unset_indexing(self, wait: bool | int = False):
         """
         Unset the indexing request.
 

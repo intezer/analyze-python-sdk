@@ -1,6 +1,4 @@
 import datetime
-from typing import List
-from typing import Optional
 
 from intezer_sdk import consts
 from intezer_sdk._account_api import AccountApi
@@ -21,23 +19,23 @@ class Account:
         return self.details['account_name']
 
     @property
-    def email(self) -> Optional[str]:
+    def email(self) -> str | None:
         return self.details['account_email'] if 'account_email' else None
 
     @property
-    def created_time(self) -> Optional[datetime.datetime]:
+    def created_time(self) -> datetime.datetime | None:
         if 'created_time' in self.details:
             return datetime.datetime.strptime(self.details['created_time'], consts.DEFAULT_DATE_FORMAT)
         return None
 
     @property
-    def last_sign_in_time(self) -> Optional[datetime.datetime]:
+    def last_sign_in_time(self) -> datetime.datetime | None:
         if 'last_sign_in_time' in self.details:
             return datetime.datetime.strptime(self.details['last_sign_in_time'], consts.DEFAULT_DATE_FORMAT)
         return None
 
     @classmethod
-    def from_account_id(cls, account_id: str, api: IntezerApiClient = None) -> Optional['Account']:
+    def from_account_id(cls, account_id: str, api: IntezerApiClient = None) -> 'Account | None':
         """
         Get details about an account.
 
@@ -62,7 +60,7 @@ class Account:
         return cls(account_details['account_id'], account_details, api=api)
 
     @classmethod
-    def get_organization_account(cls, api: IntezerApiClient = None) -> List['Account']:
+    def get_organization_account(cls, api: IntezerApiClient = None) -> list['Account']:
         """
         Get all accounts in the organization.
 
