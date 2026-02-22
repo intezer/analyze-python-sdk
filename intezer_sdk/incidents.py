@@ -1,8 +1,5 @@
 import datetime
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
 
 from requests import HTTPError
 
@@ -20,25 +17,25 @@ INCIDENTS_SEARCH_REQUEST = '/incidents/search'
 
 
 def generate_incidents_history_search_filters(*,
-                                              incident_ids: List[str] = None,
-                                              environments: List[str] = None,
+                                              incident_ids: list[str] = None,
+                                              environments: list[str] = None,
                                               offset: int = None,
                                               limit: int = None,
-                                              time_filter_type: List[str] = None,
+                                              time_filter_type: list[str] = None,
                                               start_time: datetime.datetime = None,
                                               end_time: datetime.datetime = None,
-                                              sources: List[str] = None,
-                                              senders: List[str] = None,
-                                              severities: List[str] = None,
-                                              statuses: List[str] = None,
-                                              names: List[str] = None,
-                                              related_alert_ids: List[str] = None,
-                                              risk_categories: List[str] = None,
-                                              response_statuses: List[str] = None,
+                                              sources: list[str] = None,
+                                              senders: list[str] = None,
+                                              severities: list[str] = None,
+                                              statuses: list[str] = None,
+                                              names: list[str] = None,
+                                              related_alert_ids: list[str] = None,
+                                              risk_categories: list[str] = None,
+                                              response_statuses: list[str] = None,
                                               free_text: str = None,
-                                              sort_by: List[str] = None,
+                                              sort_by: list[str] = None,
                                               sort_order: str = None,
-                                              include_raw_incident: bool = None) -> Dict[str, Any]:
+                                              include_raw_incident: bool = None) -> dict[str, Any]:
     filters = {}
     start_timestamp = int(start_time.timestamp()) if start_time else None
     end_timestamp = int(end_time.timestamp()) if end_time else None
@@ -68,23 +65,23 @@ def generate_incidents_history_search_filters(*,
 
 def query_incidents_history(*,
                             api: IntezerApiClient = None,
-                            incident_ids: List[str] = None,
-                            environments: List[str] = None,
+                            incident_ids: list[str] = None,
+                            environments: list[str] = None,
                             offset: int = DEFAULT_OFFSET,
                             limit: int = DEFAULT_LIMIT,
-                            time_filter_type: List[str] = None,
+                            time_filter_type: list[str] = None,
                             start_time: datetime.datetime = None,
                             end_time: datetime.datetime = None,
-                            sources: List[str] = None,
-                            senders: List[str] = None,
-                            severities: List[str] = None,
-                            statuses: List[str] = None,
-                            names: List[str] = None,
-                            related_alert_ids: List[str] = None,
-                            risk_categories: List[str] = None,
-                            response_statuses: List[str] = None,
+                            sources: list[str] = None,
+                            senders: list[str] = None,
+                            severities: list[str] = None,
+                            statuses: list[str] = None,
+                            names: list[str] = None,
+                            related_alert_ids: list[str] = None,
+                            risk_categories: list[str] = None,
+                            response_statuses: list[str] = None,
                             free_text: str = None,
-                            sort_by: List[str] = None,
+                            sort_by: list[str] = None,
                             sort_order: str = None,
                             include_raw_incident: bool = None) -> IncidentsHistoryResult:
     """
@@ -161,16 +158,16 @@ class Incident:
 
     def __init__(
         self,
-        incident_id: Optional[str] = None,
-        environment: Optional[str] = None,
+        incident_id: str | None = None,
+        environment: str | None = None,
         api: IntezerApiClient = None,
     ):
         """
         Create a new Incident instance with the given incident id.
-        Please note that this does not query the Intezer Analyze API for the incident data, but rather creates an Incident
+        Please note that this does not query the Intezer Platform API for the incident data, but rather creates an Incident
         instance with the given incident id.
 
-        If you wish to fetch the incident data from the Intezer Analyze API, use the `from_id` class method.
+        If you wish to fetch the incident data from the Intezer Platform API, use the `from_id` class method.
 
         :param incident_id: The incident id.
         :param environment: The environment of the incident.
@@ -180,17 +177,17 @@ class Incident:
         self.environment = environment
         self._intezer_api_client = api
         self._api = IntezerApi(api or get_global_api())
-        self._result: Optional[Dict] = None
-        self.name: Optional[str] = None
-        self.source: Optional[str] = None
-        self.sender: Optional[str] = None
-        self.risk_category: Optional[str] = None
-        self.risk_level: Optional[str] = None
-        self.intezer_incident_url: Optional[str] = None
+        self._result: dict | None = None
+        self.name: str | None = None
+        self.source: str | None = None
+        self.sender: str | None = None
+        self.risk_category: str | None = None
+        self.risk_level: str | None = None
+        self.intezer_incident_url: str | None = None
 
     def fetch_info(self):
         """
-        Fetch the incident data from the Intezer Analyze API.
+        Fetch the incident data from the Intezer Platform API.
 
         :raises intezer_sdk.errors.IncidentNotFound: If the incident was not found.
         """
@@ -205,10 +202,10 @@ class Incident:
             if e.response.status_code == 404:
                 raise errors.IncidentNotFoundError(self.incident_id)
             raise
-        
+
         if not self.environment:
             self.environment = self._result['environment']
-        
+
         self.source = self._result.get('source')
         self.sender = self._result.get('sender')
         self.name = self._result.get('incident', {}).get('name')
@@ -216,9 +213,9 @@ class Incident:
         self.risk_level = self._result.get('triage_summary', {}).get('risk_level')
         self.intezer_incident_url = self._result.get('intezer_incident_url')
 
-    def result(self) -> Optional[dict]:
+    def result(self) -> dict | None:
         """
-        Get the raw incident result, as received from Intezer Analyze API.
+        Get the raw incident result, as received from Intezer Platform API.
 
         :raises intezer_sdk.errors.IncidentNotFound: If the incident was not found.
         :return: The raw incident dictionary.
@@ -226,9 +223,9 @@ class Incident:
         return self._result
 
     @classmethod
-    def from_id(cls, incident_id: str, environment: Optional[str] = None, api: IntezerApiClient = None) -> 'Incident':
+    def from_id(cls, incident_id: str, environment: str | None = None, api: IntezerApiClient = None) -> 'Incident':
         """
-        Create a new Incident instance, and fetch the incident data from the Intezer Analyze API.
+        Create a new Incident instance, and fetch the incident data from the Intezer Platform API.
 
         :param incident_id: The incident id.
         :param environment: The environment of the incident.
@@ -241,7 +238,7 @@ class Incident:
         return new_incident
 
     def get_raw_data(
-        self, environment: Optional[str] = None, raw_data_type: str = 'raw_incident'
+        self, environment: str | None = None, raw_data_type: str = 'raw_incident'
     ) -> dict:
         """
         Get raw incident data.

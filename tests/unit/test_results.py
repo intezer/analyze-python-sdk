@@ -3,7 +3,6 @@ import copy
 import datetime
 import uuid
 from http import HTTPStatus
-from typing import List
 
 import responses
 
@@ -57,8 +56,8 @@ class ResultsSpec(BaseTest):
             self.expected_result = copy.deepcopy(self.normal_result['analyses'])
             yield mock
 
-    def assert_deep_lists_equal(self, lst1: List, lst2: List):
-        [self.assertDictEqual(x, y) for x, y in zip(lst1, lst2)]
+    def assert_deep_lists_equal(self, lst1: list, lst2: list):
+        [self.assertDictEqual(x, y) for x, y in zip(lst1, lst2, strict=True)]
 
     def test_current_page_never_none(self):
         """Current page will always hold a page even thought didn't ask to fetch analyse yet."""

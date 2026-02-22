@@ -1,8 +1,3 @@
-import typing
-
-from typing import Optional
-from typing import List
-
 from intezer_sdk import errors
 from intezer_sdk._api import IntezerApi
 from intezer_sdk.api import IntezerApiClient
@@ -26,7 +21,7 @@ class Family:
         return self is other or isinstance(other, Family) and self.family_id and other.family_id == self.family_id
 
     @classmethod
-    def from_family_id(cls, family_id: str, api: IntezerApiClient = None) -> typing.Optional['Family']:
+    def from_family_id(cls, family_id: str, api: IntezerApiClient = None) -> 'Family | None':
         try:
             family = cls(family_id, api=api)
             family.fetch_info()
@@ -58,14 +53,14 @@ class Family:
         return self._type
 
     @property
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         if self._tags is None:
             self.fetch_info()
 
         return self._tags
 
 
-def get_family_by_name(family_name: str, api: IntezerApiClient = None) -> typing.Optional[Family]:
+def get_family_by_name(family_name: str, api: IntezerApiClient = None) -> Family | None:
     family = IntezerApi(api or get_global_api()).get_family_by_name(family_name)
     if family:
         return Family(family['family_id'], family['family_name'])

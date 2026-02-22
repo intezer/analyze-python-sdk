@@ -28,7 +28,7 @@ setup(
     license='Apache 2.0',
     author='Intezer Labs ltd.',
     author_email='info@intezer.com',
-    description='Intezer Analyze SDK',
+    description='Intezer Platform SDK',
     long_description=long_description,
     long_description_content_type='text/markdown',
     install_requires=[
@@ -39,13 +39,13 @@ setup(
         'responses == 0.25.8',
         'pytest == 8.1.1'
     ],
-    python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,!=3.8.*',
+    python_requires='!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,!=3.8.*,!=3.9.*',
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
     ]
 )

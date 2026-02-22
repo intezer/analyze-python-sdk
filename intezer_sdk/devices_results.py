@@ -1,6 +1,4 @@
-from typing import List
 from typing import Literal
-from typing import Tuple
 
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
@@ -20,7 +18,7 @@ class DevicesHistoryResult(HistoryResult):
         super().__init__(request_url_path, api, filters)
         self._search_mode = search_mode
 
-    def _fetch_history(self, url_path: str, data: dict) -> Tuple[int, List]:
+    def _fetch_history(self, url_path: str, data: dict) -> tuple[int, list]:
         """
         Request devices from server according to filters.
         :param url_path: Url to request new data from.

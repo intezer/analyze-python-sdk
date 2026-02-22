@@ -1,18 +1,15 @@
 import datetime
-from typing import Dict
-from typing import Optional
-from typing import Union
 
 from intezer_sdk._api import IntezerApi
 from intezer_sdk.operation import Operation
 
 
-def handle_operation(operations: Dict[str, Operation],
+def handle_operation(operations: dict[str, Operation],
                      api: IntezerApi,
                      operation: str,
                      result_url: str,
-                     wait: Union[bool, int],
-                     wait_timeout: Optional[datetime.timedelta]) -> Operation:
+                     wait: bool | int,
+                     wait_timeout: datetime.timedelta | None) -> Operation:
     if operation not in operations:
         operations[operation] = Operation(result_url, operation, api=api.api)
 

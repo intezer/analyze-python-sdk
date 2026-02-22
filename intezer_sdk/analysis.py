@@ -5,9 +5,6 @@ import re
 from http import HTTPStatus
 from typing import BinaryIO
 from typing import IO
-from typing import Optional
-from typing import Union
-from typing import List
 
 import requests
 from requests import Response
@@ -91,7 +88,7 @@ class FileAnalysis(Analysis):
         self._zip_password = zip_password
         self._sandbox_command_line_arguments = sandbox_command_line_arguments
         self._sandbox_machine_type = sandbox_machine_type
-        self._sub_analyses: List[SubAnalysis] = None
+        self._sub_analyses: list[SubAnalysis] = None
         self._root_analysis = None
         self._iocs_report = None
         self._dynamic_ttps_report = None
@@ -108,7 +105,7 @@ class FileAnalysis(Analysis):
                 self._file_name = 'file.zip'
 
     @classmethod
-    def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> Optional['FileAnalysis']:
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> 'FileAnalysis | None':
         """
         Returns a FileAnalysis instance with the given analysis ID.
         Returns None when analysis doesn't exist.
@@ -127,7 +124,7 @@ class FileAnalysis(Analysis):
                                   private_only: bool = False,
                                   composed_only: bool = None,
                                   days_threshold_for_latest_analysis: int = None,
-                                  **additional_parameters) -> Optional['FileAnalysis']:
+                                  **additional_parameters) -> 'FileAnalysis | None':
         """
         Returns the latest FileAnalysis instance for the given file hash, with the option to filter by private analyses only.
         Returns None when analysis doesn't exist.
@@ -200,7 +197,7 @@ class FileAnalysis(Analysis):
             self._file_stream = None
             return analysis_id
 
-    def get_sub_analyses(self) -> List[SubAnalysis]:
+    def get_sub_analyses(self) -> list[SubAnalysis]:
         """
         Get a list of sub analysis.
 
@@ -266,8 +263,8 @@ class FileAnalysis(Analysis):
         return self._iocs_report
 
     def get_detections(self,
-                       wait: Union[bool, int] = False,
-                       wait_timeout: Optional[datetime.timedelta] = None) -> Optional[operation.Operation]:
+                       wait: bool | int = False,
+                       wait_timeout: datetime.timedelta | None = None) -> operation.Operation | None:
         """
         Gets the detection report :data:`intezer_sdk.operation.Operation` related to specific analysis.
 
@@ -324,17 +321,17 @@ class FileAnalysis(Analysis):
 def get_latest_analysis(file_hash: str,
                         api: IntezerApi = None,
                         private_only: bool = False,
-                        **additional_parameters) -> Optional[FileAnalysis]:
+                        **additional_parameters) -> FileAnalysis | None:
     return FileAnalysis.from_latest_hash_analysis(file_hash, api, private_only, **additional_parameters)
 
 
 @deprecated('This method is deprecated, use FileAnalysis.from_analysis_by_id instead to be explict')
-def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[FileAnalysis]:
+def get_file_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> FileAnalysis | None:
     return FileAnalysis.from_analysis_id(analysis_id, api)
 
 
 @deprecated('This method is deprecated, use FileAnalysis.from_analysis_by_id instead to be explict')
-def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[FileAnalysis]:
+def get_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> FileAnalysis | None:
     return get_file_analysis_by_id(analysis_id, api)
 
 def _clean_url(url: str) -> str:
@@ -361,7 +358,7 @@ class UrlAnalysis(Analysis):
     :vartype url: str
     """
 
-    def __init__(self, url: Optional[str] = None, api: IntezerApiClient = None):
+    def __init__(self, url: str | None = None, api: IntezerApiClient = None):
         """
          UrlAnalysis is a class for analyzing URLs.
 
@@ -371,10 +368,10 @@ class UrlAnalysis(Analysis):
         super().__init__(api)
         self._api.assert_any_on_premise('query-url-history')
         self.url = url
-        self._file_analysis: Optional[FileAnalysis] = None
+        self._file_analysis: FileAnalysis | None = None
 
     @classmethod
-    def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> Optional['UrlAnalysis']:
+    def from_analysis_id(cls, analysis_id: str, api: IntezerApiClient = None) -> 'UrlAnalysis | None':
         """
         Returns a UrlAnalysis instance with the given analysis ID.
         Returns None when analysis doesn't exist.
@@ -391,7 +388,7 @@ class UrlAnalysis(Analysis):
                              url: str,
                              days_threshold_for_latest_analysis: int = 1,
                              api: IntezerApiClient = None,
-                             exact_match: bool = False) -> Optional['UrlAnalysis']:
+                             exact_match: bool = False) -> 'UrlAnalysis | None':
         """
         Returns a UrlAnalysis instance with the latest analysis of the given URL.
         Note: For more control over the query (beyond the submitted URL), use the 'query_url_analyses_history' method.
@@ -448,7 +445,7 @@ class UrlAnalysis(Analysis):
         return self._api.analyze_url(self.url, **additional_parameters)
 
     @property
-    def downloaded_file_analysis(self) -> Optional[FileAnalysis]:
+    def downloaded_file_analysis(self) -> FileAnalysis | None:
         """
         In case the url downloaded a file, returns the downloaded file analysis, otherwise, None.
         """
@@ -469,5 +466,5 @@ class UrlAnalysis(Analysis):
 
 
 @deprecated('This method is deprecated, use UrlAnalysis.from_analysis_by_id instead to be explict')
-def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> Optional[UrlAnalysis]:
+def get_url_analysis_by_id(analysis_id: str, api: IntezerApi = None) -> UrlAnalysis | None:
     return UrlAnalysis.from_analysis_id(analysis_id, api)

@@ -3,9 +3,6 @@ import datetime
 import time
 from http import HTTPStatus
 from typing import Any
-from typing import Dict
-from typing import Optional
-from typing import Union
 
 from requests import Response
 
@@ -26,12 +23,12 @@ class Analysis(metaclass=abc.ABCMeta):
         """
         :param api: The API connection to Intezer.
         """
-        self.status: Optional[consts.AnalysisStatusCode] = None
-        self.analysis_id: Optional[str] = None
-        self.analysis_time: Optional[datetime.datetime] = None
+        self.status: consts.AnalysisStatusCode | None = None
+        self.analysis_id: str | None = None
+        self.analysis_time: datetime.datetime | None = None
         self._api = IntezerApi(api or get_global_api())
-        self._report: Optional[Dict[str, Any]] = None
-        self._send_time: Optional[datetime.datetime] = None
+        self._report: dict[str, Any] | None = None
+        self._send_time: datetime.datetime | None = None
 
     @abc.abstractmethod
     def _query_status_from_api(self) -> Response:
@@ -53,7 +50,7 @@ class Analysis(metaclass=abc.ABCMeta):
     def wait_for_completion(self,
                             interval: int = None,
                             sleep_before_first_check=False,
-                            timeout: Optional[datetime.timedelta] = None):
+                            timeout: datetime.timedelta | None = None):
         """
         Blocks until the analysis is completed.
 
@@ -88,7 +85,7 @@ class Analysis(metaclass=abc.ABCMeta):
                                consts.AnalysisStatusCode.QUEUED)
 
     @property
-    def running_analysis_duration(self) -> Optional[datetime.timedelta]:
+    def running_analysis_duration(self) -> datetime.timedelta | None:
         """
         Returns the time elapsed from the analysis sending and now. Returns None when the analysis finished.
 
@@ -171,8 +168,8 @@ class Analysis(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def send(self,
-             wait: Union[bool, int] = False,
-             wait_timeout: Optional[datetime.timedelta] = None,
+             wait: bool | int = False,
+             wait_timeout: datetime.timedelta | None = None,
              **additional_parameters) -> None:
         if self.analysis_id:
             raise errors.AnalysisHasAlreadyBeenSentError()

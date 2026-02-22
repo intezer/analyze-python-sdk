@@ -1,6 +1,5 @@
 import datetime
 import time
-from typing import Optional
 
 from intezer_sdk import errors
 from intezer_sdk._api import IntezerApi
@@ -57,7 +56,7 @@ class Operation:
     def wait_for_completion(self,
                             interval: int = None,
                             sleep_before_first_check=False,
-                            wait_timeout: Optional[datetime.timedelta] = None) -> None:
+                            wait_timeout: datetime.timedelta | None = None) -> None:
         """
         Blocks until the operation is completed.
         :param interval: The interval to wait between checks in seconds.

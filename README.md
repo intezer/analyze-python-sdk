@@ -2,7 +2,7 @@
 ![Build](https://github.com/intezer/analyze-python-sdk/actions/workflows/test.yml/badge.svg)
 # Intezer SDK
 
-The SDK wraps Intezer Analyze API 2.0 ([View full API documentation](https://analyze.intezer.com/api-docs.html))
+The SDK wraps Intezer Platform API 2.0 ([View full API documentation](https://analyze.intezer.com/api-docs.html))
 
 Currently, the following options are available in the SDK:
 
