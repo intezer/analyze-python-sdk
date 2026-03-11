@@ -43,7 +43,7 @@ class ApiSpec(unittest.TestCase):
             mock.add('POST',
                      url=f'{self.full_url}/some-route',
                      status=HTTPStatus.OK)
-            response = api.request_with_refresh_expired_access_token('POST', '/some-route')
+            response = api.request_with_refresh_expired_access_token(method='POST', path='/some-route')
             response.raise_for_status()
             time.sleep(0.2)
             mock.reset()
@@ -55,7 +55,7 @@ class ApiSpec(unittest.TestCase):
                      status=HTTPStatus.OK,
                      json={'result': 'access-token', 'expire_at': time.time()})
 
-            response = api.request_with_refresh_expired_access_token('POST', '/some-route')
+            response = api.request_with_refresh_expired_access_token(method='POST', path='/some-route')
             response.raise_for_status()
 
     def test_api_raise_insufficient_permissions_error_when_insufficient_permissions_received(self):
@@ -73,7 +73,7 @@ class ApiSpec(unittest.TestCase):
                      f'{self.full_url}/some-route',
                      status=HTTPStatus.FORBIDDEN,
                      json={'error': 'Insufficient Permissions'})
-            response = api.request_with_refresh_expired_access_token('GET', '/some-route')
+            response = api.request_with_refresh_expired_access_token(method='GET', path='/some-route')
 
             with self.assertRaises(errors.InsufficientPermissionsError):
                 raise_for_status(response)
@@ -94,7 +94,7 @@ class ApiSpec(unittest.TestCase):
                      url=f'{self.full_url}/get-access-token',
                      status=HTTPStatus.OK,
                      json={'result': 'access-token', 'expire_at': 2166920067})
-            response = api.request_with_refresh_expired_access_token('GET', '/some-route')
+            response = api.request_with_refresh_expired_access_token(method='GET', path='/some-route')
 
             with self.assertRaises(errors.InvalidApiKeyError):
                 raise_for_status(response)

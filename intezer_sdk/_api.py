@@ -56,7 +56,7 @@ class IntezerApi:
             data['file_name'] = file_name
 
         data['hash'] = file_hash
-        response = self.api.request_with_refresh_expired_access_token('POST', '/analyze-by-hash', data)
+        response = self.api.request_with_refresh_expired_access_token(method='POST', path='/analyze-by-hash', data=data)
         self._assert_analysis_response_status_code(response)
 
         return self._get_analysis_id_from_response(response)
@@ -92,7 +92,7 @@ class IntezerApi:
                                       **additional_parameters)
 
         data['download_url'] = download_url
-        response = self.api.request_with_refresh_expired_access_token('POST', '/analyze-by-url', data)
+        response = self.api.request_with_refresh_expired_access_token(method='POST', path='/analyze-by-url', data=data)
         self._assert_analysis_response_status_code(response)
 
         return self._get_analysis_id_from_response(response)
@@ -108,7 +108,7 @@ class IntezerApi:
         """
         file = {'file': (file_name, file_stream)}
 
-        response = self.api.request_with_refresh_expired_access_token('POST', '/analyze', options, files=file)
+        response = self.api.request_with_refresh_expired_access_token(method='POST', path='/analyze', data=options, files=file)
         self._assert_analysis_response_status_code(response)
         return self._get_analysis_id_from_response(response)
 
@@ -175,7 +175,7 @@ class IntezerApi:
                  self.api.on_premise_version > OnPremiseVersion.V22_10)):
             options['should_get_only_composed_analysis'] = composed_only
 
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/files/{file_hash}', options)
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/files/{file_hash}', data=options)
 
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
@@ -192,7 +192,7 @@ class IntezerApi:
         :param ignore_not_found: Whether to ignore not found errors.
         :return: The analysis response.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/analyses/{analyses_id}')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/analyses/{analyses_id}')
         self._assert_result_response(ignore_not_found, response)
 
         return response
@@ -209,7 +209,7 @@ class IntezerApi:
         :param ignore_not_found: Whether to ignore not found errors.
         :return: The analysis response.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/url/{analyses_id}')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/url/{analyses_id}')
         self._assert_result_response(ignore_not_found, response)
 
         return response
@@ -222,7 +222,7 @@ class IntezerApi:
         :param ignore_not_found: Whether to ignore not found errors.
         :return: The analysis response.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/endpoint-analyses/{analyses_id}')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/endpoint-analyses/{analyses_id}')
         self._assert_result_response(ignore_not_found, response)
 
         return response
@@ -237,9 +237,9 @@ class IntezerApi:
         """
         data = dict(verdicts=verdicts) if verdicts is not None else None
         response = self.api.request_with_refresh_expired_access_token(
-            'GET',
-            f'/endpoint-analyses/{analyses_id}/sub-analyses',
-            data
+            method='GET',
+            path=f'/endpoint-analyses/{analyses_id}/sub-analyses',
+            data=data
         )
         self._assert_result_response(False, response)
 
@@ -254,9 +254,9 @@ class IntezerApi:
         """
         if not self.api.on_premise_version or self.api.on_premise_version > OnPremiseVersion.V22_10:
             scanner_info['scan_type'] = consts.SCAN_TYPE_OFFLINE_ENDPOINT_SCAN
-        response = self.api.request_with_refresh_expired_access_token('POST',
-                                                                      'scans',
-                                                                      scanner_info,
+        response = self.api.request_with_refresh_expired_access_token(method='POST',
+                                                                      path='scans',
+                                                                      data=scanner_info,
                                                                       base_url=self.api.base_url)
 
         raise_for_status(response)
@@ -294,7 +294,7 @@ class IntezerApi:
         :param analyses_id: The id of the analysis to get the IOCs of.
         :return: The IOCs.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/analyses/{analyses_id}/iocs')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/analyses/{analyses_id}/iocs')
         raise_for_status(response)
 
         return response.json()['result']
@@ -306,7 +306,7 @@ class IntezerApi:
         :param analyses_id: The id of the analysis to get the detection result url of.
         :return: The detection result url.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/analyses/{analyses_id}/detect')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/analyses/{analyses_id}/detect')
         if response.status_code == HTTPStatus.CONFLICT:
             return None
         raise_for_status(response)
@@ -321,8 +321,8 @@ class IntezerApi:
         :return: The dynamic TTPs.
         """
         self.assert_on_premise_above_v21_11()
-        response = self.api.request_with_refresh_expired_access_token('GET',
-                                                                      f'/analyses/{analyses_id}/dynamic-ttps')
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path=f'/analyses/{analyses_id}/dynamic-ttps')
         raise_for_status(response)
 
         return response.json()['result']
@@ -334,7 +334,7 @@ class IntezerApi:
         :param family_id: The id of the family to get the info of.
         :return: The family info.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/families/{family_id}/info')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/families/{family_id}/info')
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
@@ -348,9 +348,9 @@ class IntezerApi:
         :param family_name: The name of the family to get.
         :return: The family.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET',
-                                                                      '/families',
-                                                                      {'family_name': family_name})
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path='/families',
+                                                                      data={'family_name': family_name})
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
@@ -365,7 +365,7 @@ class IntezerApi:
         :return: The sub analyses.
         """
         response = self.api.request_with_refresh_expired_access_token(
-            'GET', f'/analyses/{analysis_id}/sub-analyses'
+            method='GET', path=f'/analyses/{analysis_id}/sub-analyses'
         )
         raise_for_status(response)
 
@@ -382,7 +382,7 @@ class IntezerApi:
         :return: The code reuse sub analysis.
         """
         response = self.api.request_with_refresh_expired_access_token(
-            'GET', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/code-reuse',
+            method='GET', path=f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/code-reuse',
         )
 
         if response.status_code == HTTPStatus.CONFLICT:
@@ -401,7 +401,7 @@ class IntezerApi:
         :return: The metadata of the sub analysis.
         """
         response = self.api.request_with_refresh_expired_access_token(
-            'GET', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/metadata'
+            method='GET', path=f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/metadata'
         )
         raise_for_status(response)
 
@@ -420,8 +420,8 @@ class IntezerApi:
         :return: The related files of the sub analysis.
         """
         response = self.api.request_with_refresh_expired_access_token(
-            'POST',
-            f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/code-reuse/families/{family_id}/find-related-files'
+            method='POST',
+            path=f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/code-reuse/families/{family_id}/find-related-files'
         )
 
         raise_for_status(response)
@@ -437,7 +437,7 @@ class IntezerApi:
         :return: The account related samples of the sub analysis.
         """
         response = self.api.request_with_refresh_expired_access_token(
-            'POST', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/get-account-related-samples'
+            method='POST', path=f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/get-account-related-samples'
         )
 
         raise_for_status(response)
@@ -454,7 +454,7 @@ class IntezerApi:
         """
         self.assert_on_premise_above_v21_11()
         response = self.api.request_with_refresh_expired_access_token(
-            'POST', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/capabilities',
+            method='POST', path=f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/capabilities',
         )
 
         raise_for_status(response)
@@ -470,7 +470,7 @@ class IntezerApi:
         :return: The vaccine of the sub analysis.
         """
         response = self.api.request_with_refresh_expired_access_token(
-            'POST', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/generate-vaccine')
+            method='POST', path=f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/generate-vaccine')
 
         raise_for_status(response)
 
@@ -485,7 +485,7 @@ class IntezerApi:
         :return: The strings of the sub analysis.
         """
         response = self.api.request_with_refresh_expired_access_token(
-            'POST', f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/strings'
+            method='POST', path=f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/strings'
         )
 
         raise_for_status(response)
@@ -497,9 +497,9 @@ class IntezerApi:
                                          sub_analysis_id: str,
                                          string_value: str) -> str:
         response = self.api.request_with_refresh_expired_access_token(
-            'POST',
-            f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/string-related-samples',
-            {'string_value': string_value}
+            method='POST',
+            path=f'/analyses/{composed_analysis_id}/sub-analyses/{sub_analysis_id}/string-related-samples',
+            data={'string_value': string_value}
         )
 
         raise_for_status(response)
@@ -508,7 +508,7 @@ class IntezerApi:
 
     def get_code_reuse_by_code_block(self, sha256: str):
         response = self.api.request_with_refresh_expired_access_token(
-            'POST', f'/files/{sha256}/code-reuse-by-code-block'
+            method='POST', path=f'/files/{sha256}/code-reuse-by-code-block'
         )
 
         if response.status_code == HTTPStatus.NOT_FOUND:
@@ -527,7 +527,7 @@ class IntezerApi:
         :param url: The url to get the result of.
         :return: The response data from the url.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET', url)
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=url)
 
         raise_for_status(response)
         result = response.json()
@@ -564,8 +564,8 @@ class IntezerApi:
 
         json_data = {'password_protected': password_protected} if password_protected else None
 
-        response = self.api.request_with_refresh_expired_access_token('GET',
-                                                                      f'/files/{sha256}/download',
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path=f'/files/{sha256}/download',
                                                                       stream=bool(path),
                                                                       data=json_data)
 
@@ -635,7 +635,7 @@ class IntezerApi:
         if family_name:
             data['family_name'] = family_name
 
-        response = self.api.request_with_refresh_expired_access_token('POST', f'/files/{sha256}/index', data)
+        response = self.api.request_with_refresh_expired_access_token(method='POST', path=f'/files/{sha256}/index', data=data)
         self._assert_index_response_status_code(response)
 
         return self._get_index_id_from_response(response)
@@ -646,7 +646,7 @@ class IntezerApi:
 
         :param sha256: The sha256 hash of the file
         """
-        response = self.api.request_with_refresh_expired_access_token('DELETE', f'/files/{sha256}/index')
+        response = self.api.request_with_refresh_expired_access_token(method='DELETE', path=f'/files/{sha256}/index')
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise errors.HashDoesNotExistError(response)
         raise_for_status(response)
@@ -667,9 +667,9 @@ class IntezerApi:
         with open(file_path, 'rb') as file_to_upload:
             file = {'file': (os.path.basename(file_path), file_to_upload)}
 
-            response = self.api.request_with_refresh_expired_access_token('POST',
-                                                                          '/files/index',
-                                                                          data,
+            response = self.api.request_with_refresh_expired_access_token(method='POST',
+                                                                          path='/files/index',
+                                                                          data=data,
                                                                           files=file)
 
         self._assert_index_response_status_code(response)
@@ -778,7 +778,7 @@ class IntezerApi:
         :param index_id: The id of the index.
         :return: The index response.
         """
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/files/index/{index_id}')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/files/index/{index_id}')
         raise_for_status(response)
 
         return response
@@ -792,9 +792,9 @@ class IntezerApi:
         :return: The analysis id.
         """
         self.assert_any_on_premise('analyze-url')
-        response = self.api.request_with_refresh_expired_access_token('POST',
-                                                                      '/url',
-                                                                      dict(url=url, **additional_parameters))
+        response = self.api.request_with_refresh_expired_access_token(method='POST',
+                                                                      path='/url',
+                                                                      data=dict(url=url, **additional_parameters))
         self._assert_analysis_response_status_code(response)
 
         return self._get_analysis_id_from_response(response)

@@ -96,9 +96,11 @@ class IntezerApiClient:
         self.user_agent = user_agent
 
     def _request(self,
+                 *,
                  method: str,
                  path: str,
                  data: dict = None,
+                 params: dict = None,
                  headers: dict = None,
                  files: dict = None,
                  stream: bool = None,
@@ -115,6 +117,7 @@ class IntezerApiClient:
                 url,
                 files=files,
                 data=data or {},
+                params=params,
                 headers=headers or {},
                 stream=stream,
                 timeout=timeout_in_seconds or self.timeout_in_seconds
@@ -125,6 +128,7 @@ class IntezerApiClient:
                 url,
                 files=files,
                 data=data,
+                params=params,
                 headers=headers or {},
                 stream=stream,
                 timeout=timeout_in_seconds or self.timeout_in_seconds
@@ -134,6 +138,7 @@ class IntezerApiClient:
                 method,
                 url,
                 json=data or {},
+                params=params,
                 headers=headers,
                 stream=stream,
                 timeout=timeout_in_seconds or self.timeout_in_seconds
@@ -148,9 +153,11 @@ class IntezerApiClient:
                 self._set_access_token()
 
     def request_with_refresh_expired_access_token(self,
+                                                  *,
                                                   method: str,
                                                   path: str,
                                                   data: dict = None,
+                                                  params: dict = None,
                                                   headers: dict = None,
                                                   files: dict = None,
                                                   stream: bool = None,
@@ -159,11 +166,11 @@ class IntezerApiClient:
         for retry_count in range(self.max_retry):
             try:
                 self._refresh_token_if_needed()
-                response = self._request(method, path, data, headers, files, stream, base_url, timeout_in_seconds)
+                response = self._request(method=method, path=path, data=data, params=params, headers=headers, files=files, stream=stream, base_url=base_url, timeout_in_seconds=timeout_in_seconds)
 
                 if response.status_code == HTTPStatus.UNAUTHORIZED:
                     self._set_access_token()
-                    response = self._request(method, path, data, headers, files, stream, base_url, timeout_in_seconds)
+                    response = self._request(method=method, path=path, data=data, params=params, headers=headers, files=files, stream=stream, base_url=base_url, timeout_in_seconds=timeout_in_seconds)
 
                 return response
             except ConnectionError:
@@ -427,7 +434,7 @@ class IntezerApi(IntezerApiClient):
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_family_info(self, family_id: str) -> dict | None:
-        response = self.request_with_refresh_expired_access_token('GET', '/families/{}/info'.format(family_id))
+        response = self.request_with_refresh_expired_access_token(method='GET', path='/families/{}/info'.format(family_id))
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
@@ -436,7 +443,7 @@ class IntezerApi(IntezerApiClient):
 
     @deprecated('IntezerApi is deprecated and will be removed in the future')
     def get_family_by_name(self, family_name: str) -> dict[str, Any] | None:
-        response = self.request_with_refresh_expired_access_token('GET', '/families', {'family_name': family_name})
+        response = self.request_with_refresh_expired_access_token(method='GET', path='/families', data={'family_name': family_name})
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
