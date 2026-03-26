@@ -11,7 +11,7 @@ class AccountApi:
         self.api = api or get_global_api()
 
     def get_my_quota(self, raise_on_no_file_quota=False, raise_on_no_endpoint_quota=False) -> dict:
-        response = self.api.request_with_refresh_expired_access_token('GET', '/current-quota-usage')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path='/current-quota-usage')
         raise_for_status(response)
         result = response.json()['result']
         if raise_on_no_file_quota and result['file_scans']['quota'] - result['file_scans']['usage'] <= 0:
@@ -21,12 +21,12 @@ class AccountApi:
         return result
 
     def get_my_account(self) -> dict:
-        response = self.api.request_with_refresh_expired_access_token('GET', '/accounts/me')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path='/accounts/me')
         raise_for_status(response)
         return response.json()['result']
 
     def get_account(self, account_id: str) -> dict | None:
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/accounts/{account_id}')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path=f'/accounts/{account_id}')
         if response.status_code == HTTPStatus.NOT_FOUND:
             return None
 
@@ -34,6 +34,6 @@ class AccountApi:
         return response.json()['result']
 
     def get_organization_accounts(self) -> list[dict]:
-        response = self.api.request_with_refresh_expired_access_token('GET', f'/accounts')
+        response = self.api.request_with_refresh_expired_access_token(method='GET', path='/accounts')
         raise_for_status(response)
         return response.json()['result']

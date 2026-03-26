@@ -17,8 +17,8 @@ class EndpointScanApi:
         self.base_url = f"{api.base_url.replace('/api/', '')}/scans/scans/{scan_id}"
         self.max_upload_retries = max_upload_retries
 
-    def request_with_refresh_expired_access_token(self, *args, **kwargs):
-        return self.api.request_with_refresh_expired_access_token(base_url=self.base_url, *args, **kwargs)
+    def request_with_refresh_expired_access_token(self, **kwargs):
+        return self.api.request_with_refresh_expired_access_token(base_url=self.base_url, **kwargs)
 
     def send_host_info(self, host_info: dict):
         response = self.request_with_refresh_expired_access_token(path='/host-info',
