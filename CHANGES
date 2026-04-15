@@ -1,3 +1,7 @@
+1.26.0
+-------
+- Raise AlertConflictError when fetching an alert by id without an environment returns 409 (previously masked as AlertNotFoundError)
+
 1.25.1
 -------
 - Make request method kwargs only and add params

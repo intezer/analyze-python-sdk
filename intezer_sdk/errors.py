@@ -159,6 +159,13 @@ class AlertNotFoundError(AlertError):
         super().__init__(f'The given alert does not exist - {alert_id}')
 
 
+class AlertConflictError(AlertError):
+    def __init__(self, alert_id: str):
+        super().__init__(
+            f'The alert {alert_id} is ambiguous across environments - please specify an environment'
+        )
+
+
 class InvalidAlertArgumentError(AlertError):
     def __init__(self, message: str):
         super().__init__(message)

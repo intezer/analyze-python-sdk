@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import json
 import time
+from http import HTTPStatus
 from io import BytesIO
 from typing import Any
 from typing import BinaryIO
@@ -314,11 +315,12 @@ class Alert:
         Refresh the alert data from the Intezer Platform API - overrides current data (if exists) with the new data.
 
         :return: The updated status of the alert.
-
         """
         try:
             alert, status = self._api.get_alert_by_alert_id(alert_id=self.alert_id, environment=self.environment)
-        except requests.HTTPError:
+        except requests.HTTPError as e:
+            if e.response is not None and e.response.status_code == HTTPStatus.CONFLICT:
+                raise errors.AlertConflictError(self.alert_id)
             self.status = AlertStatusCode.NOT_FOUND
             raise errors.AlertNotFoundError(self.alert_id)
 
@@ -374,6 +376,7 @@ class Alert:
         :param timeout: The timeout for the wait operation.
         :raises intezer_sdk.errors.AlertNotFound: If the alert was not found.
         :raises intezer_sdk.errors.AlertInProgressError: If the alert is still being processed.
+        :raises intezer_sdk.errors.AlertConflictError: If the alert is ambiguous across environments and no environment was provided.
         :return: The Alert instance, with the updated alert data.
         """
         new_alert = cls(alert_id=alert_id, environment=environment or None, api=api)
