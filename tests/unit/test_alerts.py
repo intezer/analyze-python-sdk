@@ -83,6 +83,17 @@ class AlertsSpec(BaseTest):
             self.assertEqual(alert.alert_id, 'alert_id')
 
 
+    def test_alert_from_id_raises_conflict_when_environment_is_ambiguous(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.CONFLICT,
+                     json={'error': 'Alert exists in multiple environments'})
+            # Act & Assert
+            with self.assertRaises(errors.AlertConflictError):
+                Alert.from_id('alert_id')
+
     def test_alert_from_id_waits_from_completion(self):
         # Arrange
         with responses.RequestsMock() as mock:
