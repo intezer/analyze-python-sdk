@@ -853,6 +853,62 @@ class IntezerApi:
         raise_for_status(response)
         return response.json()
 
+    def get_case_by_id(self, case_id: str) -> dict:
+        """
+        Get case by case id.
+
+        :param case_id: The case id to get.
+        :return: The case data.
+        """
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path=f'/cases/{case_id}')
+        raise_for_status(response)
+        data_response = response.json()
+
+        return data_response['result']
+
+    def get_case_devices(self, case_id: str) -> dict:
+        """
+        Get devices related to a specific case.
+
+        :param case_id: The case id to get devices for.
+        :return: The case devices data.
+        """
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path=f'/cases/{case_id}/devices')
+        raise_for_status(response)
+        data_response = response.json()
+
+        return data_response['result']
+
+    def get_case_users(self, case_id: str) -> dict:
+        """
+        Get users related to a specific case.
+
+        :param case_id: The case id to get users for.
+        :return: The case users data.
+        """
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path=f'/cases/{case_id}/users')
+        raise_for_status(response)
+        data_response = response.json()
+
+        return data_response['result']
+
+    def get_case_ttps(self, case_id: str) -> dict:
+        """
+        Get TTPs related to a specific case.
+
+        :param case_id: The case id to get TTPs for.
+        :return: The case TTPs data.
+        """
+        response = self.api.request_with_refresh_expired_access_token(method='GET',
+                                                                      path=f'/cases/{case_id}/ttps')
+        raise_for_status(response)
+        data_response = response.json()
+
+        return data_response['result']
+
     @staticmethod
     def _assert_result_response(ignore_not_found: bool, response: Response):
         statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None

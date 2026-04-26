@@ -1,3 +1,7 @@
+1.27.0
+-------
+- Add Case object and cases history query, with support for fetching related devices, users and TTPs
+
 1.26.0
 -------
 - Raise AlertConflictError when fetching an alert by id without an environment returns 409 (previously masked as AlertNotFoundError)

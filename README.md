@@ -21,6 +21,7 @@ Currently, the following options are available in the SDK:
 - Ingest a raw email alert (.msg or .eml file)
 - Get raw alert data  
 - Get raw incident data
+- Query cases and fetch related devices, users and TTPs
 
 ## Installation
 
@@ -297,6 +298,38 @@ incident = Incident(incident_id="your-incident-id")
 raw_data = incident.get_raw_data(
     environment="your-environment",
 )`
+```
+
+### Cases
+#### Get case by id
+```python
+from intezer_sdk.cases import Case
+
+case = Case.from_id(case_id="your-case-id")
+print(case.case_title, case.case_status, case.case_priority)
+```
+
+#### Get case devices, users and TTPs
+```python
+case = Case.from_id(case_id="your-case-id")
+devices = case.get_devices()
+users = case.get_users()
+ttps = case.get_ttps()
+```
+
+#### Cases History
+```python
+from intezer_sdk.cases import query_cases_history
+
+history_results = query_cases_history(
+    case_statuses=["new", "in_progress"],
+    priorities=["high", "escalated"],
+    time_range_start=<unix_timestamp_seconds>,
+    time_range_end=<unix_timestamp_seconds>,
+    sort_by="creation_time",
+)
+for case in history_results:
+    print(case)
 ```
 
 ## Code examples
