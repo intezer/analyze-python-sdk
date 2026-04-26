@@ -224,3 +224,8 @@ class IncidentNotFoundError(IntezerError):
 class DeviceNotFoundError(IntezerError):
     def __init__(self, incident_id: str):
         super().__init__(f'Device not found: {incident_id}')
+
+
+class CaseNotFoundError(IntezerError):
+    def __init__(self, case_id: str):
+        super().__init__(f'Case not found: {case_id}')
