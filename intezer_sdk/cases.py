@@ -180,7 +180,7 @@ class Case:
     """
 
     def __init__(self,
-                 case_id: str | None = None,
+                 case_id: str,
                  api: IntezerApiClient = None):
         """
         Create a new Case instance with the given case id.
@@ -206,7 +206,6 @@ class Case:
         self.case_verdict: str | None = None
         self.response_status: str | None = None
         self.analyst_verdict: str | None = None
-        self.tenant_id: str | None = None
         self.intezer_case_url: str | None = None
 
     def fetch_info(self):
@@ -215,9 +214,6 @@ class Case:
 
         :raises intezer_sdk.errors.CaseNotFoundError: If the case was not found.
         """
-        if not self.case_id:
-            raise ValueError('Case ID is required to fetch case info.')
-
         try:
             self._result = self._api.get_case_by_id(self.case_id)
         except HTTPError as e:
@@ -232,7 +228,6 @@ class Case:
         self.case_sources = self._result.get('case_sources')
         self.case_tags = self._result.get('case_tags')
         self.analyst_verdict = self._result.get('analyst_verdict')
-        self.tenant_id = self._result.get('tenant_id')
         self.intezer_case_url = self._result.get('intezer_case_url')
 
         case_triage = self._result.get('case_triage') or {}

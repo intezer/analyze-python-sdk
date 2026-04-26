@@ -141,7 +141,6 @@ class CasesSpec(BaseTest):
             'case_sources': ['source1'],
             'case_tags': ['tag1'],
             'analyst_verdict': 'true_positive',
-            'tenant_id': 'tenant_1',
             'intezer_case_url': 'https://analyze.intezer.com/cases/test_case_id',
             'case_triage': {
                 'risk_category': 'malware',
@@ -168,22 +167,11 @@ class CasesSpec(BaseTest):
             self.assertEqual(case.case_sources, ['source1'])
             self.assertEqual(case.case_tags, ['tag1'])
             self.assertEqual(case.analyst_verdict, 'true_positive')
-            self.assertEqual(case.tenant_id, 'tenant_1')
             self.assertEqual(case.intezer_case_url,
                              'https://analyze.intezer.com/cases/test_case_id')
             self.assertEqual(case.risk_category, 'malware')
             self.assertEqual(case.case_verdict, 'malicious')
             self.assertEqual(case.response_status, 'responded')
-
-    def test_case_fetch_info_without_case_id_raises_error(self):
-        # Arrange
-        case = Case()
-
-        # Act & Assert
-        with self.assertRaises(ValueError) as context:
-            case.fetch_info()
-
-        self.assertEqual(str(context.exception), 'Case ID is required to fetch case info.')
 
     def test_case_fetch_info_not_found_raises_error(self):
         # Arrange
@@ -300,14 +288,6 @@ class CasesSpec(BaseTest):
             # Assert
             self.assertEqual(result, devices)
 
-    def test_case_get_devices_without_case_id_raises_error(self):
-        # Arrange
-        case = Case()
-
-        # Act & Assert
-        with self.assertRaises(ValueError):
-            case.get_devices()
-
     def test_case_get_users(self):
         # Arrange
         case_id = 'test_case_id'
@@ -326,14 +306,6 @@ class CasesSpec(BaseTest):
             # Assert
             self.assertEqual(result, users)
 
-    def test_case_get_users_without_case_id_raises_error(self):
-        # Arrange
-        case = Case()
-
-        # Act & Assert
-        with self.assertRaises(ValueError):
-            case.get_users()
-
     def test_case_get_ttps(self):
         # Arrange
         case_id = 'test_case_id'
@@ -351,14 +323,6 @@ class CasesSpec(BaseTest):
 
             # Assert
             self.assertEqual(result, ttps)
-
-    def test_case_get_ttps_without_case_id_raises_error(self):
-        # Arrange
-        case = Case()
-
-        # Act & Assert
-        with self.assertRaises(ValueError):
-            case.get_ttps()
 
 
 class CasesHistoryResultSpec(BaseTest):
