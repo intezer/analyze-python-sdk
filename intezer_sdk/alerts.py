@@ -194,9 +194,10 @@ def query_alerts_history(*,
     :param device_private_ips: Query alerts only with these private ips.
     :param device_external_ips: Query alerts only with these external ips.
     :param device_ids: Query alerts only with these device ids.
-    :param time_filter_type: The time value to filter alerts by (creation_time / triage_time / triage_change_time / triage_or_triage_change_time).
+    :param time_filter_type: The time value to filter alerts by (creation_time / triage_time / triage_change_time /
+    triage_or_triage_change_time / case_association_time).
     :param sort_order: The order to sort the alerts by (asc / desc).
-    :param sort_by: Sort alerts only with this sort_by_key value (CREATION_TIME / TRIAGE_TIME / TRIAGE_CHANGE_TIME ).
+    :param sort_by: Sort alerts only with this sort_by_key value (CREATION_TIME / TRIAGE_TIME / TRIAGE_CHANGE_TIME / CASE_ASSOCIATION_TIME).
 
     :return: Alert query result from server as Results iterator.
     """
@@ -261,6 +262,8 @@ class Alert:
     :vartype intezer_alert_url: str
     :ivar scans: Relevant scans for the alert.
     :vartype scans: list
+    :ivar case_association_time: Timestamp when this alert was associated with its current case (None if not in a case).
+    :vartype case_association_time: datetime.datetime | None
     """
 
     def __init__(self,
@@ -302,6 +305,7 @@ class Alert:
         self.intezer_alert_url: str | None = None
         self.status: AlertStatusCode | None = None
         self.scans: list[UrlAnalysis | FileAnalysis | EndpointAnalysis] = []
+        self.case_association_time: datetime.datetime | None = None
 
     @classmethod
     def _parse_alert_id_from_alert_stream(cls, alert_stream: BinaryIO) -> str:
@@ -338,6 +342,11 @@ class Alert:
         self.sender = alert.get('sender')
         self.intezer_alert_url = alert.get('intezer_alert_url')
         self.status = AlertStatusCode.FINISHED
+        case_association_time_str = alert.get('case_association_time')
+        self.case_association_time = (
+            datetime.datetime.fromisoformat(case_association_time_str)
+            if case_association_time_str else None
+        )
         return self.status
 
     def is_running(self) -> bool:
