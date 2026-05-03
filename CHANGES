@@ -1,3 +1,7 @@
+1.27.1
+-------
+- Add case_association_time to alert
+
 1.27.0
 -------
 - Add Case object and cases history query, with support for fetching related devices, users and TTPs
