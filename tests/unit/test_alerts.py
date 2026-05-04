@@ -303,17 +303,12 @@ class AlertsSpec(BaseTest):
 
     def test_partial_alert_result_method_raises_error_when_allow_partial_false(self):
         # Arrange
-        with responses.RequestsMock() as mock:
-            mock.add('GET',
-                     url=f'{self.full_url}/alerts/get-by-id',
-                     status=HTTPStatus.OK,
-                     json={'result': {'environment': 'environment'}, 'status': 'in_progress'})
-            alert = Alert(alert_id='alert_id', environment='environment')
-            alert.status = AlertStatusCode.IN_PROGRESS
+        alert = Alert(alert_id='alert_id', environment='environment')
+        alert.status = AlertStatusCode.IN_PROGRESS
 
-            # Act & Assert
-            with self.assertRaises(errors.AlertInProgressError):
-                alert.result()
+        # Act & Assert
+        with self.assertRaises(errors.AlertInProgressError):
+            alert.result()
 
     def test_partial_alert_fetch_scans_raises_error(self):
         # Arrange
