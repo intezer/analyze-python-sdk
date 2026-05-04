@@ -244,6 +244,18 @@ def query_alerts_history(*,
     return AlertsHistoryResult(ALERTS_SEARCH_REQUEST, api, filters)
 
 
+class AlertCase:
+    """
+    Represents the case associated with an alert.
+
+    :ivar case_association_time: Timestamp when this alert was associated with its case.
+    :vartype case_association_time: datetime.datetime | None
+    """
+
+    def __init__(self, case_association_time: datetime.datetime | None = None):
+        self.case_association_time = case_association_time
+
+
 class Alert:
     """
     The Alert class is used to represent an alert from the Intezer Platform API.
@@ -262,8 +274,8 @@ class Alert:
     :vartype intezer_alert_url: str
     :ivar scans: Relevant scans for the alert.
     :vartype scans: list
-    :ivar case_association_time: Timestamp when this alert was associated with its current case (None if not in a case).
-    :vartype case_association_time: datetime.datetime | None
+    :ivar case: The case associated with this alert (None if not in a case).
+    :vartype case: AlertCase | None
     """
 
     def __init__(self,
@@ -305,7 +317,7 @@ class Alert:
         self.intezer_alert_url: str | None = None
         self.status: AlertStatusCode | None = None
         self.scans: list[UrlAnalysis | FileAnalysis | EndpointAnalysis] = []
-        self.case_association_time: datetime.datetime | None = None
+        self.case: AlertCase | None = None
 
     @classmethod
     def _parse_alert_id_from_alert_stream(cls, alert_stream: BinaryIO) -> str:
@@ -341,12 +353,17 @@ class Alert:
         self.family_name = alert.get('triage_result', {}).get('family_name')
         self.sender = alert.get('sender')
         self.intezer_alert_url = alert.get('intezer_alert_url')
+        case_data = alert.get('case')
+        if case_data:
+            case_association_time_str = case_data.get('case_association_time')
+            case_association_time = (
+                datetime.datetime.fromisoformat(case_association_time_str)
+                if case_association_time_str else None
+            )
+            self.case = AlertCase(case_association_time=case_association_time)
+        else:
+            self.case = None
         self.status = AlertStatusCode.FINISHED
-        case_association_time_str = alert.get('case_association_time')
-        self.case_association_time = (
-            datetime.datetime.fromisoformat(case_association_time_str)
-            if case_association_time_str else None
-        )
         return self.status
 
     def is_running(self) -> bool:

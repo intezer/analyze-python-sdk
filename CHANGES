@@ -1,3 +1,7 @@
+1.27.3
+-------
+- Change case_association_time to be under alert.case
+
 1.27.1
 -------
 - Add case_association_time to alert

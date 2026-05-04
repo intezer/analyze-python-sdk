@@ -77,14 +77,14 @@ class AlertsSpec(BaseTest):
             mock.add('GET',
                      url=f'{self.full_url}/alerts/get-by-id',
                      status=HTTPStatus.OK,
-                     json={'result': {'case_association_time': case_association_time_str},
+                     json={'result': {'case': {'case_association_time': case_association_time_str}},
                            'status': 'success'})
             # Act
             alert = Alert.from_id('alert_id', environment='environment')
 
             # Assert
             self.assertEqual(alert.alert_id, 'alert_id')
-            self.assertEqual(alert.case_association_time,
+            self.assertEqual(alert.case.case_association_time,
                              datetime.datetime.fromisoformat(case_association_time_str))
 
 
