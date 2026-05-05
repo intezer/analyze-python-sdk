@@ -296,7 +296,7 @@ class Alert:
 
         self.environment = environment
         self._intezer_api_client = api
-        self._raise_on_in_progress: bool = False
+        self._raise_on_in_progress: bool = True
         self._api = IntezerApi(api or get_global_api())
         self._report: dict | None = None
         self.source: str | None = None
