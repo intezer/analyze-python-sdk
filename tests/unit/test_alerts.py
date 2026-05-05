@@ -212,3 +212,131 @@ class AlertsSpec(BaseTest):
         # Act & Assert
         with self.assertRaises(errors.AlertInProgressError):
             alert.notify()
+
+
+    def test_alert_from_id_with_allow_partial_true_extracts_available_fields(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {
+                         'environment': 'environment',
+                         'source': 'source',
+                         'sender': 'sender',
+                         'intezer_alert_url': 'alert_url'
+                     }, 'status': 'in_progress'})
+            # Act
+            alert = Alert.from_id('alert_id', environment='environment', allow_partial=True)
+
+            # Assert
+            self.assertEqual(alert.status, AlertStatusCode.IN_PROGRESS)
+            self.assertEqual(alert.source, 'source')
+            self.assertEqual(alert.sender, 'sender')
+            self.assertEqual(alert.intezer_alert_url, 'alert_url')
+            self.assertIsNone(alert.verdict)
+            self.assertIsNone(alert.family_name)
+
+    def test_alert_from_id_with_allow_partial_false_raises_error_on_in_progress(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment'}, 'status': 'in_progress'})
+            # Act & Assert
+            with self.assertRaises(errors.AlertInProgressError):
+                Alert.from_id('alert_id', environment='environment', allow_partial=False)
+
+    def test_alert_from_id_with_allow_partial_default_raises_error_on_in_progress(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment'}, 'status': 'in_progress'})
+            # Act & Assert
+            with self.assertRaises(errors.AlertInProgressError):
+                Alert.from_id('alert_id', environment='environment')
+
+    def test_alert_from_id_with_wait_true_ignores_allow_partial(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment'}, 'status': 'in_progress'})
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {
+                         'environment': 'environment',
+                         'triage_result': {
+                             'alert_verdict': 'alert_verdict',
+                             'family_name': 'family_name'
+                         }
+                     }, 'status': 'success'})
+            # Act
+            alert = Alert.from_id('alert_id', environment='environment', wait=True, allow_partial=True)
+
+            # Assert
+            self.assertEqual(alert.status, AlertStatusCode.FINISHED)
+            self.assertEqual(alert.verdict, 'alert_verdict')
+            self.assertEqual(alert.family_name, 'family_name')
+
+    def test_partial_alert_result_method_returns_partial_data(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment', 'source': 'source'}, 'status': 'in_progress'})
+            alert = Alert.from_id('alert_id', environment='environment', allow_partial=True)
+
+            # Act
+            result = alert.result()
+
+            # Assert
+            self.assertIsNotNone(result)
+            self.assertEqual(result['environment'], 'environment')
+            self.assertEqual(result['source'], 'source')
+
+    def test_partial_alert_result_method_raises_error_when_allow_partial_false(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment'}, 'status': 'in_progress'})
+            alert = Alert(alert_id='alert_id', environment='environment')
+            alert.status = AlertStatusCode.IN_PROGRESS
+
+            # Act & Assert
+            with self.assertRaises(errors.AlertInProgressError):
+                alert.result()
+
+    def test_partial_alert_fetch_scans_raises_error(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment'}, 'status': 'in_progress'})
+            alert = Alert.from_id('alert_id', environment='environment', allow_partial=True)
+
+            # Act & Assert
+            with self.assertRaises(errors.AlertInProgressError):
+                alert.fetch_scans()
+
+    def test_partial_alert_notify_raises_error(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('GET',
+                     url=f'{self.full_url}/alerts/get-by-id',
+                     status=HTTPStatus.OK,
+                     json={'result': {'environment': 'environment'}, 'status': 'in_progress'})
+            alert = Alert.from_id('alert_id', environment='environment', allow_partial=True)
+
+            # Act & Assert
+            with self.assertRaises(errors.AlertInProgressError):
+                alert.notify()

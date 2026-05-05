@@ -296,6 +296,7 @@ class Alert:
 
         self.environment = environment
         self._intezer_api_client = api
+        self._allow_partial: bool = False
         self._api = IntezerApi(api or get_global_api())
         self._report: dict | None = None
         self.source: str | None = None
@@ -332,21 +333,22 @@ class Alert:
         if not self.environment:
             self.environment = alert['environment']
 
-        if status in (AlertStatusCode.IN_PROGRESS.value, AlertStatusCode.QUEUED.value):
-            self.status = AlertStatusCode.IN_PROGRESS
-            return self.status
-
         self.source = alert.get('source')
         self.verdict = alert.get('triage_result', {}).get('alert_verdict')
         self.family_name = alert.get('triage_result', {}).get('family_name')
         self.sender = alert.get('sender')
         self.intezer_alert_url = alert.get('intezer_alert_url')
-        self.status = AlertStatusCode.FINISHED
         case_association_time_str = alert.get('case_association_time')
         self.case_association_time = (
             datetime.datetime.fromisoformat(case_association_time_str)
             if case_association_time_str else None
         )
+
+        if status in (AlertStatusCode.IN_PROGRESS.value, AlertStatusCode.QUEUED.value):
+            self.status = AlertStatusCode.IN_PROGRESS
+        else:
+            self.status = AlertStatusCode.FINISHED
+
         return self.status
 
     def is_running(self) -> bool:
@@ -357,12 +359,12 @@ class Alert:
         Get the raw alert result, as received from Intezer Platform API.
 
         :raises intezer_sdk.errors.AlertNotFound: If the alert was not found.
-        :raises intezer_sdk.errors.AlertInProgressError: If the alert is in progress
+        :raises intezer_sdk.errors.AlertInProgressError: If the alert is in progress and allow_partial=False.
         :return: The raw alert dictionary.
         """
         if self.status == AlertStatusCode.NOT_FOUND:
             raise errors.AlertNotFoundError(self.alert_id)
-        if self.status == AlertStatusCode.IN_PROGRESS:
+        if self.status == AlertStatusCode.IN_PROGRESS and not self._allow_partial:
             raise errors.AlertInProgressError(self.alert_id)
         return self._report
 
@@ -373,6 +375,7 @@ class Alert:
                 api: IntezerApiClient = None,
                 fetch_scans: bool = False,
                 wait: bool = False,
+                allow_partial: bool = False,
                 timeout: int | None = None):
         """
         Create a new Alert instance, and fetch the alert data from the Intezer Platform API.
@@ -382,15 +385,17 @@ class Alert:
         :param api: The API connection to Intezer.
         :param fetch_scans: Whether to fetch the scans for the alert - this could take some time.
         :param wait: Wait for the alert to finish processing before returning.
+        :param allow_partial: Return partial alert data if status is IN_PROGRESS (only applies when wait=False).
         :param timeout: The timeout for the wait operation.
         :raises intezer_sdk.errors.AlertNotFound: If the alert was not found.
-        :raises intezer_sdk.errors.AlertInProgressError: If the alert is still being processed.
+        :raises intezer_sdk.errors.AlertInProgressError: If the alert is still being processed and allow_partial=False.
         :raises intezer_sdk.errors.AlertConflictError: If the alert is ambiguous across environments and no environment was provided.
         :return: The Alert instance, with the updated alert data.
         """
         new_alert = cls(alert_id=alert_id, environment=environment or None, api=api)
+        new_alert._allow_partial = allow_partial
         status = new_alert.check_status()
-        if status == AlertStatusCode.IN_PROGRESS and not wait:
+        if status == AlertStatusCode.IN_PROGRESS and not wait and not allow_partial:
             raise errors.AlertInProgressError(alert_id)
         if wait:
             new_alert.wait_for_completion(timeout=timeout)
