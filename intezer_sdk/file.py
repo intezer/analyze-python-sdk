@@ -1,3 +1,10 @@
+"""
+File-level operations.
+
+This module exposes :class:`File` for indexing, downloading, and inspecting code
+blocks of a stored file by hash, and the :class:`Block` dataclass describing a
+disassembled code block.
+"""
 import datetime
 from dataclasses import dataclass
 from typing import IO
@@ -13,6 +20,8 @@ from intezer_sdk.index import Index
 
 @dataclass
 class Block:
+    """A code block belonging to a file: its address, software type, and matching genetic families."""
+
     address: int
     software_type: str
     families: list[str]

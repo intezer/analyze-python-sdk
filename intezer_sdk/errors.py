@@ -1,3 +1,10 @@
+"""
+Exception hierarchy raised by the SDK.
+
+All errors raised by SDK operations derive from :class:`IntezerError`. Subclasses
+identify specific failure modes (insufficient quota, analysis still running,
+unsupported on-premise version, …).
+"""
 import datetime
 
 import requests

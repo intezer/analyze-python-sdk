@@ -1,3 +1,10 @@
+"""
+Search and inspect incidents.
+
+This module provides helpers for building incident search filters and querying
+the incident history, returning a paginated
+:class:`~intezer_sdk.incidents_results.IncidentsHistoryResult`.
+"""
 import datetime
 from typing import Any
 

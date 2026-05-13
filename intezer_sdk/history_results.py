@@ -1,3 +1,9 @@
+"""
+Base class for paginated history result sets.
+
+This module exposes :class:`HistoryResult`, the abstract iterator/pagination
+backbone reused by analyses, alerts, devices, and incidents history result types.
+"""
 import abc
 from typing import Any
 
@@ -5,6 +11,14 @@ from intezer_sdk.api import IntezerApiClient
 
 
 class HistoryResult:
+    """Abstract iterator over a paginated history endpoint.
+
+    Iterate the instance to walk all pages, call :meth:`all` to materialize every
+    result into a list, or read :attr:`current_page` to inspect the current page
+    only. Subclasses implement ``_fetch_history`` for endpoint-specific request
+    and response parsing.
+    """
+
     def __init__(self, request_url_path: str, api: IntezerApiClient, filters: dict):
         """
         Fetch all history results from server.

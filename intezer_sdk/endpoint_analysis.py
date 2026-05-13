@@ -1,3 +1,11 @@
+"""
+Endpoint scan analysis.
+
+This module exposes :class:`EndpointAnalysis`, used to upload endpoint scanner
+output to Intezer Analyze, poll for completion, and inspect the resulting
+sub-analyses. It also exposes :func:`download_endpoint_scanner` for fetching the
+scanner binary.
+"""
 import concurrent.futures
 import datetime
 import glob

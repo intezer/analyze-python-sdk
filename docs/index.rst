@@ -1,41 +1,57 @@
-.. Intezer Python SDK documentation master file, created by
-   sphinx-quickstart on Wed Feb  8 13:33:44 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. Intezer Python SDK documentation master file
 
 Welcome to Intezer Python SDK's documentation!
 ==============================================
 
+The ``intezer-sdk`` package wraps the Intezer Analyze 2.0 API
+(`full HTTP API documentation <https://docs.intezer.com/reference/>`_).
 
-GitHub (code repository, issues): https://github.com/intezer//analyze-python-sdk
+* GitHub: https://github.com/intezer/analyze-python-sdk
+* PyPI: https://pypi.org/project/intezer-sdk
 
-PyPI (installable, stable distributions): https://pypi.org/project/intezer-sdk. You can install Injector using pip::
+Quick start
+-----------
 
-    pip install intezer-sdk
+.. code-block:: bash
 
-Intezer SDK works with CPython 3.6+ .
-
-The SDK wraps Intezer Analyze API 2.0 (`View full API documentation <https://analyze.intezer.com/api-docs.html>`_)
-
-Setup
-#####
-Intezer works with global api configuration configured with and API key
+   pip install intezer-sdk
 
 .. code-block:: python
 
+   from intezer_sdk import api
+   from intezer_sdk.analysis import FileAnalysis
+
    api.set_global_api('<api_key>')
 
-Basic Usage
-===========
+   analysis = FileAnalysis(file_path='/path/to/sample')
+   analysis.send(wait=True)
+   print(analysis.result())
 
+Guides
+------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User guide
+
+   getting_started
+   alerts
+   incidents
+   cases
+   file_analysis
+   url_analysis
+   endpoint_analysis
+   history
+   indexing
+
+API reference
+-------------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
 
    modules
-
-
 
 Indices and tables
 ==================

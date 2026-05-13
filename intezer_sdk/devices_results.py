@@ -1,3 +1,10 @@
+"""
+Paginated devices history result set.
+
+This module exposes :class:`DevicesHistoryResult`, returned from
+:func:`intezer_sdk.devices.query_devices_history`, which lazily paginates over
+device records that match a search filter.
+"""
 from typing import Literal
 
 from intezer_sdk.api import IntezerApiClient
@@ -6,6 +13,7 @@ from intezer_sdk.history_results import HistoryResult
 
 
 class DevicesHistoryResult(HistoryResult):
+    """Paginated result set of devices matching a search filter."""
 
     def __init__(self,
                  request_url_path: str,

@@ -1,3 +1,11 @@
+"""
+HTTP client and global API configuration.
+
+This module exposes :class:`IntezerApiClient`, the low-level HTTP client used by
+all SDK objects, and :func:`set_global_api` / :func:`get_global_api` for
+configuring a shared API instance authenticated by API key. It also provides
+:func:`raise_for_status`, used internally to surface API errors.
+"""
 import datetime
 import logging
 import os

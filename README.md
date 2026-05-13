@@ -1,27 +1,21 @@
-![PyPI](https://img.shields.io/pypi/v/intezer_sdk)
-![Build](https://github.com/intezer/analyze-python-sdk/actions/workflows/test.yml/badge.svg)
+[![PyPI](https://img.shields.io/pypi/v/intezer_sdk)](https://pypi.org/project/intezer-sdk/)
+[![Build](https://github.com/intezer/analyze-python-sdk/actions/workflows/test.yml/badge.svg)](https://github.com/intezer/analyze-python-sdk/actions/workflows/test.yml)
+[![Documentation Status](https://readthedocs.org/projects/analyze-python-sdk/badge/?version=latest)](https://analyze-python-sdk.readthedocs.io/en/latest/)
+
 # Intezer SDK
 
-The SDK wraps Intezer Platform API 2.0 ([View full API documentation](https://analyze.intezer.com/api-docs.html))
+The SDK wraps the Intezer Platform API 2.0 ([full HTTP API documentation](https://docs.intezer.com/reference/)).
 
-Currently, the following options are available in the SDK:
+📖 **Full documentation**: https://analyze-python-sdk.readthedocs.io/
 
-- Analyze by file
-- Analyze by SHA256
-- Analyze Url
-- Index by file
-- Index by SHA256
-- Get Latest Analysis
-- Account and file related samples
-- Code reuse and Metadata
-- IOCs, Dynamic TTPs and Capabilities
-- Strings related samples
-- Search a family
-- Ingest an alert from any source
-- Ingest a raw email alert (.msg or .eml file)
-- Get raw alert data  
-- Get raw incident data
-- Query cases and fetch related devices, users and TTPs
+What you can do with the SDK:
+
+- Analyze files, URLs and endpoint scans
+- Send and retrieve alerts (raw and phishing emails)
+- Inspect incidents and cases (devices, users, TTPs)
+- Search analyses, alerts, incidents, cases and devices history
+- Index files as trusted or malicious and look up genetic families
+- Get code reuse, metadata, IOCs, dynamic TTPs, capabilities and related samples
 
 ## Installation
 
@@ -29,309 +23,46 @@ Currently, the following options are available in the SDK:
 pip install intezer-sdk
 ```
 
-## Using Intezer SDK
-### Set global api key
-Before using the SDK functionality we should set the api key:
-```python
-    api.set_global_api('<api_key>')
-```
+The SDK requires CPython 3.10 or newer.
 
-### Analyze By File
-```python
-analysis = FileAnalysis(file_path=<file_path>,
-                    dynamic_unpacking=<force_dynamic_unpacking>, # optional
-                    static_unpacking=<force_static_unpacking>)   # optional
-analysis.send(wait=True) 
-result = analysis.result()
-```
-### Analyze By SHA256
-```python
-analysis = FileAnalysis(file_hash=<file_sha256>)
-analysis.send(wait=True)
-result = analysis.result()
-```
+## Quick start
 
-### File Analysis result example
-```python
-{
-  'analysis_id': '00000000-0000-0000-0000-000000000000', 
-  'analysis_time': 'Sun, 04 Aug 2019 09:38:16 GMT', 
-  'analysis_url': 'https://analyze.intezer.com/#/analyses/00000000-0000-0000-0000-000000000000', 
-  'family_name': 'Ramnit', 
-  'is_private': True, 
-  'sha256': '4e553bce90f0b39cd71ba633da5990259e185979c2859ec2e04dd8efcdafe356', 
-  'sub_verdict': 'malicious', 
-  'verdict': 'malicious'
-}
-```
-### Analyze Url
-```python
-analysis = UrlAnalysis(url=<url>)
-analysis.send(wait=True)
-result = analysis.result()
-```
-### Url Analysis result example
-```python
-{
-    'analysis_id': '70d09f68-c7a3-43a3-a8de-07ec31fbf4ed',
-    'domain_info': {
-        'creation_date': '1997-08-13 04:00:00.000000',
-        'domain_name': 'foo.com',
-        'registrar': 'TUCOWS, INC.'
-    },
-    'indicators': [
-    {
-        'classification': 'informative',
-        'text': 'URL is accessible'
-    },
-    {
-        'classification': 'informative',
-        'text': 'Assigned IPv4 domain'
-    },
-    {
-        'classification': 'informative',
-        'text': 'Vaild IPv4 domain'
-    }
-    ],
-    'ip': '34.206.39.153',
-    'redirect_chain': [
-    {
-        'response_status': 301,
-        'url': 'https://foo.com/'
-    },
-    {
-        'response_status': 200,
-        'url': 'http://www.foo.com/'
-    }
-    ],
-    'scanned_url': 'http://www.foo.com/',
-    'submitted_url': 'foo.com',
-    'downloaded_file': {
-        'analysis_id': '8db9a401-a142-41be-9a31-8e5f3642db62',
-        'analysis_summary': {
-           'verdict_description': 'This file contains code from malicious software, therefore it's very likely that it's malicious.',
-           'verdict_name': 'malicious',
-           'verdict_title': 'Malicious',
-           'verdict_type': 'malicious'
-        },
-        'sha256': '4293c1d8574dc87c58360d6bac3daa182f64f7785c9d41da5e0741d2b1817fc7'
-     },
-    'summary': {
-        'description': 'No suspicious activity was detected for this URL',
-        'title': 'No Threats',
-        'verdict_name': 'no_threats',
-        'verdict_type': 'no_threats'
-    }
-}
-```
-### Index By File
-```python
-from intezer_sdk import consts
-
-index = Index(file_path=<file_path>, 
-              index_as=consts.IndexType.MALICIOUS, 
-              family_name=<family_name>)
-index.send(wait=True)
-index_id = index.index_id
-```
-### Index By SHA256
-```python
-from intezer_sdk import consts
-
-index = Index(sha256=<file_sha256>, 
-              index_as=consts.IndexType.TRUSTED)
-index.send(wait=True)
-index_id = index.index_id
-```
-
-### Get Latest File Analysis
-```python
-analysis = FileAnalysis.from_latest_hash_analysis(file_hash: <file_sha256>)
-result = analysis.result()
-```
-
-### Get Sub Analyses
-#### Root File Analysis
-```python
-root_analysis = analysis.get_root_analysis()
-```
-#### Sub Analyses
-```python
-sub_analyses = analysis.get_sub_analyses()
-```
-#### Code Reuse and Metadata
-```python
-root_analysis_code_reuse = root_analysis.code_reuse
-root_analysis_metadata = root_analysis.metadata
-
-for sub_analysis in sub_analyses:
-    sub_analyses_code_reuse = sub_analysis.code_reuse
-    sub_analyses_metadata = sub_analysis.metadata
-```
-#### Related Files by Family
-```python
-root_analysis_code_reuse = root_analysis.code_reuse
-
-for family in root_analysis_code_reuse['families']:
-    operation = root_analysis.find_related_files(family['family_id'], wait=True)
-    related_files = operation.get_result()
-```
-#### Account Related Samples
-```python
-operation = root_analysis.get_account_related_samples()
-related_samples = operation.get_result()
-```
-#### Vaccine
-```python
-operation = root_analysis.generate_vaccine()
-vaccine = operation.get_result()
-```
-
-#### Strings related samples
-```python
-operation = root_analysis.get_string_related_samples('string_to_relate_to', wait=True)
-string_related_samples = operation.get_result()
-```
-
-#### Wait with timeout
-```python
-analysis = FileAnalysis(file_hash=<file_sha256>)
-analysis.send(wait=True, wait_timeout=datetime.timedelta(minutes=1))
-```
-
-#### Analyses History
- - File
-
-```python
-history_results = query_file_analyses_history(
-    start_date = <datetime>,
-    end_date= <datetime>,
-    api = <IntezerApi>
-    aggregated_view: <bool>,
-    sources=<source>
-    verdicts=<verdicts>,
-    file_hash=<file_hash>,
-    family_names=<family_names>,
-    file_name=<file_name>
-)
-for analyse in history_results:
-    print(analyse)
-```
- - URL
-```python
-history_results = query_url_analyses_history(
-    start_date = <datetime>,
-    end_date=<datetime>,
-    aggregated_view=<bool>,
-    sources=<sources>,
-    verdicts=<verdicts>,
-)
-for analyse in history_results:
-    print(analyse)
-```
- - End Point
-```python
-history_results = query_endpoint_analyses_history(
-    start_date = <datetime>,
-    end_date=<datetime>,
-    aggregated_view=<bool>,
-    sources=<sources>,
-    verdicts=<verdicts>,
-    sub_verdicts=<verdicts>,
-    did_download_file=<bool>,
-    submitted_url=<submitted_url>
-)
-for analyse in history_results:
-    print(analyse)
-```
-
-### Alerts
-#### Get alert by id
-```python
-alert = Alert.from_id(alert_id=alert_id,
-                      fetch_scans=False,
-                      wait=False)
-```
-
-#### Get raw alert data
-Get raw alert data (original alert data sent to Intezer):
+Configure the global API once, then use any SDK class:
 
 ```python
 from intezer_sdk import api
+from intezer_sdk.analysis import FileAnalysis
+
+api.set_global_api('<api_key>')
+
+analysis = FileAnalysis(file_path='/path/to/sample')
+analysis.send(wait=True)
+print(analysis.result())
+```
+
+The API key can also be read from the `INTEZER_ANALYZE_API_KEY` environment
+variable. See the [Getting started guide](https://analyze-python-sdk.readthedocs.io/en/latest/getting_started.html)
+for US region, on-premise, and multi-tenant setups.
+
+## A taste of the SDK
+
+```python
+# Analyze a URL
+from intezer_sdk.analysis import UrlAnalysis
+analysis = UrlAnalysis(url='https://example.com/suspicious')
+analysis.send(wait=True)
+
+# Fetch an alert and its scans
 from intezer_sdk.alerts import Alert
+alert = Alert.from_id(alert_id='<alert_id>', wait=True, fetch_scans=True)
+print(alert.verdict, alert.family_name)
 
-api.set_global_api('<api_key>')
-alert = Alert(alert_id="your-alert-id")
-raw_data = alert.get_raw_data(
-    environment="your-environment"
-)
-```
-
-#### Alerts History
-
-```python
-history_results = query_file_analyses_history(
-    api = <IntezerApi>,
-    **filters
-)
-for analyse in history_results:
-    print(analyse)
-```
-
-### Incidents
-#### Get incident by id
-```python
-from intezer_sdk.incidents import Incident
-
-incident = Incident.from_id(incident_id="your-incident-id")
-```
-
-#### Get raw incident data
-Get raw incident data (original incident data sent to Intezer):
-
-```python
-from intezer_sdk import api
-from intezer_sdk.incidents import Incident
-
-api.set_global_api('<api_key>')
-incident = Incident(incident_id="your-incident-id")
-raw_data = incident.get_raw_data(
-    environment="your-environment",
-)`
-```
-
-### Cases
-#### Get case by id
-```python
+# Look up a case
 from intezer_sdk.cases import Case
-
-case = Case.from_id(case_id="your-case-id")
+case = Case.from_id(case_id='<case_id>')
 print(case.case_title, case.case_status, case.case_priority)
 ```
 
-#### Get case devices, users and TTPs
-```python
-case = Case.from_id(case_id="your-case-id")
-devices = case.get_devices()
-users = case.get_users()
-ttps = case.get_ttps()
-```
-
-#### Cases History
-```python
-from intezer_sdk.cases import query_cases_history
-
-history_results = query_cases_history(
-    case_statuses=["new", "in_progress"],
-    priorities=["high", "escalated"],
-    time_range_start=<unix_timestamp_seconds>,
-    time_range_end=<unix_timestamp_seconds>,
-    sort_by="creation_time",
-)
-for case in history_results:
-    print(case)
-```
-
-## Code examples
-You can find more code examples under [analyze-python-sdk/examples/](https://github.com/intezer/analyze-python-sdk/tree/master/examples) directory 
-
+For the full set of examples — wait patterns, sub-analyses, alert ingestion,
+incident and case search, indexing, history queries, on-premise setup — see the
+[hosted documentation](https://analyze-python-sdk.readthedocs.io/).

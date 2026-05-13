@@ -1,3 +1,10 @@
+"""
+File and URL analysis.
+
+This module exposes :class:`FileAnalysis` and :class:`UrlAnalysis`, the primary
+entry points for submitting samples to Intezer Analyze, polling for status, and
+inspecting results, sub-analyses, IOCs, dynamic TTPs, and metadata.
+"""
 import datetime
 import logging
 import os

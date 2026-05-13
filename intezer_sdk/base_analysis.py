@@ -1,3 +1,10 @@
+"""
+Base class for analyses.
+
+This module exposes the abstract :class:`Analysis` base, shared by
+:class:`~intezer_sdk.analysis.FileAnalysis`, :class:`~intezer_sdk.analysis.UrlAnalysis`,
+and :class:`~intezer_sdk.endpoint_analysis.EndpointAnalysis`.
+"""
 import abc
 import datetime
 import time

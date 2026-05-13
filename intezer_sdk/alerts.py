@@ -1,3 +1,10 @@
+"""
+Alert ingestion and search.
+
+This module exposes the :class:`Alert` class for sending raw or pre-parsed alerts
+to Intezer, polling for triage results, and providing a triage verdict back to the
+analyst. It also offers helpers for fetching alerts by id and searching alert history.
+"""
 import datetime
 import hashlib
 import json
@@ -194,8 +201,7 @@ def query_alerts_history(*,
     :param device_private_ips: Query alerts only with these private ips.
     :param device_external_ips: Query alerts only with these external ips.
     :param device_ids: Query alerts only with these device ids.
-    :param time_filter_type: The time value to filter alerts by (creation_time / triage_time / triage_change_time /
-    triage_or_triage_change_time / case_association_time).
+    :param time_filter_type: The time value to filter alerts by (creation_time / triage_time / triage_change_time / triage_or_triage_change_time / case_association_time).
     :param sort_order: The order to sort the alerts by (asc / desc).
     :param sort_by: Sort alerts only with this sort_by_key value (CREATION_TIME / TRIAGE_TIME / TRIAGE_CHANGE_TIME / CASE_ASSOCIATION_TIME).
 

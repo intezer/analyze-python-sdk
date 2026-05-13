@@ -1,3 +1,9 @@
+"""
+Utility helpers for summaries and filters.
+
+This module provides helpers for rendering human-readable analysis summaries,
+working with EML attachments, and adding filter values to a query dict.
+"""
 import collections
 import email
 import email.parser

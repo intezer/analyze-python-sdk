@@ -1,10 +1,17 @@
+"""
+Paginated analyses history result set.
 
+This module exposes :class:`AnalysesHistoryResult`, returned by the
+``query_*_analyses_history`` helpers in :mod:`intezer_sdk.analyses_history`.
+"""
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
 from intezer_sdk.history_results import HistoryResult
 
 
 class AnalysesHistoryResult(HistoryResult):
+    """Paginated result set of analyses matching a search filter."""
+
     def __init__(self, request_url_path: str, api: IntezerApiClient, filters: dict):
         """
         Fetch all analyses history results from server.
