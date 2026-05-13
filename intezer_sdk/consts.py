@@ -1,3 +1,9 @@
+"""
+Shared enums and constants.
+
+This module collects the enums (analysis status, code item type, verdicts, alert
+status, on-premise version, …) and string constants used across the SDK.
+"""
 import enum
 
 from intezer_sdk import __version__

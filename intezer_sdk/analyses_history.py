@@ -1,3 +1,10 @@
+"""
+Search and paginate analysis history.
+
+This module provides query helpers for retrieving file, URL, and endpoint analysis
+history, returning :class:`~intezer_sdk.analyses_results.AnalysesHistoryResult`
+instances that paginate over the matching analyses.
+"""
 import datetime
 from typing import Any
 

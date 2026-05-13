@@ -1,10 +1,17 @@
+"""
+Paginated alerts history result set.
 
+This module exposes :class:`AlertsHistoryResult`, returned from
+:func:`intezer_sdk.alerts.query_alerts_history`, which lazily paginates over alert
+records that match a search filter.
+"""
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
 from intezer_sdk.history_results import HistoryResult
 
 
 class AlertsHistoryResult(HistoryResult):
+    """Paginated result set of alerts matching a search filter."""
 
     def __init__(self, request_url_path: str, api: IntezerApiClient, filters: dict):
         """

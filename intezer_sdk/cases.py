@@ -1,3 +1,10 @@
+"""
+Search and inspect cases.
+
+This module exposes the :class:`Case` class for fetching case metadata, triage
+results, and the related devices, users, and TTPs. It also provides
+:func:`query_cases_history` for paginated case searches.
+"""
 from typing import Any
 
 from requests import HTTPError

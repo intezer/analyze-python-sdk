@@ -1,13 +1,33 @@
 intezer\_sdk package
 ====================
 
+The ``intezer_sdk`` package wraps the Intezer Analyze 2.0 API. The submodules
+below correspond one-to-one with the public modules in the package; private
+modules whose names start with an underscore are intentionally omitted.
+
 Submodules
 ----------
 
 intezer\_sdk.account module
--------------------------------------
+---------------------------
 
 .. automodule:: intezer_sdk.account
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.alerts module
+--------------------------
+
+.. automodule:: intezer_sdk.alerts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.alerts\_results module
+-----------------------------------
+
+.. automodule:: intezer_sdk.alerts_results
    :members:
    :undoc-members:
    :show-inheritance:
@@ -55,10 +75,42 @@ intezer\_sdk.base\_analysis module
    :undoc-members:
    :show-inheritance:
 
+intezer\_sdk.cases module
+-------------------------
+
+.. automodule:: intezer_sdk.cases
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.cases\_results module
+----------------------------------
+
+.. automodule:: intezer_sdk.cases_results
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 intezer\_sdk.consts module
 --------------------------
 
 .. automodule:: intezer_sdk.consts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.devices module
+---------------------------
+
+.. automodule:: intezer_sdk.devices
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.devices\_results module
+------------------------------------
+
+.. automodule:: intezer_sdk.devices_results
    :members:
    :undoc-members:
    :show-inheritance:
@@ -83,6 +135,38 @@ intezer\_sdk.family module
 --------------------------
 
 .. automodule:: intezer_sdk.family
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.file module
+------------------------
+
+.. automodule:: intezer_sdk.file
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.history\_results module
+------------------------------------
+
+.. automodule:: intezer_sdk.history_results
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.incidents module
+-----------------------------
+
+.. automodule:: intezer_sdk.incidents
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+intezer\_sdk.incidents\_results module
+--------------------------------------
+
+.. automodule:: intezer_sdk.incidents_results
    :members:
    :undoc-members:
    :show-inheritance:

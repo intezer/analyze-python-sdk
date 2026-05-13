@@ -1,3 +1,11 @@
+"""
+Sub-analysis access.
+
+This module exposes :class:`SubAnalysis`, a single component (root or extracted
+file) within a composed file analysis. Sub-analyses provide access to the
+component's code reuse, metadata, IOCs, TTPs, capabilities, strings, and the
+ability to download the underlying file.
+"""
 import datetime
 from typing import IO
 

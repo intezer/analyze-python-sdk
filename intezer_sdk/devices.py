@@ -1,3 +1,10 @@
+"""
+Search the device inventory.
+
+This module provides helpers for building device search filters and querying the
+device history, returning a paginated
+:class:`~intezer_sdk.devices_results.DevicesHistoryResult`.
+"""
 import datetime
 from typing import Any
 from typing import Literal

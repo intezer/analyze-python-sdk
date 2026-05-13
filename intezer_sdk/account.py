@@ -1,3 +1,9 @@
+"""
+Account information and quota management.
+
+This module exposes the :class:`Account` class for retrieving account details,
+listing accounts in an organization, and reading quota usage.
+"""
 import datetime
 
 from intezer_sdk import consts
@@ -6,6 +12,8 @@ from intezer_sdk.api import IntezerApiClient
 
 
 class Account:
+    """Represents an Intezer account and provides access to its details and quota."""
+
     def __init__(self, account_id: str, account_details: dict, *, api: IntezerApiClient):
         self._api = AccountApi(api)
         self.account_id: str = account_id

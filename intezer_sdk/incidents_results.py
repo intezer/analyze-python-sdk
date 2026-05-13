@@ -1,9 +1,17 @@
+"""
+Paginated incidents history result set.
+
+This module exposes :class:`IncidentsHistoryResult`, returned from
+:func:`intezer_sdk.incidents.query_incidents_history`, which lazily paginates
+over incident records that match a search filter.
+"""
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
 from intezer_sdk.history_results import HistoryResult
 
 
 class IncidentsHistoryResult(HistoryResult):
+    """Paginated result set of incidents matching a search filter."""
 
     def __init__(self, request_url_path: str, api: IntezerApiClient, filters: dict):
         """

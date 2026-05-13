@@ -1,3 +1,10 @@
+"""
+Genetic malware family lookup.
+
+This module exposes :class:`Family` for retrieving information about a malware
+family (name, type, tags) by id, and :func:`get_family_by_name` for looking up
+a family by name.
+"""
 from intezer_sdk import errors
 from intezer_sdk._api import IntezerApi
 from intezer_sdk.api import IntezerApiClient
@@ -5,6 +12,8 @@ from intezer_sdk.api import get_global_api
 
 
 class Family:
+    """A genetic malware family known to Intezer."""
+
     def __init__(self,
                  family_id: str,
                  name: str = None,

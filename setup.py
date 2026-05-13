@@ -24,7 +24,12 @@ setup(
     name='intezer_sdk',
     version=version,
     packages=['intezer_sdk'],
-    url='https://github.com/intezer/analyze-python-sdk',
+    url='https://analyze-python-sdk.readthedocs.io/',
+    project_urls={
+        'Documentation': 'https://analyze-python-sdk.readthedocs.io/',
+        'Source': 'https://github.com/intezer/analyze-python-sdk',
+        'Issues': 'https://github.com/intezer/analyze-python-sdk/issues',
+    },
     license='Apache 2.0',
     author='Intezer Labs ltd.',
     author_email='info@intezer.com',

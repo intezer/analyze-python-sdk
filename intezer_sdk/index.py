@@ -1,3 +1,9 @@
+"""
+Index files as trusted or malicious.
+
+This module exposes the :class:`Index` operation, which submits a file (by path
+or sha256) to be tagged in the Intezer genetic database under a given family.
+"""
 import time
 from http import HTTPStatus
 
@@ -9,6 +15,8 @@ from intezer_sdk.api import get_global_api
 
 
 class Index:
+    """Submit a file or hash to be indexed under a given family in the genetic database."""
+
     def __init__(self,
                  index_as: consts.IndexType,
                  file_path: str = None,

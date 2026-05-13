@@ -1,3 +1,10 @@
+"""
+Long-running asynchronous operations.
+
+This module exposes :class:`Operation`, used to track asynchronous Intezer
+operations (such as IOC, TTP, and metadata generation triggered from an
+analysis), wait for them to finish, and read their results.
+"""
 import datetime
 import time
 
