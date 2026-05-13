@@ -1,7 +1,9 @@
 import datetime
+import io
 import time
 import unittest
 from http import HTTPStatus
+from unittest.mock import MagicMock
 
 import responses
 
@@ -10,6 +12,10 @@ from intezer_sdk import errors
 from intezer_sdk.api import IntezerApiClient
 from intezer_sdk.api import raise_for_status
 from intezer_sdk.api import set_global_api
+
+
+def mock_open_bytes(data: bytes = b'data') -> MagicMock:
+    return MagicMock(side_effect=lambda *args, **kwargs: io.BytesIO(data))
 
 
 class BaseTest(unittest.TestCase):

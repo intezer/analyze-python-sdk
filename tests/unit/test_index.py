@@ -1,6 +1,5 @@
 import datetime
 from http import HTTPStatus
-from unittest.mock import mock_open
 from unittest.mock import patch
 
 import responses
@@ -9,6 +8,7 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.index import Index
 from tests.unit.base_test import BaseTest
+from tests.unit.base_test import mock_open_bytes
 
 
 class IndexSpec(BaseTest):
@@ -86,7 +86,7 @@ class IndexSpec(BaseTest):
                      json={'result_url': '/files/index/testindex'})
             index = Index(file_path='a', index_as=consts.IndexType.TRUSTED)
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 index.send()
 
@@ -162,7 +162,7 @@ class IndexSpec(BaseTest):
                            'status': 'succeeded'})
             index = Index(file_path='a', index_as=consts.IndexType.TRUSTED)
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 index.send(wait=True)
 
@@ -197,7 +197,7 @@ class IndexSpec(BaseTest):
                            'status': 'succeeded'})
             index = Index(file_path='a', index_as=consts.IndexType.TRUSTED)
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 index.send()
                 index.check_status()
