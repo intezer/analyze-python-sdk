@@ -1,12 +1,12 @@
 [![PyPI](https://img.shields.io/pypi/v/intezer_sdk)](https://pypi.org/project/intezer-sdk/)
 [![Build](https://github.com/intezer/analyze-python-sdk/actions/workflows/test.yml/badge.svg)](https://github.com/intezer/analyze-python-sdk/actions/workflows/test.yml)
-[![Documentation Status](https://readthedocs.org/projects/analyze-python-sdk/badge/?version=latest)](https://analyze-python-sdk.readthedocs.io/en/latest/)
+[![Documentation Status](https://readthedocs.org/projects/analyze-python-sdk/badge/?version=latest)](https://intezer-python-sdk.readthedocs.io/en/latest/)
 
 # Intezer SDK
 
 The SDK wraps the Intezer Platform API 2.0 ([full HTTP API documentation](https://docs.intezer.com/reference/)).
 
-📖 **Full documentation**: https://analyze-python-sdk.readthedocs.io/
+📖 **Full documentation**: https://intezer-python-sdk.readthedocs.io/
 
 What you can do with the SDK:
 
@@ -41,7 +41,7 @@ print(analysis.result())
 ```
 
 The API key can also be read from the `INTEZER_ANALYZE_API_KEY` environment
-variable. See the [Getting started guide](https://analyze-python-sdk.readthedocs.io/en/latest/getting_started.html)
+variable. See the [Getting started guide](https://intezer-python-sdk.readthedocs.io/en/latest/getting_started.html)
 for US region, on-premise, and multi-tenant setups.
 
 ## A taste of the SDK
@@ -65,4 +65,4 @@ print(case.case_title, case.case_status, case.case_priority)
 
 For the full set of examples — wait patterns, sub-analyses, alert ingestion,
 incident and case search, indexing, history queries, on-premise setup — see the
-[hosted documentation](https://analyze-python-sdk.readthedocs.io/).
+[hosted documentation](https://intezer-python-sdk.readthedocs.io/).

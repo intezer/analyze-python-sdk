@@ -24,9 +24,9 @@ setup(
     name='intezer_sdk',
     version=version,
     packages=['intezer_sdk'],
-    url='https://analyze-python-sdk.readthedocs.io/',
+    url='https://intezer-python-sdk.readthedocs.io/',
     project_urls={
-        'Documentation': 'https://analyze-python-sdk.readthedocs.io/',
+        'Documentation': 'https://intezer-python-sdk.readthedocs.io/',
         'Source': 'https://github.com/intezer/analyze-python-sdk',
         'Issues': 'https://github.com/intezer/analyze-python-sdk/issues',
     },
