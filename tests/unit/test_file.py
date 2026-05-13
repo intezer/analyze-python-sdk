@@ -10,6 +10,7 @@ from intezer_sdk import consts
 from intezer_sdk import errors
 from intezer_sdk.file import File
 from tests.unit.base_test import BaseTest
+from tests.unit.base_test import mock_open_bytes
 
 
 class FileSpec(BaseTest):
@@ -87,7 +88,7 @@ class FileSpec(BaseTest):
                 json={'result_url': '/files/index/testindex'})
             file_obj = File(file_path='a')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 file_obj.index(consts.IndexType.TRUSTED)
 

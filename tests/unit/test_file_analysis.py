@@ -6,7 +6,6 @@ import tempfile
 import time
 import uuid
 from http import HTTPStatus
-from unittest.mock import mock_open
 from unittest.mock import patch
 
 import requests
@@ -20,6 +19,7 @@ from intezer_sdk.consts import OnPremiseVersion
 from intezer_sdk.endpoint_analysis import EndpointAnalysis
 from intezer_sdk.sub_analysis import SubAnalysis
 from tests.unit.base_test import BaseTest
+from tests.unit.base_test import mock_open_bytes
 
 
 class FileAnalysisSpec(BaseTest):
@@ -48,7 +48,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'result_url': 'a/sd/asd'})
             analysis = FileAnalysis(file_path='a')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send()
 
@@ -70,7 +70,7 @@ class FileAnalysisSpec(BaseTest):
             analysis = FileAnalysis(file_path='a',
                                     code_item_type='memory_module')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send()
 
@@ -105,7 +105,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
 
@@ -126,7 +126,7 @@ class FileAnalysisSpec(BaseTest):
             analysis = FileAnalysis(file_path='a')
             wait = 1
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 start = datetime.datetime.utcnow()
                 analysis.send(wait=wait)
@@ -149,7 +149,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send()
                 analysis.wait_for_completion()
@@ -176,7 +176,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send()
                 analysis.check_status()
@@ -198,7 +198,7 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.OK,
                      json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
 
@@ -242,7 +242,7 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.OK,
                      json={'result': 'ioc_report'})
             analysis = FileAnalysis(file_path='a')
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
                 iocs = analysis.iocs
@@ -267,7 +267,7 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.OK,
                      json={'result': 'ttps_report'})
             analysis = FileAnalysis(file_path='a')
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
                 ttps = analysis.dynamic_ttps
@@ -301,7 +301,7 @@ class FileAnalysisSpec(BaseTest):
                      url=f'{self.full_url}/analyses/asd/dynamic-ttps',
                      status=HTTPStatus.NOT_FOUND)
             analysis = FileAnalysis(file_path='a')
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
                 self.assertIsNone(analysis.dynamic_ttps)
@@ -321,7 +321,7 @@ class FileAnalysisSpec(BaseTest):
                      url=f'{self.full_url}/analyses/asd/dynamic-ttps',
                      status=405)
             analysis = FileAnalysis(file_path='a')
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
                 with self.assertRaises(requests.HTTPError):
@@ -343,7 +343,7 @@ class FileAnalysisSpec(BaseTest):
                      status=405,
                      json={'result': 'ioc_report'})
             analysis = FileAnalysis(file_path='a')
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
                 with self.assertRaises(requests.HTTPError):
@@ -365,7 +365,7 @@ class FileAnalysisSpec(BaseTest):
                      status=HTTPStatus.NOT_FOUND,
                      json={'result': 'ioc_report'})
             analysis = FileAnalysis(file_path='a')
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
                 self.assertIsNone(analysis.iocs)
@@ -384,7 +384,7 @@ class FileAnalysisSpec(BaseTest):
             analysis = FileAnalysis(file_path='a',
                                     disable_dynamic_unpacking=True,
                                     disable_static_unpacking=True)
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
 
@@ -412,7 +412,7 @@ class FileAnalysisSpec(BaseTest):
                                     file_name='b.zip',
                                     zip_password='asd')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
 
@@ -440,7 +440,7 @@ class FileAnalysisSpec(BaseTest):
                                     file_name='b.zip',
                                     sandbox_command_line_arguments='-c hello')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
 
@@ -490,7 +490,7 @@ class FileAnalysisSpec(BaseTest):
             analysis = FileAnalysis(file_stream=__file__,
                                     zip_password='asd')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
 
@@ -517,7 +517,7 @@ class FileAnalysisSpec(BaseTest):
             analysis = FileAnalysis(file_path='a',
                                     zip_password='asd')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
 
@@ -935,7 +935,7 @@ class FileAnalysisSpec(BaseTest):
                      json={'result': {'analysis_id': 'asd'}, 'status': 'succeeded'})
             analysis = FileAnalysis(file_path='a')
 
-            with patch(self.patch_prop, mock_open(read_data='data')):
+            with patch(self.patch_prop, mock_open_bytes()):
                 # Act
                 analysis.send(wait=True)
 
