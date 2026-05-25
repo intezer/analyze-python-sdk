@@ -1,3 +1,7 @@
+1.27.4
+-------
+- Add alert_update_time field to alert and remove case_association_time
+
 1.27.3
 -------
 - Add raise_on_in_progress flag to Alert.from_id() enabling result() to return partial data when in progress
