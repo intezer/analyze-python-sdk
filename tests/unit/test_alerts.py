@@ -72,20 +72,20 @@ class AlertsSpec(BaseTest):
 
     def test_alert_from_id(self):
         # Arrange
-        case_association_time_str = '2026-04-29T12:34:56+00:00'
+        alert_update_time_str = '2026-04-29T12:34:56+00:00'
         with responses.RequestsMock() as mock:
             mock.add('GET',
                      url=f'{self.full_url}/alerts/get-by-id',
                      status=HTTPStatus.OK,
-                     json={'result': {'case_association_time': case_association_time_str},
+                     json={'result': {'alert_update_time': alert_update_time_str},
                            'status': 'success'})
             # Act
             alert = Alert.from_id('alert_id', environment='environment')
 
             # Assert
             self.assertEqual(alert.alert_id, 'alert_id')
-            self.assertEqual(alert.case_association_time,
-                             datetime.datetime.fromisoformat(case_association_time_str))
+            self.assertEqual(alert.alert_update_time,
+                             datetime.datetime.fromisoformat(alert_update_time_str))
 
 
     def test_alert_from_id_raises_conflict_when_environment_is_ambiguous(self):
