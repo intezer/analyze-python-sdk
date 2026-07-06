@@ -552,6 +552,34 @@ class FileAnalysisSpec(BaseTest):
             with self.assertRaises(errors.FileTooLargeError):
                 analysis.send()
 
+    def test_send_analysis_of_password_protected_archive_raise_error(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=f'{self.full_url}/analyze',
+                     status=HTTPStatus.BAD_REQUEST,
+                     json={'error': 'Archive is password protected'})
+            analysis = FileAnalysis(file_path='a')
+
+            with patch(self.patch_prop, mock_open_bytes()):
+                # Act + Assert
+                with self.assertRaises(errors.PasswordProtectedArchiveError):
+                    analysis.send()
+
+    def test_password_protected_archive_error_is_a_server_error(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=f'{self.full_url}/analyze',
+                     status=HTTPStatus.BAD_REQUEST,
+                     json={'error': 'Archive is password protected'})
+            analysis = FileAnalysis(file_path='a')
+
+            with patch(self.patch_prop, mock_open_bytes()):
+                # Act + Assert
+                with self.assertRaises(errors.ServerError):
+                    analysis.send()
+
     def test_send_analysis_by_sha256_with_expired_jwt_token_gets_new_token(self):
         # Arrange
         analysis = FileAnalysis(file_hash='a' * 64)

@@ -188,6 +188,13 @@ class InvalidUrlError(ServerError):
         super().__init__('Invalid url', response)
 
 
+class PasswordProtectedArchiveError(ServerError):
+    """Raised when the submitted archive is password protected and cannot be extracted."""
+
+    def __init__(self, response: requests.Response):
+        super().__init__('Archive is password protected', response)
+
+
 class AnalysisSkippedByRuleError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Analysis skipped by rule', response)
