@@ -970,6 +970,9 @@ class IntezerApi:
                 if error == 'Invalid url':
                     raise errors.InvalidUrlError(response)
 
+                if error == 'Archive is password protected':
+                    raise errors.PasswordProtectedArchiveError(response)
+
                 raise errors.ServerError(f'Server returned bad request error: {error}, details: {details}', response)
             case HTTPStatus.CREATED:
                 pass

@@ -1,3 +1,7 @@
+1.27.5
+-------
+- Add PasswordProtectedArchiveError raised when a submitted archive is password protected
+
 1.27.4
 -------
 - Add alert_update_time field to alert and remove case_association_time
