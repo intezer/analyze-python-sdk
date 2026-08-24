@@ -5,6 +5,7 @@ import unittest
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
+import requests
 import responses
 
 from intezer_sdk import consts
@@ -83,6 +84,29 @@ class ApiSpec(unittest.TestCase):
 
             with self.assertRaises(errors.InsufficientPermissionsError):
                 raise_for_status(response)
+
+    def test_api_raises_http_error_with_server_error_message_when_conflict_received(self):
+        # Arrange
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     url=f'{self.full_url}/get-access-token',
+                     status=HTTPStatus.OK,
+                     json={'result': 'access-token', 'expire_at': 2166920067})
+            api = set_global_api()
+            api.authenticate()
+
+        with responses.RequestsMock() as mock:
+            mock.add('POST',
+                     f'{self.full_url}/some-route',
+                     status=HTTPStatus.CONFLICT,
+                     json={'error': 'Windows scanner version 1.0.1.20 is not supported'})
+            response = api.request_with_refresh_expired_access_token(method='POST', path='/some-route')
+
+            # Act & Assert
+            with self.assertRaises(requests.HTTPError) as context:
+                raise_for_status(response)
+
+            self.assertIn('Windows scanner version 1.0.1.20 is not supported', str(context.exception))
 
     def test_api_raise_invalid_api_key_error_when_unauthorized_received(self):
         # Arrange
