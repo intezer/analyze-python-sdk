@@ -911,7 +911,8 @@ class IntezerApi:
 
     @staticmethod
     def _assert_result_response(ignore_not_found: bool, response: Response):
-        statuses_to_ignore = [HTTPStatus.NOT_FOUND] if ignore_not_found else None
+        # A deleted, expired or deprecated analysis is returned as GONE, which callers treat as a missing analysis
+        statuses_to_ignore = [HTTPStatus.NOT_FOUND, HTTPStatus.GONE] if ignore_not_found else None
         raise_for_status(response, statuses_to_ignore=statuses_to_ignore)
 
     @staticmethod

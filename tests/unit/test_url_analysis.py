@@ -64,6 +64,21 @@ class UrlAnalysisSpec(BaseTest):
             with self.assertRaises(errors.AnalysisFailedError):
                 UrlAnalysis.from_analysis_id(analysis_id)
 
+    def test_get_analysis_by_id_returns_none_when_analysis_is_missing_or_deleted(self):
+        analysis_id = 'analysis_id'
+
+        for status in (HTTPStatus.NOT_FOUND, HTTPStatus.GONE):
+            with self.subTest(status=status):
+                # Arrange
+                with responses.RequestsMock() as mock:
+                    mock.add('GET', url=f'{self.full_url}/url/{analysis_id}', status=status)
+
+                    # Act
+                    analysis = UrlAnalysis.from_analysis_id(analysis_id)
+
+                # Assert
+                self.assertIsNone(analysis)
+
     def test_send_perform_request_and_sets_analysis_status(self):
         # Arrange
         analysis_id = str(uuid.uuid4())
