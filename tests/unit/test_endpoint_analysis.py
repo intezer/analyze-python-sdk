@@ -93,18 +93,20 @@ class EndpointAnalysisSpec(BaseTest):
             with self.assertRaises(errors.AnalysisFailedError):
                 EndpointAnalysis.from_analysis_id(analysis_id)
 
-    def test_analysis_not_found(self):
-        # Arrange
+    def test_analysis_missing_or_deleted(self):
         analysis_id = str(uuid.uuid4())
 
-        with responses.RequestsMock() as mock:
-            mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=HTTPStatus.NOT_FOUND)
+        for status in (HTTPStatus.NOT_FOUND, HTTPStatus.GONE):
+            with self.subTest(status=status):
+                # Arrange
+                with responses.RequestsMock() as mock:
+                    mock.add('GET', url=f'{self.full_url}/endpoint-analyses/{analysis_id}', status=status)
 
-            # Act
-            analysis = EndpointAnalysis.from_analysis_id(analysis_id)
+                    # Act
+                    analysis = EndpointAnalysis.from_analysis_id(analysis_id)
 
-        # Assert
-        self.assertIsNone(analysis)
+                # Assert
+                self.assertIsNone(analysis)
 
     def test_get_sub_analyses(self):
         # Arrange

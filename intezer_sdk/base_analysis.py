@@ -152,7 +152,7 @@ class Analysis(metaclass=abc.ABCMeta):
 
     @classmethod
     def _create_analysis_from_response(cls, response: Response, api: IntezerApiClient, analysis_id: str):
-        if response.status_code == HTTPStatus.NOT_FOUND:
+        if response.status_code in (HTTPStatus.NOT_FOUND, HTTPStatus.GONE):
             return None
 
         response_json = response.json()

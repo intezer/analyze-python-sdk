@@ -13,6 +13,7 @@ import responses
 
 from intezer_sdk import consts
 from intezer_sdk import errors
+from intezer_sdk._api import IntezerApi
 from intezer_sdk.analysis import FileAnalysis
 from intezer_sdk.api import get_global_api
 from intezer_sdk.consts import OnPremiseVersion
@@ -1100,6 +1101,32 @@ class FileAnalysisSpec(BaseTest):
             analysis = FileAnalysis.from_analysis_id(analysis_id)
             self.assertEqual(consts.AnalysisStatusCode.IN_PROGRESS, analysis.status)
             self.assertEqual(analysis_id, analysis.analysis_id)
+
+    def test_get_analysis_by_id_returns_none_when_analysis_is_missing_or_deleted(self):
+        analysis_id = 'analysis_id'
+
+        for status in (HTTPStatus.NOT_FOUND, HTTPStatus.GONE):
+            with self.subTest(status=status):
+                # Arrange
+                with responses.RequestsMock() as mock:
+                    mock.add('GET', url=f'{self.full_url}/analyses/{analysis_id}', status=status)
+
+                    # Act
+                    analysis = FileAnalysis.from_analysis_id(analysis_id)
+
+                # Assert
+                self.assertIsNone(analysis)
+
+    def test_get_file_analysis_response_raises_when_analysis_is_deleted_and_not_found_is_not_ignored(self):
+        # Arrange
+        analysis_id = 'analysis_id'
+
+        with responses.RequestsMock() as mock:
+            mock.add('GET', url=f'{self.full_url}/analyses/{analysis_id}', status=HTTPStatus.GONE)
+
+            # Act & Assert
+            with self.assertRaises(requests.HTTPError):
+                IntezerApi(get_global_api()).get_file_analysis_response(analysis_id, False)
 
     def test_download_file_path_uses_content_disposition(self):
         # Arrange
