@@ -1,3 +1,7 @@
+1.27.9
+-------
+- Add rule_id to AnalysisSkippedByRuleError with the id of the rule that skipped the analysis
+
 1.27.8
 -------
 - Return None instead of raising when fetching a deleted analysis (410 Gone) by id, matching the documented from_analysis_id contract

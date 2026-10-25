@@ -198,6 +198,15 @@ class PasswordProtectedArchiveError(ServerError):
 class AnalysisSkippedByRuleError(ServerError):
     def __init__(self, response: requests.Response):
         super().__init__('Analysis skipped by rule', response)
+        self.rule_id: str | None = self._parse_rule_id(response)
+
+    @staticmethod
+    def _parse_rule_id(response: requests.Response) -> str | None:
+        try:
+            result = response.json().get('result') or {}
+        except ValueError:
+            return None
+        return result.get('rule_id')
 
 
 class AnalysisRateLimitError(ServerError):
