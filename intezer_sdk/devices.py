@@ -42,6 +42,7 @@ def generate_devices_history_search_filters(*,
                                             host_types: list[str] = None,
                                             last_login_users: list[str] = None,
                                             site_names: list[str] = None,
+                                            sub_tenant_ids: list[str] = None,
                                             include_raw_device: bool = None) -> dict[str, Any]:
     filters = {}
     time_range_start_timestamp = int(time_range_start.timestamp()) if time_range_start else None
@@ -65,6 +66,7 @@ def generate_devices_history_search_filters(*,
     add_filter(filters, 'host_types', host_types)
     add_filter(filters, 'last_login_users', last_login_users)
     add_filter(filters, 'site_names', site_names)
+    add_filter(filters, 'sub_tenant_ids', sub_tenant_ids)
     add_filter(filters, 'include_raw_device', include_raw_device)
 
     return filters
@@ -91,6 +93,7 @@ def query_devices_history(*,
                           host_types: list[str] = None,
                           last_login_users: list[str] = None,
                           site_names: list[str] = None,
+                          sub_tenant_ids: list[str] = None,
                           include_raw_device: bool = None) -> DevicesHistoryResult:
     """
     Query devices history with query param.
@@ -115,6 +118,7 @@ def query_devices_history(*,
     :param host_types: Query devices only with these host types (e.g. server, workstation).
     :param last_login_users: Query devices only with these last login users.
     :param site_names: Query devices only with these site names.
+    :param sub_tenant_ids: Query devices only from these sub-tenants.
     :param include_raw_device: Include raw device data in the results.
 
     :return: Device query result from server as Results iterator.
@@ -140,6 +144,7 @@ def query_devices_history(*,
         host_types=host_types,
         last_login_users=last_login_users,
         site_names=site_names,
+        sub_tenant_ids=sub_tenant_ids,
         include_raw_device=include_raw_device,
     )
 

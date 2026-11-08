@@ -42,6 +42,7 @@ def generate_incidents_history_search_filters(*,
                                               free_text: str = None,
                                               sort_by: list[str] = None,
                                               sort_order: str = None,
+                                              sub_tenant_ids: list[str] = None,
                                               include_raw_incident: bool = None) -> dict[str, Any]:
     filters = {}
     start_timestamp = int(start_time.timestamp()) if start_time else None
@@ -65,6 +66,7 @@ def generate_incidents_history_search_filters(*,
     add_filter(filters, 'free_text', free_text)
     add_filter(filters, 'sort_by', sort_by)
     add_filter(filters, 'sort_order', sort_order)
+    add_filter(filters, 'sub_tenant_ids', sub_tenant_ids)
     add_filter(filters, 'include_raw_incident', include_raw_incident)
 
     return filters
@@ -90,6 +92,7 @@ def query_incidents_history(*,
                             free_text: str = None,
                             sort_by: list[str] = None,
                             sort_order: str = None,
+                            sub_tenant_ids: list[str] = None,
                             include_raw_incident: bool = None) -> IncidentsHistoryResult:
     """
     Query for incidents history with query param.
@@ -113,6 +116,7 @@ def query_incidents_history(*,
     :param free_text: Query incidents that contain this text in the following fields: name, severity, status, related_alert_ids.
     :param sort_by: Sort incidents only with this sort_by_key value (creation_time / received_time / triage_time / triage_change_time / risk_score).
     :param sort_order: The order to sort the incidents by (asc / desc).
+    :param sub_tenant_ids: Query incidents only from these sub-tenants.
     :param include_raw_incident: Include the raw incident data in the results.
 
     :return: Incident query result from server as Results iterator.
@@ -138,6 +142,7 @@ def query_incidents_history(*,
         free_text=free_text,
         sort_by=sort_by,
         sort_order=sort_order,
+        sub_tenant_ids=sub_tenant_ids,
         include_raw_incident=include_raw_incident,
     )
 

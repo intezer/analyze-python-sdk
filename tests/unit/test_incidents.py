@@ -33,6 +33,7 @@ class IncidentsSpec(BaseTest):
         free_text = 'test search'
         sort_by = ['creation_time']
         sort_order = 'desc'
+        sub_tenant_ids = ['sub_tenant1', 'sub_tenant2']
         include_raw_incident = True
 
         # Act
@@ -55,6 +56,7 @@ class IncidentsSpec(BaseTest):
             free_text=free_text,
             sort_by=sort_by,
             sort_order=sort_order,
+            sub_tenant_ids=sub_tenant_ids,
             include_raw_incident=include_raw_incident
         )
 
@@ -77,6 +79,7 @@ class IncidentsSpec(BaseTest):
         self.assertEqual(result['free_text'], free_text)
         self.assertEqual(result['sort_by'], sort_by)
         self.assertEqual(result['sort_order'], sort_order)
+        self.assertEqual(result['sub_tenant_ids'], sub_tenant_ids)
         self.assertEqual(result['include_raw_incident'], include_raw_incident)
 
     def test_generate_incidents_history_search_filters_with_none_parameters(self):
@@ -105,6 +108,16 @@ class IncidentsSpec(BaseTest):
 
         # Assert
         self.assertIsInstance(result, IncidentsHistoryResult)
+
+    def test_query_incidents_history_with_sub_tenant_ids(self):
+        # Arrange
+        sub_tenant_ids = ['sub_tenant1']
+
+        # Act
+        result = query_incidents_history(sub_tenant_ids=sub_tenant_ids)
+
+        # Assert
+        self.assertEqual(result.filters['sub_tenant_ids'], sub_tenant_ids)
 
     def test_incident_init(self):
         # Arrange
