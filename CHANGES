@@ -1,3 +1,7 @@
+1.27.10
+-------
+- Add sub_tenant_ids filter to devices and incidents history queries
+
 1.27.9
 -------
 - Add rule_id to AnalysisSkippedByRuleError with the id of the rule that skipped the analysis

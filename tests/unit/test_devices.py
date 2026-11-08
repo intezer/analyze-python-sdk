@@ -33,6 +33,7 @@ class DevicesSpec(BaseTest):
         host_types = ['server', 'workstation']
         last_login_users = ['user1', 'user2']
         site_names = ['site1', 'site2']
+        sub_tenant_ids = ['sub_tenant1', 'sub_tenant2']
 
         # Act
         result = generate_devices_history_search_filters(
@@ -53,7 +54,8 @@ class DevicesSpec(BaseTest):
             cloud_providers=cloud_providers,
             host_types=host_types,
             last_login_users=last_login_users,
-            site_names=site_names
+            site_names=site_names,
+            sub_tenant_ids=sub_tenant_ids
         )
 
         # Assert
@@ -75,6 +77,7 @@ class DevicesSpec(BaseTest):
         self.assertEqual(result['host_types'], host_types)
         self.assertEqual(result['last_login_users'], last_login_users)
         self.assertEqual(result['site_names'], site_names)
+        self.assertEqual(result['sub_tenant_ids'], sub_tenant_ids)
 
     def test_generate_devices_history_search_filters_with_none_parameters(self):
         # Arrange & Act
@@ -113,6 +116,16 @@ class DevicesSpec(BaseTest):
         # Assert
         self.assertIsInstance(result, DevicesHistoryResult)
         self.assertEqual(result._search_mode, 'or')
+
+    def test_query_devices_history_with_sub_tenant_ids(self):
+        # Arrange
+        sub_tenant_ids = ['sub_tenant1']
+
+        # Act
+        result = query_devices_history(sub_tenant_ids=sub_tenant_ids)
+
+        # Assert
+        self.assertEqual(result.filters['sub_tenant_ids'], sub_tenant_ids)
 
     def test_device_init(self):
         # Arrange
